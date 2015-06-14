@@ -1,0 +1,16 @@
+[Unit]
+Description=sync manager service startup script
+After=tizen-runtime.target
+Requires=tizen-runtime.target
+
+[Service]
+User=system
+Group=system
+SmackProcessLabel=sync-manager
+Type=simple
+ExecStart=/usr/bin/sync-service
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

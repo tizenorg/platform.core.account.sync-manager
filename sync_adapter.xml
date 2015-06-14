@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node name="/org/tizen/sync/adapter">
+	<interface name="org.tizen.sync.adapter">
+	<method name="send_result">
+		<arg type="i" name="sync_result" direction="in" />
+		<arg type="i" name="account_id" direction="in"/>
+		<arg type="s" name="capability" direction="in"/>
+	</method>
+	<signal name="start_sync">
+		<arg type="i" name="account_id" />
+		<arg type="a{sv}" name="extra" />
+		<arg type="s" name="capability" />
+	</signal>
+	<signal name="cancel_sync">
+		<arg type="i" name="account_id" />
+		<arg type="s" name="capability" />
+	</signal>
+	<method name="init_complete" />
+	</interface>
+</node>

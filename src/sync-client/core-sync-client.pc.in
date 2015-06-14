@@ -1,0 +1,13 @@
+#Package Information for pkg-config
+
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: Sync manager library
+Description: Sync manager client API
+Version: @VERSION@
+Libs: -L${libdir} -lcore-sync-client
+Cflags: -I${includedir}
+

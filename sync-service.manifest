@@ -1,0 +1,69 @@
+<manifest>
+	<define>
+		<domain name="sync-manager" />
+		<provide>
+			<label name="sync-manager::add" />
+			<label name="sync-manager::remove" />
+			<label name="sync-manager::setting" />
+			<label name="sync-manager::db" />
+		</provide>
+		<request>
+			<smack request="sys-assert::core" type="rwxat"/>
+			<smack request="system::vconf" type="rx"/>
+			<smack request="system::vconf_inhouse" type="rl"/>
+			<smack request="system::vconf_setting" type="rl"/>
+			<smack request="system::vconf_system" type="rl"/>
+			<smack request="system::vconf_network" type="rl"/>
+			<smack request="dbus" type="rwx"/>
+			<smack request="sys-assert::core" type="wx"/>
+			<smack request="net-config" type="rw"/>
+			<smack request="connman" type="rw"/>
+			<smack request="dlogutil" type="rwx"/>
+			<smack request="device::sys_logging" type="w"/>
+			<smack request="device::app_logging" type="w"/>
+			<smack request="pkgmgr" type="r"/>
+			<smack request="pkgmgr::db" type="rw"/>
+			<smack request="app-svc::db" type="rwxa"/>
+			<smack request="aul::launch" type="x"/>
+			<smack request="libaccounts-svc" type="rl"/>
+			<smack request="libaccounts-svc::db" type="rl"/>
+			<smack request="libaccounts-svc::check_read" type="r"/>
+			<smack request="tizen::vconf::account" type="rw"/>
+			<smack request="contacts-service" type="rwx"/>
+			<smack request="contacts-service::svc" type="rw"/>
+			<smack request="calendar-service" type="rwx"/>
+			<smack request="calendar-service::svc" type="rw"/>
+			<smack request="alarm-server::alarm-periodic" type="w"/>
+			<smack request="sync-manager::db" type="rwx"/>
+			<smack request="xorg" type="rw"/>
+		</request>
+	</define>
+	<assign>
+		<filesystem path="/opt/usr/data/sync-manager/" label="sync-manager::db" />
+		<dbus name="org.tizen.sync" own="sync-manager" bus="system">
+			<node name="/org/tizen/sync/manager">
+				<interface name="org.tizen.sync.manager">
+					<method name="add_sync_job">
+						<annotation name="org.tizen.smack" value="sync-manager::add"/>
+					</method>
+					<method name="remove_sync_job">
+						<annotation name="org.tizen.smack" value="sync-manager::remove"/>
+					</method>
+					<method name="add_periodic_sync_job">
+						<annotation name="org.tizen.smack" value="sync-manager::add"/>
+					</method>
+					<method name="remove_periodic_sync_job">
+						<annotation name="org.tizen.smack" value="sync-manager::remove"/>
+					</method>
+					<method name="set_sync_status">
+						<annotation name="org.tizen.smack" value="sync-manager::setting"/>
+					</method>
+				</interface>
+			</node>
+		</dbus>
+	</assign>
+	<request>
+		<domain name="sync-manager" />
+	</request>
+</manifest>
+
