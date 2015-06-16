@@ -456,7 +456,7 @@ void SyncManager::OnContactsDataChanged(int value)
 }
 
 
-static int OnPackageUninstalled(int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,
+static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,
 									const char* pVal, const void* pMsg, void* pData)
 {
 	LOG_LOGD("OnPackageUninstalled [type %s] type [pkdId:%s]", pPkgType, pPkgId);
@@ -725,7 +725,7 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 		__pPkgmgrClient = NULL;
 		return -1;
 	}
-/*
+
 	if (pkgmgr_client_listen_status(__pPkgmgrClient, OnPackageUninstalled, &__syncJobQueueMutex) < 0)
 	{
 		LOG_LOGD("pkgmgr_client_listen_status failed.");
@@ -733,7 +733,7 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 		__pPkgmgrClient = NULL;
 		return -1;
 	}
-*/
+
 	return 0;
 }
 

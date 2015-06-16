@@ -73,6 +73,7 @@ ADD_DEFINITIONS("-DPACKAGE=\"${PACKAGE_NAME}\"")
 
 INCLUDE(FindPkgConfig)
 SET(PACKAGES
+		ecore
 		capi-network-connection
 		capi-system-runtime-info
 		capi-system-device

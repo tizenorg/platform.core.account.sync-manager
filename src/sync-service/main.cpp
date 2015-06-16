@@ -45,7 +45,7 @@ DbusSignalHandler(DBusConnection* pConnection, DBusMessage* pMsg, void* pUserDat
 		{
 			ShutdownInitiated = true;
 			sync_service_finalise();
-//			ecore_main_loop_quit();
+			ecore_main_loop_quit();
 		}
 	}
 
@@ -72,7 +72,7 @@ OnTerminate(void *data, int ev_type, void *ev)
 		sync_service_finalise();
 	}
 
-//	ecore_main_loop_quit();
+	ecore_main_loop_quit();
 
 	return EINA_TRUE;
 }
@@ -81,14 +81,14 @@ OnTerminate(void *data, int ev_type, void *ev)
 int
 main(int argc, char **argv)
 {
-/*
+
 	if (!ecore_init())
 	{
 		return -1;
 	}
 	LOG_LOGD("Sync Service");
-*/
-//	ecore_idler_add(OnIdle, NULL);
+
+	ecore_idler_add(OnIdle, NULL);
 
 	//Dbus handler to catch shutdown signal in kiran
 	DBusError error;
@@ -129,7 +129,7 @@ main(int argc, char **argv)
 		}
 	}
 
-//	ecore_event_handler_add(ECORE_EVENT_SIGNAL_EXIT, OnTerminate, NULL);
+	ecore_event_handler_add(ECORE_EVENT_SIGNAL_EXIT, OnTerminate, NULL);
 
 	int ret = sync_service_initialise();
 	if (ret != 0)
@@ -138,9 +138,9 @@ main(int argc, char **argv)
 		return 0;
 	}
 
-//	ecore_main_loop_begin();
+	ecore_main_loop_begin();
 
-//	ecore_shutdown();
+	ecore_shutdown();
 
 	return 0;
 }

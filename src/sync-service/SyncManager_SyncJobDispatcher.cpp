@@ -220,8 +220,8 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 			}
 			LOG_LOGD("Effective poll time [%lld s]", scheduledTimeoutTime / 1000);
 			long timeout = scheduledTimeoutTime / 1000;
-//			int ret = alarmmgr_add_periodic_alarm_withcb(timeout, QUANTUMIZE, SyncJobDispatcher::OnAlarmExpired, NULL, &alarm_id);
-//			LOG_LOGD("Alarm added for %ld s, id %ld, status %d", timeout, alarm_id, ret);
+			int ret = alarmmgr_add_periodic_alarm_withcb(timeout, QUANTUMIZE, SyncJobDispatcher::OnAlarmExpired, NULL, &alarm_id);
+			LOG_LOGD("Alarm added for %ld s, id %ld, status %d", timeout, alarm_id, ret);
 		}
 	}
 
