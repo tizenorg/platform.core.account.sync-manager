@@ -9,6 +9,9 @@
 		</provide>
 		<request>
 			<smack request="sys-assert::core" type="rwxat"/>
+			<smack request="tizen::vconf::public::r" type="rl"/>
+			<smack request="tizen::vconf::public::r::platform::rw" type="rl"/>
+			<smack request="tizen::vconf::setting::admin" type="rl"/>
 			<smack request="system::vconf" type="rx"/>
 			<smack request="system::vconf_inhouse" type="rl"/>
 			<smack request="system::vconf_setting" type="rl"/>

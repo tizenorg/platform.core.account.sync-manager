@@ -81,7 +81,6 @@ OnTerminate(void *data, int ev_type, void *ev)
 int
 main(int argc, char **argv)
 {
-
 	if (!ecore_init())
 	{
 		return -1;
