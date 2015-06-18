@@ -12,13 +12,7 @@
 			<smack request="tizen::vconf::public::r" type="rl"/>
 			<smack request="tizen::vconf::public::r::platform::rw" type="rl"/>
 			<smack request="tizen::vconf::setting::admin" type="rl"/>
-			<smack request="system::vconf" type="rx"/>
-			<smack request="system::vconf_inhouse" type="rl"/>
-			<smack request="system::vconf_setting" type="rl"/>
-			<smack request="system::vconf_system" type="rl"/>
-			<smack request="system::vconf_network" type="rl"/>
 			<smack request="dbus" type="rwx"/>
-			<smack request="sys-assert::core" type="wx"/>
 			<smack request="net-config" type="rw"/>
 			<smack request="connman" type="rw"/>
 			<smack request="dlogutil" type="rwx"/>
@@ -28,7 +22,6 @@
 			<smack request="pkgmgr::db" type="rw"/>
 			<smack request="app-svc::db" type="rwxa"/>
 			<smack request="aul::launch" type="x"/>
-			<smack request="libaccounts-svc" type="rl"/>
 			<smack request="libaccounts-svc::db" type="rl"/>
 			<smack request="libaccounts-svc::check_read" type="r"/>
 			<smack request="tizen::vconf::account" type="rw"/>
