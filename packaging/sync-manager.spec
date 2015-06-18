@@ -103,9 +103,11 @@ systemctl start sync-manager.service
 /opt/usr/data/sync-manager/
 
 %files -n libcore-sync-client
+%defattr(-,root,root,-)
 %{_libdir}/libcore-sync-client.so*
 
 %files -n libcore-sync-client-devel
+%defattr(-,root,root,-)
 %{_includedir}/*sync*.h
 %{_libdir}/pkgconfig/*.pc
-%{_libdir}/libcore-sync-client.so
+%{_libdir}/libcore-sync-client.so*
