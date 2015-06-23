@@ -426,7 +426,6 @@ int sync_manager_remove_periodic_sync_job(account_h account, const char *capabil
 }
 
 
-/*LCOV_EXCL_START*/
 int _sync_manager_enable_sync()
 {
 	if (!g_sync_manager)
@@ -459,4 +458,3 @@ int _sync_manager_disable_sync()
 
 	return SYNC_ERROR_NONE;
 }
-/*LCOV_EXCL_STOP*/
