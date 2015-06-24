@@ -25,63 +25,55 @@ extern "C"
 #endif
 
 void
-bundle_iterate_cb (const char *key, const char *val, void *data)
+bundle_iterate_cb(const char *key, const char *val, void *data)
 {
-	g_variant_builder_add ((GVariantBuilder*)data, "{sv}",
+	g_variant_builder_add((GVariantBuilder *)data, "{sv}",
 			key,
-			g_variant_new_string (val));
+			g_variant_new_string(val));
 }
 
 GVariant*
-marshal_bundle(bundle* extras)
+marshal_bundle(bundle *extras)
 {
-
 	GVariantBuilder builder;
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 
-	bundle_iterate(extras, bundle_iterate_cb, (void*)&builder);
-	return g_variant_builder_end (&builder);
+	bundle_iterate(extras, bundle_iterate_cb, (void *)&builder);
+	return g_variant_builder_end(&builder);
 }
 
 bundle*
-umarshal_bundle(GVariant* in_data)
+umarshal_bundle(GVariant *in_data)
 {
-
-	if (in_data == NULL)
-	{
+	if (in_data == NULL) {
 		LOG_LOGD(" Null input");
 		return NULL;
 	}
 
-	GVariant* temp_var = in_data;
-	gchar* print_type = NULL;
+	GVariant *temp_var = in_data;
+	gchar *print_type = NULL;
 	print_type = g_variant_print(temp_var, TRUE);
-	if (print_type == NULL)
-	{
+	if (print_type == NULL)	{
 		LOG_LOGD(" Invalid input");
 		return NULL;
 	}
 
 	bundle *extras = bundle_create();
 	if (extras == NULL)
-	{
 		LOG_LOGD(" bundle_create returned null");
-	}
 
 	GVariantIter iter;
 	gchar *key = NULL;
-	//gchar *value = NULL;
+	/*gchar *value = NULL;*/
 	GVariant *value = NULL;
 
-	g_variant_iter_init (&iter, in_data);;
+	g_variant_iter_init(&iter, in_data);;
 
-	while (g_variant_iter_next (&iter, "{sv}", &key, &value))
+	while (g_variant_iter_next(&iter, "{sv}", &key, &value))
 	{
-		//LOG_LOGD("umarshal bundle key %s val %s", key, (char*) g_variant_get_string (value, NULL));
-		if (bundle_add(extras, key, g_variant_get_string (value, NULL)) != 0)
-		{
+		/*LOG_LOGD("umarshal bundle key %s val %s", key, (char*) g_variant_get_string (value, NULL));*/
+		if (bundle_add(extras, key, g_variant_get_string(value, NULL)) != 0)
 			LOG_LOGD(" error in bundle_add");
-		}
 	}
 	return extras;
 
