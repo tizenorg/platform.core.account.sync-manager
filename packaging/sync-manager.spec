@@ -88,7 +88,7 @@ mkdir -p %{buildroot}/opt/usr/data/sync-manager
 rm -rf %{buildroot}
 
 %post
-chsmack -a sync-manager::db -e sync-manager /opt/usr/data/sync-manager/
+chsmack -a sync-service::db -e sync-service /opt/usr/data/sync-manager/
 
 chown system:system /opt/usr/data/sync-manager/
 systemctl enable sync-manager.service
@@ -103,10 +103,12 @@ systemctl start sync-manager.service
 /opt/usr/data/sync-manager/
 
 %files -n libcore-sync-client
+%manifest libcore-sync-client.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libcore-sync-client.so*
 
 %files -n libcore-sync-client-devel
+%manifest libcore-sync-client.manifest
 %defattr(-,root,root,-)
 %{_includedir}/*sync*.h
 %{_libdir}/pkgconfig/*.pc
