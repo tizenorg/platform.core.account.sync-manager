@@ -2,17 +2,9 @@ Name:      sync-service
 Version:   0.0.1
 Release:   1
 License:   Apache-2.0
-Summary:   A Samsung sync framework library in SLP C API
+Summary:   Sync manager daemon
 Group:     Social & Content/API
 Source0:   %{name}-%{version}.tar.gz
-
-%if "%{?tizen_profile_name}" == "wearable"
-ExcludeArch: %{arm} %ix86 x86_64
-%endif
-
-%if "%{?tizen_profile_name}" == "tv"
-ExcludeArch: %{arm} %ix86 x86_64
-%endif
 
 BuildRequires: cmake
 BuildRequires: pkgconfig(capi-system-info)
@@ -46,7 +38,7 @@ sync manager service and sync framework which manages sync of registered applica
 
 
 %package -n libcore-sync-client
-Summary:   sync manager client library.
+Summary:    Sync manager client library
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 
@@ -54,8 +46,8 @@ Requires:   %{name} = %{version}-%{release}
 sync client provides sync adapter functionality to register sync adapters and to get callbacks.
 
 %package -n libcore-sync-client-devel
-Summary:   sync client library (Development)
-Group:    Application Framework/Development
+Summary:    Sync manager client library (Development)
+Group:      Application Framework/Development
 
 %description -n  libcore-sync-client-devel
 sync client provides sync adapter functionality to register sync adapters and to get callbacks.
@@ -67,6 +59,7 @@ sync client provides sync adapter functionality to register sync adapters and to
 %prep
 %setup -q
 
+%build
 _CONTAINER_ENABLE=ON
 
 cmake \
@@ -87,17 +80,20 @@ mkdir -p %{buildroot}/opt/usr/data/sync-manager
 %clean
 rm -rf %{buildroot}
 
-%post
-chsmack -a sync-service::db -e sync-service /opt/usr/data/sync-manager/
+%post -n libcore-sync-client -p /sbin/ldconfig
+%post -n libcore-sync-client-devel -p /sbin/ldconfig
 
+%post
 chown system:system /opt/usr/data/sync-manager/
 systemctl enable sync-manager.service
 systemctl start sync-manager.service
 
+%postun -n libcore-sync-client -p /sbin/ldconfig
+%postun -n libcore-sync-client-devel -p /sbin/ldconfig
+
 %files -n sync-service
 %manifest sync-service.manifest
 %defattr(-,system,system,-)
-
 %{_bindir}/*
 %{_systemd_dir}/*
 /opt/usr/data/sync-manager/
