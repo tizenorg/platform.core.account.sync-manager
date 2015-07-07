@@ -2,9 +2,6 @@
 Description=sync manager service startup script
 
 [Service]
-User=system
-Group=system
-SmackProcessLabel=sync-service
 Type=simple
 ExecStart=/usr/bin/sync-service
 Restart=always
