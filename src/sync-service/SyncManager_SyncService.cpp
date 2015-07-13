@@ -380,9 +380,6 @@ sync_adapter_handle_send_result(
 		account_h account = NULL;
 		if (accountId != -1)
 		{
-			ret = account_connect();
-			SYNC_LOG_IF(ret != ACCOUNT_ERROR_NONE, "account access failed");
-
 			ret = account_create(&account);
 			SYNC_LOG_IF(ret != ACCOUNT_ERROR_NONE, "account create failed");
 

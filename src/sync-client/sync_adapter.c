@@ -77,17 +77,11 @@ void *run_sync(void *params)
 		account_h account = NULL;
 		int ret = 0;
 		if (sync_params->accountId != -1) {
-			ret = account_connect();
-			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_connect() failed");
-
 			ret = account_create(&account);
 			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_create() failed");
 
 			ret =  account_query_account_by_account_id(sync_params->accountId, &account);
 			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_query_account_by_account_id() failed %d");
-
-			ret = account_disconnect();
-			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_disconnect() failed");
 		}
 
 		ret = g_sync_adapter->start_sync_cb(account, sync_params->extra, sync_params->capability);
@@ -155,17 +149,11 @@ sync_adapter_on_stop_sync(
 	account_h account = NULL;
 	int ret = 0;
 	if (accountId != -1) {
-		ret = account_connect();
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_connect() failed");
-
 		ret = account_create(&account);
 		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_create() failed");
 
 		ret =  account_query_account_by_account_id(accountId, &account);
 		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_query_account_by_account_id() failed");
-
-		ret = account_disconnect();
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_disconnect() failed");
 	}
 
 	if (g_sync_adapter->cur_thread)	{

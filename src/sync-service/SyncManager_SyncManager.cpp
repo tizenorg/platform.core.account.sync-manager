@@ -914,19 +914,15 @@ SyncManager::Construct(void)
 
 	LOG_LOGE_BOOL(SetAppLaunchListener() == 0, "Failed to register app launch callback.");
 
-	ret = account_connect();
-	if (ret == ACCOUNT_ERROR_NONE)
-	{
-		UpdateRunningAccounts();
+	UpdateRunningAccounts();
 
-		if (account_subscribe_create(&__accountSubscriptionHandle) < 0)
-		{
-			LOG_LOGD("Failed to create account subscription handle");
-		}
-		else if (account_subscribe_notification(__accountSubscriptionHandle, OnAccountUpdated, this) < 0)
-		{
-			LOG_LOGD("Failed to register callback for account updation");
-		}
+	if (account_subscribe_create(&__accountSubscriptionHandle) < 0)
+	{
+		LOG_LOGD("Failed to create account subscription handle");
+	}
+	else if (account_subscribe_notification(__accountSubscriptionHandle, OnAccountUpdated, this) < 0)
+	{
+		LOG_LOGD("Failed to register callback for account updation");
 	}
 	else
 		LOG_LOGD("Account connect failed");
@@ -942,8 +938,6 @@ SyncManager::~SyncManager(void)
 
 	pthread_mutex_destroy(&__syncJobQueueMutex);
 	pthread_mutex_destroy(&__currJobQueueMutex);
-
-	account_disconnect();
 
 	DeRegisterForNetworkChange();
 	DeRegisterForStorageChange();
