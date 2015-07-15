@@ -440,6 +440,7 @@ sync_manager_add_sync_job(
 	{
 		LOG_LOGD("On-Demand Sync appid [%s]", app_id);
 		SyncService::GetInstance()->RequestSync(app_id, -1, pBundle, NULL);
+		LOGE("after SyncService::GetInstance()->RequestSync(app_id, -1, pBundle, NULL);");
 	}
 	else
 	{
@@ -447,10 +448,14 @@ sync_manager_add_sync_job(
 		guint pid = get_caller_pid(pInvocation);
 
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
+		LOGE("after SyncManager::GetInstance()->AddRunningAccount(accountId, pid);");
 		SyncService::GetInstance()->RequestSync(app_id, accountId, pBundle, pCapabilityArg);
+		LOGE("after SyncService::GetInstance()->RequestSync(app_id, accountId, pBundle, pCapabilityArg)");
 	}
 
 	tizen_sync_manager_complete_add_sync_job(pObject, pInvocation);
+	LOGE("after tizen_sync_manager_complete_add_sync_job(pObject, pInvocation);");
+
 	LOG_LOGD("sync service: Add sync job ends");
 
 	return true;

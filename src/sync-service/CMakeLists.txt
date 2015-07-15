@@ -26,9 +26,13 @@ IF(NOT DEFINED BINDIR)
 ENDIF(NOT DEFINED BINDIR)
 
 IF(NOT DEFINED SYSTEMD_DIR)
-	SET(SYSTEMD_DIR "/usr/lib/systemd/system")
+	SET(SYSTEMD_DIR "${LIBDIR}/systemd/system")
 ENDIF(NOT DEFINED SYSTEMD_DIR)
-SET(INCLUDEDIR "${PREFIX}/include")
+
+IF(NOT DEFINED INCLUDEDIR)
+	SET(INCLUDEDIR "${PREFIX}/include")
+ENDIF(NOT DEFINED INCLUDEDIR)
+
 
 INCLUDE_DIRECTORIES(
 	./
@@ -95,7 +99,9 @@ SET(PACKAGES
 		alarm-service
 		bundle
 		calendar-service2
-		contacts-service2)
+		contacts-service2
+		libtzplatform-config
+)
 
 #IF(_SEC_FEATURE_CONTAINER_ENABLE)
 #	SET(PACKAGES ${PACKAGES} vasum)

@@ -5,6 +5,17 @@ License:   Apache-2.0
 Summary:   Sync manager daemon
 Group:     Social & Content/API
 Source0:   %{name}-%{version}.tar.gz
+Source1:   sync-manager.service
+Source2:   org.tizen.sync.service
+Source3:   org.tizen.sync.conf
+
+%if "%{?profile}" == "wearable"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
+
+%if "%{?profile}" == "tv"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
 
 BuildRequires: cmake
 BuildRequires: pkgconfig(capi-system-info)
@@ -30,6 +41,7 @@ BuildRequires: pkgconfig(alarm-service)
 BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(calendar-service2)
 BuildRequires: pkgconfig(contacts-service2)
+BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: python-xml
 #BuildRequires: pkgconfig(vasum)
 
@@ -53,8 +65,8 @@ Group:      Application Framework/Development
 sync client provides sync adapter functionality to register sync adapters and to get callbacks.
 
 %define _pkgdir /usr
-%define _bindir %{_pkgdir}/bin
-%define _systemd_dir /usr/lib/systemd/system
+#%define _bindir %{_pkgdir}/bin
+#%define _systemd_dir /usr/lib/systemd/system
 
 %prep
 %setup -q
@@ -67,6 +79,8 @@ cmake \
 	-DPACKAGE_NAME=%{name} \
 	-DBINDIR=%{_bindir} \
 	-DLIBDIR=%{_libdir} \
+	-DINCLUDEDIR=%{_includedir} \
+	-DSYSTEMD_DIR=%{_unitdir} \
 	-D_SEC_FEATURE_CONTAINER_ENABLE:BOOL=${_CONTAINER_ENABLE} \
 	-DMANIFESTDIR=%{_manifestdir} \
 	-DVERSION=%{version}
@@ -75,7 +89,17 @@ make %{?jobs:-j%jobs}
 
 %install
 %make_install
-mkdir -p %{buildroot}/opt/usr/data/sync-manager
+mkdir -p %{buildroot}%{_unitdir}/multi-user.target.wants
+#install -m 644 %SOURCE1 %{buildroot}%{_unitdir}/sync-manager.service
+ln -s ../sync-manager.service %{buildroot}%{_unitdir}/multi-user.target.wants/sync-manager.service
+
+mkdir -p %{buildroot}/usr/share/dbus-1/system-services
+install -m 0644 %SOURCE2 %{buildroot}/usr/share/dbus-1/system-services/org.tizen.sync.service
+
+mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/system.d
+install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/dbus-1/system.d/
+
+mkdir -p %{buildroot}%{TZ_SYS_DATA}/sync-manager
 
 %clean
 rm -rf %{buildroot}
@@ -84,7 +108,7 @@ rm -rf %{buildroot}
 %post -n libcore-sync-client-devel -p /sbin/ldconfig
 
 %post
-chown system:system /opt/usr/data/sync-manager/
+chown system:system %{TZ_SYS_DATA}/sync-manager/
 systemctl enable sync-manager.service
 systemctl start sync-manager.service
 
@@ -94,9 +118,13 @@ systemctl start sync-manager.service
 %files -n sync-service
 %manifest sync-service.manifest
 %defattr(-,system,system,-)
+%config %{_sysconfdir}/dbus-1/system.d/org.tizen.sync.conf
 %{_bindir}/*
-%{_systemd_dir}/*
-/opt/usr/data/sync-manager/
+#%{_unitdir}/*
+%{TZ_SYS_DATA}/sync-manager/
+%{_unitdir}/sync-manager.service
+%{_unitdir}/multi-user.target.wants/sync-manager.service
+/usr/share/dbus-1/system-services/org.tizen.sync.service
 
 %files -n libcore-sync-client
 %manifest libcore-sync-client.manifest

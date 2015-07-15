@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <fstream>
 #include <sstream>
+#include <tzplatform_config.h>
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_SyncJobQueue.h"
@@ -41,6 +42,10 @@
 */
 
 #define SYNC_DIRECTORY "sync-manager";
+#define PATH_ACCOUNT tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/accounts.xml")
+#define PATH_SYNCJOBS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/syncjobs.xml")
+#define PATH_SYNCADAPTERS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/syncadapters.xml")
+#define PATH_STATUS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/statusinfo.bin")
 
 #ifndef MAX
 #define MAX(a, b) a>b?a:b
@@ -49,10 +54,10 @@
 
 //xml Tags Definitions
 //For Accounts.xml
-static char PATH_ACCOUNT[] = "/opt/usr/data/sync-manager/accounts.xml";
-static char PATH_SYNCJOBS[] = "/opt/usr/data/sync-manager/syncjobs.xml";
-static char PATH_SYNCADAPTERS[] = "/opt/usr/data/sync-manager/syncadapters.xml";
-static char PATH_STATUS[] = "/opt/usr/data/sync-manager/statusinfo.bin";
+//static char PATH_ACCOUNT[] = "/opt/usr/data/sync-manager/accounts.xml";
+//static char PATH_SYNCJOBS[] = "/opt/usr/data/sync-manager/syncjobs.xml";
+//static char PATH_SYNCADAPTERS[] = "/opt/usr/data/sync-manager/syncadapters.xml";
+//static char PATH_STATUS[] = "/opt/usr/data/sync-manager/statusinfo.bin";
 static const xmlChar _VERSION[]				= "1.0";
 
 
@@ -167,7 +172,7 @@ RepositoryEngine::ReadAccountData(void)
 
 	int maxCapabilityId = -1;
 	//Parse the Xml file
-	char* pDocName;
+	const char* pDocName;
 	xmlDocPtr doc = NULL;
 	xmlNodePtr cur = NULL;
 
@@ -315,7 +320,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 	LOG_LOGD("Read Sync jobs");
 
 	//Parse the Xml file
-	char* pDocName;
+	const char* pDocName;
 	xmlDocPtr doc = NULL;
 	xmlNodePtr cur = NULL;
 
@@ -413,7 +418,7 @@ RepositoryEngine::ReadSyncAdapters(void)
 	LOG_LOGD("Reading sync adapters");
 
 	//Parse the Xml file
-	char* pDocName;
+	const char* pDocName;
 	xmlDocPtr doc = NULL;
 	xmlNodePtr cur = NULL;
 

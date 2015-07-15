@@ -90,13 +90,16 @@ SyncManager::RequestSync(string appId, int accountId, const char* capability, bu
 	{
 		LOG_LOGD("Schedule account less sync");
 		ScheduleAccountLessSync(appId, REASON_USER_INITIATED, pExtras, 0, 0, false);
+		LOGE("after ScheduleAccountLessSync(appId, REASON_USER_INITIATED, pExtras, 0, 0, false);");
 	}
 	else
 	{
 		LOG_LOGD("Schedule sync for account ID %d and capability %s", accountId, capability);
 		ScheduleSync(appId, accountId, capability, REASON_USER_INITIATED, pExtras, 0, 0, false);
+		LOGE("after ScheduleSync(appId, accountId, capability, REASON_USER_INITIATED, pExtras, 0, 0, false);");
 	}
 
+	LOGE("before return SYNC_ERROR_NONE");
 	return SYNC_ERROR_NONE;
 }
 
@@ -1335,10 +1338,12 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 	{
 		int pid = GetAccountPid(accountId);
 		accounts.insert(make_pair(accountId, pid));
+		LOGE("after accounts.insert(make_pair(accountId, pid));");
 	}
 	else
 	{
 		accounts = __runningAccounts;
+		LOGE("after accounts = __runningAccounts;");
 		LOG_LOGE_VOID(accounts.size() != 0, "Accounts are not available yet, returning");
 	}
 
@@ -1369,6 +1374,8 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 		syncSource = SOURCE_SERVER;
 	}
 
+	LOGE("after syncSource = SOURCE_SERVER;");
+
 	map<int, int>::iterator it;
 	for (it = accounts.begin(); it != accounts.end(); it++)
 	{
@@ -1378,15 +1385,18 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 		account_h currentAccount = NULL;
 		int ret = account_create(&currentAccount);
 		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
+		LOGE("after account_create");
 
 		KNOX_CONTAINER_ZONE_ENTER(pid);
 		ret =  account_query_account_by_account_id(account_id, &currentAccount);
 		KNOX_CONTAINER_ZONE_EXIT();
 		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account query failed");
+		LOGE("after account_query_account_by_account_id(account_id, &currentAccount);");
 
 		account_sync_state_e syncSupport;
 		ret = account_get_sync_support(currentAccount,  &syncSupport);
 		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
+		LOGE("after account_get_sync_support(currentAccount,  &syncSupport);");
 
 		if (syncSupport == ACCOUNT_SYNC_INVALID || syncSupport == ACCOUNT_SYNC_NOT_SUPPORT)
 		{
@@ -1406,6 +1416,7 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 			LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account get capability all failed");
 
 			LOG_LOGD("Sync jobs will be added for all sync enabled capabilities of the account");
+			LOGE("after account_get_capability_all(currentAccount, get_capability_all_cb, (void *)&syncableCapabilities);");
 		}
 		else
 		{
@@ -1427,11 +1438,14 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 			LOG_LOGD("Current capability %s", currentCapability.c_str());
 
 			int syncable = GetSyncable(currentAccount, currentCapability);
+			LOGE("after int syncable = GetSyncable(currentAccount, currentCapability);");
 			if (syncable == 0)
 			{
 				continue;
 			}
+			LOGE("after syncable != 0");
 			char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(currentAccount, currentCapability);
+			LOGE("after char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(currentAccount, currentCapability);");
 			if (pSyncAdapter == NULL)
 			{
 				LOG_LOGD("Sync disabled for account capability pair");
@@ -1489,6 +1503,7 @@ SyncManager::ScheduleSync(string appId, int accountId, string capability, int re
 				pJob = NULL;
 			}
 		}
+		LOGE("after for()");
 	}
 
 	if (!pExtras)
