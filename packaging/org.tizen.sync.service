@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.tizen.sync
+Exec=/usr/bin/sync-service
+User=system
+Group=system

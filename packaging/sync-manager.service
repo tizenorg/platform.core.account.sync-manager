@@ -6,6 +6,8 @@ Type=simple
 ExecStart=/usr/bin/sync-service
 Restart=always
 RestartSec=1
+User=system
+Group=system
 
 [Install]
 WantedBy=multi-user.target

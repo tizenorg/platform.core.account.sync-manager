@@ -451,6 +451,7 @@ sync_manager_add_sync_job(
 	}
 
 	tizen_sync_manager_complete_add_sync_job(pObject, pInvocation);
+
 	LOG_LOGD("sync service: Add sync job ends");
 
 	return true;

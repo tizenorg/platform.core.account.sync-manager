@@ -22,6 +22,7 @@
 #include "SyncManager_JsonParser.h"
 #include "sync-log.h"
 #include "sync-error.h"
+#include <tzplatform_config.h>
 
 
 /*namespace _SyncManager
@@ -78,7 +79,9 @@ JsonParser::parseAccountData()
 	 JsonNode* pNode;
 	 gboolean gRet = TRUE;
 	 GError *error = NULL;
-	 gchar* filename = "/opt/usr/account.json";
+//	 gchar* filename = "/opt/usr/account.json";
+	 const gchar* filename = tzplatform_mkpath(TZ_SYS_DATA, "sync-manager/account.json");
+
 	 g_type_init();
 
 	 if (mpParser)
