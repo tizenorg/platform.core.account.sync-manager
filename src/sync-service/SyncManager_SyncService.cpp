@@ -73,13 +73,19 @@ void convert_to_path(char app_id[])
 int
 SyncService::StartService()
 {
-	if (SyncManager::GetInstance() == NULL)
+	SyncManager* pSyncManager = SyncManager::GetInstance();
+	if (pSyncManager == NULL)
 	{
 		LOG_LOGD("Failed to initialize sync manager");
 		return -1;
 	}
+	bool res = pSyncManager->Construct();
+	if (!res)
+	{
+		LOG_LOGD("Sync manager construct failed");
+	}
 
-	return 0;
+	return res;
 }
 
 TizenSyncAdapter* adapter;
@@ -616,6 +622,12 @@ sync_manager_add_sync_adapter(
 	}
 
 	SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
+	if (pAggregator == NULL)
+	{
+		LOG_LOGD("sync adapter aggregator is NULL");
+		tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
+		return true;
+	}
 	if (account_less_sa)
 	{
 		LOG_LOGD("app id %s svc-app id %s ", pkgId.c_str(), pAppId);

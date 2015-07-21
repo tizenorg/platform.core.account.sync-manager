@@ -45,24 +45,6 @@
 
 int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
 
-template<>
-SyncManager*
-Singleton< SyncManager >::GetInstance()
-{
-	if (__pInstance == NULL)
-	{
-		__pInstance = new (std::nothrow) SyncManager();
-		if (__pInstance == NULL)
-		{
-			LOG_LOGD("Syncmanager construction failed");
-		}
-		else
-			__pInstance->Construct();
-	}
-	return __pInstance;
-
-}
-
 
 void
 SyncManager::SetSyncSetting(bool enable)
