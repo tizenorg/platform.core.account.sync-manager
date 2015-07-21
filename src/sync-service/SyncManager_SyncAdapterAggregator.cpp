@@ -148,6 +148,10 @@ bool
 SyncAdapterAggregator::HasSyncAdapter(const char* pAccountProviderId, const char* pServiceAppId, const char* pCapability)
 {
 	bool result = false;
+	if (__syncAdapterList.empty() == true)
+	{
+		return result;
+	}
 	pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret;
 	ret = __syncAdapterList.equal_range(pAccountProviderId);
 
