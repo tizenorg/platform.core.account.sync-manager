@@ -70,7 +70,7 @@ NetworkChangeListener::NetworkChangeListener(void)
 	int ret = connection_create(&connection);
 	if (ret != CONNECTION_ERROR_NONE)
 	{
-		LOG_LOGD("create connection failed");
+		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));
 	}
 }
 
@@ -92,7 +92,7 @@ NetworkChangeListener::IsWifiConnected()
 	ret = connection_get_wifi_state(connection, &state);
 	if (ret != CONNECTION_ERROR_NONE)
 	{
-		LOG_LOGD("Connection API failure");
+		LOG_LOGD("Connection wifi failure %d, %s", ret, get_error_message(ret));
 	}
 	return (state == CONNECTION_WIFI_STATE_CONNECTED);
 }
@@ -106,7 +106,7 @@ NetworkChangeListener::IsDataConnectionPresent()
 	ret = connection_get_cellular_state(connection, &state);
 	if (ret != CONNECTION_ERROR_NONE)
 	{
-		LOG_LOGD("Connection API failure");
+		LOG_LOGD("Connection cellular failure %d, %s", ret, get_error_message(ret));
 	}
 	return (state == CONNECTION_CELLULAR_STATE_CONNECTED);
 }
@@ -119,7 +119,7 @@ NetworkChangeListener::RegisterNetworkChangeListener(void)
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
 	if (ret != CONNECTION_ERROR_NONE)
 	{
-		LOG_LOGD("Registration of network change listener failed");
+		LOG_LOGD("Registration of network change listener failed %d, %s", ret, get_error_message(ret));
 	}
 	return ret;
 }
