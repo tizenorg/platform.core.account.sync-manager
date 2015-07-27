@@ -757,11 +757,14 @@ __initialize_dbus()
 void
 SyncService::InitializeDbus(void)
 {
+	LOG_LOGD("Dbus initialization starts");
+
 	if (__initialize_dbus() == false)
 	{
 		LOG_LOGD("__initialize_dbus failed");
 		exit(1);
 	}
+
 	g_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
 }
 

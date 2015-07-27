@@ -723,9 +723,11 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 int
 SyncManager::SetAppLaunchListener(void)
 {
-	if (aul_listen_app_launch_signal(OnAppLaunched, this) < 0)
+	int ret = aul_listen_app_launch_signal(OnAppLaunched, this);
+
+	if (ret < 0)
 	{
-		LOG_LOGD("aul_listen_app_launch_signal failed.");
+		LOG_LOGD("aul_listen_app_launch_signal failed : %d, %s", ret, get_error_message(ret));
 		return -1;
 	}
 
