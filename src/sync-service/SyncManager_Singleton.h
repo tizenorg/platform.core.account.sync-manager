@@ -30,14 +30,17 @@ class Singleton
 public:
 	static TYPE* GetInstance(void)
 	{
+//		LOG_LOGD("singleton GetInstance called");
 		if (__pInstance == NULL)
 		{
+			LOG_LOGD("singleton creation called");
 			__pInstance = new (std::nothrow) TYPE;
 			if (__pInstance == NULL)
 			{
 				LOG_LOGD("heap error");
 			}
 		}
+//		LOG_LOGD("singleton GetInstance end");
 		return __pInstance;
 	}
 	static void Destroy(void)
