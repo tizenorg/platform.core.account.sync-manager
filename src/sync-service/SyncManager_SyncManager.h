@@ -163,8 +163,6 @@ private:
 
 	int SetPkgMgrClientStatusChangedListener(void);
 
-	int SetAppLaunchListener(void);
-
 	void ClearScheduledSyncJobs(string appId, account_h account, string capability);
 
 	void CancelActiveSyncJob(string appId, account_h account, string capability);

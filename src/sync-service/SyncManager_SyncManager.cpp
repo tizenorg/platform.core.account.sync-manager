@@ -461,35 +461,6 @@ static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkg
 }
 
 
-static int OnAppLaunched(int pid, void* pData)
-{
-	char appId[255];
-	memset(appId, 0, sizeof(appId));
-/*
-	if (aul_app_get_appid_bypid(pid, appId, sizeof(appId)) == 0)
-	{
-		char* pHomeScreen = vconf_get_str(VCONF_HOME_SCREEN);
-		char* pLockScreen = vconf_get_str(VCONF_LOCK_SCREEN);
-
-		if (pHomeScreen && pLockScreen)
-		{
-			SyncManager* pSyncManager = static_cast< SyncManager* > (pData);
-			if (pSyncManager)
-			{
-				string pkgId = pSyncManager->GetPkgIdByAppId(appId);
-				if (!pkgId.empty() && pkgId.compare(pLockScreen) != 0 && pkgId.compare(pHomeScreen) != 0)
-				{
-					LOG_LOGD("OnAppLaunched[appId:%s, pkgId:%s], calling AlertForChange", appId, pkgId.c_str());
-					pSyncManager->AlertForChange();
-				}
-			}
-		}
-	}
-*/
-	return 0;
-}
-
-
 string
 SyncManager::GetPkgIdByAppId(const char* pAppId)
 {
@@ -720,21 +691,6 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 }
 
 
-int
-SyncManager::SetAppLaunchListener(void)
-{
-	int ret = aul_listen_app_launch_signal(OnAppLaunched, this);
-
-	if (ret < 0)
-	{
-		LOG_LOGD("aul_listen_app_launch_signal failed : %d, %s", ret, get_error_message(ret));
-		return -1;
-	}
-
-	return 0;
-}
-
-
 RepositoryEngine*
 SyncManager::GetSyncRepositoryEngine(void)
 {
@@ -895,8 +851,6 @@ SyncManager::Construct(void)
 	LOG_LOGE_BOOL(__pPkgmgrClient != NULL, "__pPkgmgrClient is null");
 
 	LOG_LOGE_BOOL(SetPkgMgrClientStatusChangedListener() == 0, "Failed to register for uninstall callback.");
-
-	LOG_LOGE_BOOL(SetAppLaunchListener() == 0, "Failed to register app launch callback.");
 
 	UpdateRunningAccounts();
 
