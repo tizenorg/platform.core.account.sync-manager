@@ -450,47 +450,7 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 	bundle_add_str(extra, SYNC_OPTION_NO_RETRY, "false");
 	bundle_add_str(extra, SYNC_OPTION_EXPEDITED, "false");
 
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_5MIN);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_10MIN);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_15MIN);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_20MIN);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_30MIN);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_45MIN);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
@@ -562,7 +522,7 @@ int utc_sync_manager_add_periodic_sync_job_p2(void)
 	bundle_add_str(extra, SYNC_OPTION_NO_RETRY, "false");
 	bundle_add_str(extra, SYNC_OPTION_EXPEDITED, "false");
 
-	ret = sync_manager_add_periodic_sync_job(NULL, NULL, extra, SYNC_PERIOD_INTERVAL_5MIN);
+	ret = sync_manager_add_periodic_sync_job(NULL, NULL, extra, SYNC_PERIOD_INTERVAL_30MIN);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_periodic_sync_job(NULL, NULL);
@@ -582,7 +542,7 @@ int utc_sync_manager_add_periodic_sync_job_n(void)
 	sync_manager_setup_adapter();
 	assert(connected_sync);
 
-	ret = sync_manager_add_periodic_sync_job(NULL, capability_invalid, NULL, SYNC_PERIOD_INTERVAL_5MIN);
+	ret = sync_manager_add_periodic_sync_job(NULL, capability_invalid, NULL, SYNC_PERIOD_INTERVAL_30MIN);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
 	return 0;
@@ -629,7 +589,7 @@ int utc_sync_manager_remove_periodic_sync_job_p(void)
 	bundle_add_str(extra, SYNC_OPTION_NO_RETRY, "false");
 	bundle_add_str(extra, SYNC_OPTION_EXPEDITED, "false");
 
-	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_5MIN);
+	ret = sync_manager_add_periodic_sync_job(account, capability_cal, extra, SYNC_PERIOD_INTERVAL_30MIN);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_periodic_sync_job(account, capability_cal);
@@ -653,7 +613,7 @@ int utc_sync_manager_remove_periodic_sync_job_p2(void)
 	bundle_add_str(extra, SYNC_OPTION_NO_RETRY, "false");
 	bundle_add_str(extra, SYNC_OPTION_EXPEDITED, "false");
 
-	ret = sync_manager_add_periodic_sync_job(NULL, NULL, extra, SYNC_PERIOD_INTERVAL_5MIN);
+	ret = sync_manager_add_periodic_sync_job(NULL, NULL, extra, SYNC_PERIOD_INTERVAL_30MIN);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_periodic_sync_job(NULL, NULL);

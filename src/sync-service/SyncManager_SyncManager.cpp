@@ -99,10 +99,10 @@ SyncManager::CancelSync(string appId, account_h account, const char* capability)
 int
 SyncManager::AddPeriodicSyncJob(string appId, int accountId, const char* capability, bundle* pExtras, long period)
 {
-	if (period < 300)
+	if (period < 1800)
 	{
-		LOG_LOGD("Requested period %d, rounding up to 300 sec", period);
-		period = 300;
+		LOG_LOGD("Requested period %d, rounding up to 1800 sec", period);
+		period = 1800;
 	}
 
 	long defaultFlexTime = __pSyncRepositoryEngine->CalculateDefaultFlexTime(period);

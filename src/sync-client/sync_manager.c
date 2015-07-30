@@ -238,40 +238,10 @@ int get_interval(sync_period_e period)
 {
 	int frequency = 0;
 	switch (period) {
-	case SYNC_PERIOD_INTERVAL_5MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_5MIN");
-		frequency = 5;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_10MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_10MIN");
-		frequency = 10;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_15MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_15MIN");
-		frequency = 15;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_20MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_20MIN");
-		frequency = 20;
-		break;
-	}
 	case SYNC_PERIOD_INTERVAL_30MIN:
 	{
 		LOG_LOGD("SYNC_PERIOD_INTERVAL_30MIN");
 		frequency = 30;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_45MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_45MIN");
-		frequency = 45;
 		break;
 	}
 	case SYNC_PERIOD_INTERVAL_1H:
@@ -326,7 +296,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *capability
 {
 	SYNC_LOGE_RET_RES(g_sync_manager != NULL, SYNC_ERROR_SYSTEM, "sync_manager_connected should be called first");
 	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
-	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_5MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
+	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_30MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
 
 	bool is_account_less_sync = false;
 	if (account == NULL && capability == NULL)
