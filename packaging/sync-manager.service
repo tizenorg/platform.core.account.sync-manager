@@ -4,10 +4,8 @@ Description=sync manager service startup script
 [Service]
 Type=simple
 ExecStart=/usr/bin/sync-service
-Restart=always
-RestartSec=1
-User=system
-Group=system
+#Restart=always
+#RestartSec=1
 
 [Install]
 WantedBy=multi-user.target

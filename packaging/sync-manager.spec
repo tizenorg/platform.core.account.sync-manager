@@ -108,7 +108,7 @@ rm -rf %{buildroot}
 %post -n libcore-sync-client-devel -p /sbin/ldconfig
 
 %post
-chown system:system %{TZ_SYS_DATA}/sync-manager/
+#chown system:system %{TZ_SYS_DATA}/sync-manager/
 systemctl enable sync-manager.service
 systemctl start sync-manager.service
 
@@ -117,7 +117,7 @@ systemctl start sync-manager.service
 
 %files -n sync-service
 %manifest sync-service.manifest
-%defattr(-,system,system,-)
+#%defattr(-,system,system,-)
 %config %{_sysconfdir}/dbus-1/system.d/org.tizen.sync.conf
 %{_bindir}/*
 #%{_unitdir}/*
