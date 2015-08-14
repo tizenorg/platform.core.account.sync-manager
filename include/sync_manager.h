@@ -61,7 +61,12 @@ extern "C"
  */
 typedef enum
 {
-	SYNC_PERIOD_INTERVAL_30MIN = 0,		/**< Sync within 30 minutes */
+	SYNC_PERIOD_INTERVAL_5MIN = 0,		/**< Sync within 5 minutes */
+	SYNC_PERIOD_INTERVAL_10MIN,			/**< Sync within 10 minutes */
+	SYNC_PERIOD_INTERVAL_15MIN,			/**< Sync within 15 minutes */
+	SYNC_PERIOD_INTERVAL_20MIN,			/**< Sync within 20 minutes */
+	SYNC_PERIOD_INTERVAL_30MIN,			/**< Sync within 30 minutes */
+	SYNC_PERIOD_INTERVAL_45MIN,			/**< Sync within 45 minutes */
 	SYNC_PERIOD_INTERVAL_1H,			/**< Sync within 1 hour */
 	SYNC_PERIOD_INTERVAL_2H,			/**< Sync within 2 hours */
 	SYNC_PERIOD_INTERVAL_3H,			/**< Sync within 3 hours */
