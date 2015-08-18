@@ -20,6 +20,7 @@
  */
 
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <map>
 #include <set>
 #include <climits>
@@ -29,6 +30,7 @@
 #include <glib.h>
 #include <aul.h>
 #include <pkgmgr-info.h>
+#include <tzplatform_config.h>
 #include "sync-error.h"
 #include "SyncManager_SyncManager.h"
 #include "SyncManager_SyncAdapterAggregator.h"
@@ -42,6 +44,8 @@
 
 #define VCONF_HOME_SCREEN  "db/setting/homescreen/package_name"
 #define VCONF_LOCK_SCREEN  "file/private/lockscreen/pkgname"
+
+#define SYNC_DATA_DIR tzplatform_mkpath(TZ_USER_DATA, "/sync-manager")
 
 int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
 
@@ -799,6 +803,11 @@ SyncManager::Construct(void)
 	__isStorageLow = (storageState == LOW_MEMORY_NORMAL) ? false : true;
 
 	int upsMode;
+
+	if (-1 == access (SYNC_DATA_DIR, F_OK)) {
+		mkdir(SYNC_DATA_DIR, 755);
+	}
+
 	ret = vconf_get_int(VCONFKEY_SETAPPL_PSMODE, &upsMode);
 	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed");
 	__isUPSModeEnabled = (upsMode == SETTING_PSMODE_EMERGENCY) ? true : false;
@@ -866,6 +875,7 @@ SyncManager::Construct(void)
 		LOG_LOGD("Account connect failed");
 
 	Initialize();
+
 	return true;
 }
 

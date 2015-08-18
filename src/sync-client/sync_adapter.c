@@ -190,7 +190,7 @@ int sync_adapter_init(const char *capability)
 
 	GError *error = NULL;
 	GDBusConnection *connection = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
@@ -241,7 +241,7 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
 	pid_t pid = getpid();
 	GError *error = NULL;
 	GDBusConnection *connection = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_SYSTEM, "System error occured %s", error->message);
 
 	char obj_path[50];

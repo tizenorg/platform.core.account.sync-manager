@@ -95,7 +95,7 @@ int sync_manager_connect(void)
 
 	GDBusConnection *connection = NULL;
 	GError *error = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
 			G_DBUS_PROXY_FLAGS_NONE,

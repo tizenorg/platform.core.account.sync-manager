@@ -80,7 +80,7 @@ JsonParser::parseAccountData()
 	 gboolean gRet = TRUE;
 	 GError *error = NULL;
 //	 gchar* filename = "/opt/usr/account.json";
-	 const gchar* filename = tzplatform_mkpath(TZ_SYS_DATA, "sync-manager/account.json");
+	 const gchar* filename = tzplatform_mkpath(TZ_USER_DATA, "/sync-manager/account.json");
 
 	 g_type_init();
 

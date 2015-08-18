@@ -85,7 +85,7 @@ SyncService::StartService()
 		LOG_LOGD("Sync manager construct failed");
 	}
 
-	return res;
+	return 0;
 }
 
 TizenSyncAdapter* adapter;
@@ -735,7 +735,7 @@ OnNameLost (GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 static bool
 __initialize_dbus()
 {
-	static guint ownerId = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+	static guint ownerId = g_bus_own_name (G_BUS_TYPE_SESSION,
 			"org.tizen.sync",
 			G_BUS_NAME_OWNER_FLAGS_NONE,
 			OnBusAcquired,

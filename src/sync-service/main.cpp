@@ -93,7 +93,7 @@ main(int argc, char **argv)
 	DBusError error;
 
 	dbus_error_init(&error);
-	DBusConnection* pConn = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+	DBusConnection* pConn = dbus_bus_get(DBUS_BUS_SESSION, &error);
 
 	if (dbus_error_is_set(&error))
 	{

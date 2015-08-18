@@ -42,10 +42,11 @@
 */
 
 #define SYNC_DIRECTORY "sync-manager";
-#define PATH_ACCOUNT tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/accounts.xml")
-#define PATH_SYNCJOBS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/syncjobs.xml")
-#define PATH_SYNCADAPTERS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/syncadapters.xml")
-#define PATH_STATUS tzplatform_mkpath(TZ_SYS_DATA,"sync-manager/statusinfo.bin")
+#define SYNC_DATA_DIR tzplatform_mkpath(TZ_USER_DATA, "/sync-manager")
+#define PATH_ACCOUNT tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/accounts.xml")
+#define PATH_SYNCJOBS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/syncjobs.xml")
+#define PATH_SYNCADAPTERS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/syncadapters.xml")
+#define PATH_STATUS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/statusinfo.bin")
 
 #ifndef MAX
 #define MAX(a, b) a>b?a:b
