@@ -40,24 +40,21 @@ public:
 
 	~CapabilityInfo(void);
 
-	CapabilityInfo(string appId, account_h account, string capability, int id);
+	CapabilityInfo(string capability);
+
+	void AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob);
+
+	void RemovePeriodicSyncJob(PeriodicSyncJob* pJob);
+
+	bool RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob);
 
 	CapabilityInfo(const CapabilityInfo& accountInfo);
 
 	CapabilityInfo& operator =(const CapabilityInfo& capabilityInfo);
 
 public:
-	string appId;
-	account_h accountHandle;
-	string capability;
-	bool isEnabled;
-	int syncable;
-	int id;
-	long backOffTime;
-	long backOffDelay;
-	long delayUntil;
-	vector<PeriodicSyncJob*> periodicSyncList;
-
+	string __capability;
+	map<int, PeriodicSyncJob*> __periodicSyncList;
 };
 //}//_SyncManager
 #endif // SYNC_SERVICE_CAPABILITY_INFO_H

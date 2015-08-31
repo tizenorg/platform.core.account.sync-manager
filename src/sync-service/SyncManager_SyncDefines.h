@@ -43,6 +43,7 @@
 
 #endif
 
+typedef int account_id;
 
 enum BluetoothStatus
 {
@@ -211,13 +212,22 @@ enum SyncStatus
 	SYNC_STATUS_SUCCESS = 0,
 	SYNC_STATUS_CANCELLED =  -1,
 	SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS = -2,
-	SYNC_STATUS_FAILURE = -3
+	SYNC_STATUS_FAILURE = -3,
+	SYNC_STATUS_UNKNOWN = -4
 };
 
+#define SYNC_JOB_LIMIT 100
 class SyncJob;
 
 struct Message
 {
+	Message()
+	{
+		acc = NULL;
+		pSyncJob = NULL;
+		res = SYNC_STATUS_UNKNOWN;
+	}
+
 	SyncDispatchMessage type;
 	account_h acc;
 	std::string capability;

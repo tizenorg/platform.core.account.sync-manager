@@ -32,10 +32,12 @@
 
 #define SYNC_MANAGER_DBUS_PATH "/org/tizen/sync/manager"
 #define SYNC_ADAPTER_DBUS_PATH "/org/tizen/sync/adapter"
+#define SYNC_ERROR_PREFIX "org.tizen.sync.Error"
 
 
 typedef struct sync_manager_s {
 	TizenSyncManager *ipcObj;
+	sync_manager_sync_job_cb sync_job_cb;
 	char *appid;
 } sync_manager_s;
 
@@ -82,20 +84,58 @@ char *proc_get_cmdline_self()
 }
 
 
-int sync_manager_connect(void)
+GDBusErrorEntry _sync_errors[] = {
+	{SYNC_ERROR_NONE, SYNC_ERROR_PREFIX".NoError"},
+	{SYNC_ERROR_OUT_OF_MEMORY, SYNC_ERROR_PREFIX".OutOfMemory"},
+	{SYNC_ERROR_IO_ERROR, SYNC_ERROR_PREFIX".IOError"},
+	{SYNC_ERROR_PERMISSION_DENIED, SYNC_ERROR_PREFIX".PermissionDenied"},
+	{SYNC_ERROR_ALREADY_IN_PROGRESS, SYNC_ERROR_PREFIX".AlreadyInProgress"},
+	{SYNC_ERROR_INVALID_OPERATION, SYNC_ERROR_PREFIX".InvalidOperation"},
+	{SYNC_ERROR_INVALID_PARAMETER, SYNC_ERROR_PREFIX".InvalidParameter"},
+	{SYNC_ERROR_QUOTA_EXCEEDED, SYNC_ERROR_PREFIX".QuotaExceeded"},
+	{SYNC_ERROR_UNKNOWN, SYNC_ERROR_PREFIX".Unknown"},
+	{SYNC_ERROR_SYSTEM, SYNC_ERROR_PREFIX".System"},
+	{SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, SYNC_ERROR_PREFIX".SyncAdapterIsNotFound"},
+};
+
+
+static int _sync_get_error_code(bool is_success, GError *error)
+{
+	if (!is_success) {
+		LOG_LOGD("Received error Domain[%d] Message[%s] Code[%d]", error->domain, error->message, error->code);
+
+		if (g_dbus_error_is_remote_error(error)) {
+			gchar *remote_error = g_dbus_error_get_remote_error(error);
+			if (remote_error) {
+				LOG_LOGD("Remote error[%s]", remote_error);
+
+				int error_enum_count = G_N_ELEMENTS(_sync_errors);
+				int i = 0;
+				for (i = 0; i < error_enum_count; i++) {
+					if (g_strcmp0(_sync_errors[i].dbus_error_name, remote_error) == 0) {
+						LOG_LOGD("Remote error code matched[%d]", _sync_errors[i].error_code);
+						return _sync_errors[i].error_code;
+					}
+				}
+			}
+		}
+		/*All undocumented errors mapped to SYNC_ERROR_UNKNOWN*/
+		return SYNC_ERROR_UNKNOWN;
+	}
+	return SYNC_ERROR_NONE;
+}
+
+
+static int initialize_connection()
 {
 	SYNC_LOGE_RET_RES(g_sync_manager == NULL, SYNC_ERROR_NONE, "sync manager already connected");
 
 	pid_t pid = getpid();
 	char *appId = NULL;
 
-	int ret = app_manager_get_app_id(pid, &appId);
-	if (ret != APP_MANAGER_ERROR_NONE)
-		appId = proc_get_cmdline_self();
-
 	GDBusConnection *connection = NULL;
 	GError *error = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
 			G_DBUS_PROXY_FLAGS_NONE,
@@ -120,115 +160,11 @@ int sync_manager_connect(void)
 	if (g_sync_manager == NULL)
 		return SYNC_ERROR_OUT_OF_MEMORY;
 
+	int ret = app_manager_get_app_id(pid, &appId);
+	if (ret != APP_MANAGER_ERROR_NONE)
+		appId = proc_get_cmdline_self();
 	g_sync_manager->ipcObj = ipcObj;
 	g_sync_manager->appid = appId;
-
-	return SYNC_ERROR_NONE;
-}
-
-
-void sync_manager_disconnect(void)
-{
-	if (g_sync_manager) {
-		if (g_sync_manager->appid)
-			free(g_sync_manager->appid);
-
-		free(g_sync_manager);
-		g_sync_manager = NULL;
-	}
-}
-
-
-int sync_manager_add_sync_job(account_h account, const char *capability, bundle *extra)
-{
-	SYNC_LOGE_RET_RES(g_sync_manager != NULL, SYNC_ERROR_SYSTEM, "sync_manager_connected should be called first");
-	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
-
-	LOG_LOGC("sync client: %s requesting one time Sync", g_sync_manager->appid);
-
-	bool is_account_less_sync = false;
-	if (account == NULL && capability == NULL) {
-		is_account_less_sync = true;
-		LOG_LOGC("sync client: initiating account less sync");
-	}
-
-	if (capability != NULL && strstr(capability, "http://tizen.org/account/capability/") == NULL) {
-		LOG_LOGC("sync client: invalid capability");
-
-		return SYNC_ERROR_INVALID_PARAMETER;
-	}
-
-	GVariant *ext_gvariant = NULL;
-	if (extra != NULL) {
-		ext_gvariant = marshal_bundle(extra);
-		if (ext_gvariant == NULL) {
-			LOG_LOGC("sync client: marshalling failed");
-
-			return SYNC_ERROR_SYSTEM;
-		}
-	}
-
-	int id = -1;
-	if (!is_account_less_sync) {
-		int ret = account_get_account_id(account, &id);
-		if (ret != 0) {
-			LOG_LOGC("sync client: account_get_account_id failure");
-
-			return SYNC_ERROR_INVALID_PARAMETER;
-		}
-		LOG_LOGC("sync client: account_get_account_id = %d", id);
-	}
-
-	GError *error = NULL;
-	tizen_sync_manager_call_add_sync_job_sync(g_sync_manager->ipcObj, is_account_less_sync, id, ext_gvariant, capability, g_sync_manager->appid, NULL, &error);
-	if (error != NULL) {
-		LOG_LOGC("sync client: gdbus error [%s]", error->message);
-
-		return SYNC_ERROR_IO_ERROR;
-	}
-
-	return SYNC_ERROR_NONE;
-}
-
-
-int sync_manager_remove_sync_job(account_h account, const char *capability)
-{
-	SYNC_LOGE_RET_RES(g_sync_manager != NULL, SYNC_ERROR_SYSTEM, "sync_manager_connected should be called first");
-	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
-
-	LOG_LOGC("sync client: %s remove sync job", g_sync_manager->appid);
-
-	bool is_account_less_sync = false;
-	if (account == NULL && capability == NULL) {
-		is_account_less_sync = true;
-		LOG_LOGC("sync client: initiating account less request");
-	}
-
-	if (capability != NULL && strstr(capability, "http://tizen.org/account/capability/") == NULL) {
-		LOG_LOGC("sync client: invalid capability");
-
-		return SYNC_ERROR_INVALID_PARAMETER;
-	}
-
-	int id = -1;
-	if (!is_account_less_sync) {
-		int ret = account_get_account_id(account, &id);
-		if (ret != 0) {
-			LOG_LOGC("sync client: account_get_account_id failure");
-
-			return SYNC_ERROR_INVALID_PARAMETER;
-		}
-		LOG_LOGC("sync client: account_get_account_id = %d", id);
-	}
-
-	GError *error = NULL;
-	tizen_sync_manager_call_remove_sync_job_sync(g_sync_manager->ipcObj, is_account_less_sync, id, capability, g_sync_manager->appid, NULL, &error);
-
-	if (error != NULL) {
-		LOG_LOGC("sync client: gdbus error [%s]", error->message);
-
-		return SYNC_ERROR_IO_ERROR;
-	}
 
 	return SYNC_ERROR_NONE;
 }
@@ -238,40 +174,10 @@ int get_interval(sync_period_e period)
 {
 	int frequency = 0;
 	switch (period) {
-	case SYNC_PERIOD_INTERVAL_5MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_5MIN");
-		frequency = 5;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_10MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_10MIN");
-		frequency = 10;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_15MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_15MIN");
-		frequency = 15;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_20MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_20MIN");
-		frequency = 20;
-		break;
-	}
 	case SYNC_PERIOD_INTERVAL_30MIN:
 	{
 		LOG_LOGD("SYNC_PERIOD_INTERVAL_30MIN");
 		frequency = 30;
-		break;
-	}
-	case SYNC_PERIOD_INTERVAL_45MIN:
-	{
-		LOG_LOGD("SYNC_PERIOD_INTERVAL_45MIN");
-		frequency = 45;
 		break;
 	}
 	case SYNC_PERIOD_INTERVAL_1H:
@@ -322,104 +228,202 @@ int get_interval(sync_period_e period)
 }
 
 
-int sync_manager_add_periodic_sync_job(account_h account, const char *capability, bundle *extra, sync_period_e sync_period)
+int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
-	SYNC_LOGE_RET_RES(g_sync_manager != NULL, SYNC_ERROR_SYSTEM, "sync_manager_connected should be called first");
-	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
-	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_5MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
-
-	bool is_account_less_sync = false;
-	if (account == NULL && capability == NULL)
-		is_account_less_sync = true;
-
-	if (capability != NULL && strstr(capability, "http://tizen.org/account/capability/") == NULL) {
-		LOG_LOGC("sync client: invalid capability %s", capability);
-		return SYNC_ERROR_INVALID_PARAMETER;
+	if (!g_sync_manager) {
+		LOG_LOGD("Sync manager is not initialized yet");
+		initialize_connection();
 	}
+
+	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
+
+	LOG_LOGC("sync client: %s requesting one time sync", g_sync_manager->appid);
+
+	int ret = ACCOUNT_ERROR_NONE;
 	int id = -1;
-	if (!is_account_less_sync) {
-		int ret = account_get_account_id(account, &id);
+	if (account) {
+		ret = account_get_account_id(account, &id);
 		if (ret != 0) {
 			LOG_LOGC("sync client: account_get_account_id failure");
-
-			return SYNC_ERROR_INVALID_PARAMETER;
+			return SYNC_ERROR_SYSTEM;
 		}
-		LOG_LOGC("appid [%s] accid [%d] capability [%s] ", g_sync_manager->appid, id, capability);
+		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s] ", g_sync_manager->appid, id, sync_job_name);
 	} else
-		LOG_LOGC("appid [%s] ", g_sync_manager->appid);
+		LOG_LOGC("appid [%s] sync_job_name [%s] ", g_sync_manager->appid, sync_job_name);
+
+	GError *error = NULL;
+	GVariant *user_data = marshal_bundle(sync_job_user_data);
+
+	bool is_success = tizen_sync_manager_call_add_on_demand_sync_job_sync(g_sync_manager->ipcObj, id, sync_job_name, sync_option, user_data, sync_job_id, NULL, &error);
+	if (!is_success || error) {
+		int error_code = _sync_get_error_code(is_success, error);
+		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+		g_clear_error(&error);
+
+		return error_code;
+	}
+	if (*sync_job_id == -1)
+		return SYNC_ERROR_QUOTA_EXCEEDED;
+
+
+	return SYNC_ERROR_NONE;
+}
+
+
+int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_name, sync_period_e sync_period, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
+{
+	if (!g_sync_manager) {
+		LOG_LOGD("Sync manager is not initialized yet");
+		initialize_connection();
+	}
+
+	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
+	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_30MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
+
+	LOG_LOGC("sync client: %s requesting periodic sync", g_sync_manager->appid);
+
+	int ret = ACCOUNT_ERROR_NONE;
+	int id = -1;
+	if (account) {
+		ret = account_get_account_id(account, &id);
+		if (ret != 0) {
+			LOG_LOGC("sync client: account_get_account_id failure");
+			return SYNC_ERROR_SYSTEM;
+		}
+		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s] ", g_sync_manager->appid, id, sync_job_name);
+	} else
+		LOG_LOGC("appid [%s] sync_job_name [%s] ", g_sync_manager->appid, sync_job_name);
 
 	int sync_interval = get_interval(sync_period);
 
-	bool doNotRetry = false;
-	bool expedited = false;
-
-	const char *pVal = bundle_get_val(extra, SYNC_OPTION_NO_RETRY);
-	if (pVal != NULL && strcmp(pVal, "true") == 0) {
-		doNotRetry = true;
-		pVal = NULL;
-	}
-
-	pVal = bundle_get_val(extra, SYNC_OPTION_EXPEDITED);
-	if (pVal != NULL && strcmp(pVal, "true") == 0) {
-		expedited = true;
-		pVal = NULL;
-	}
-
-	if (doNotRetry || expedited)
-		return SYNC_ERROR_INVALID_PARAMETER;
-
 	GError *error = NULL;
-	GVariant *ext = marshal_bundle(extra);
-	if (ext == NULL)
-		return SYNC_ERROR_UNKNOWN;
+	GVariant *user_data = marshal_bundle(sync_job_user_data);
 
-	tizen_sync_manager_call_add_periodic_sync_job_sync(g_sync_manager->ipcObj, is_account_less_sync, id, ext, capability, sync_interval, g_sync_manager->appid, NULL, &error);
-	if (error != NULL) {
+	bool is_success = tizen_sync_manager_call_add_periodic_sync_job_sync(g_sync_manager->ipcObj, id, sync_job_name, sync_interval, sync_option, user_data, sync_job_id, NULL, &error);
+	if (!is_success || error) {
+		int error_code = _sync_get_error_code(is_success, error);
 		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+		g_clear_error(&error);
 
-		return SYNC_ERROR_IO_ERROR;
+		return error_code;
 	}
 
 	return SYNC_ERROR_NONE;
 }
 
 
-int sync_manager_remove_periodic_sync_job(account_h account, const char *capability)
+int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
-	SYNC_LOGE_RET_RES(g_sync_manager != NULL, SYNC_ERROR_SYSTEM, "sync_manager_connected should be called first");
-	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
-
-	LOG_LOGC("sync client: %s removing periodic sync job", g_sync_manager->appid);
-
-	bool is_account_less_sync = false;
-	if (account == NULL && capability == NULL) {
-		is_account_less_sync = true;
-		LOG_LOGC("sync client: initiating account less request");
+	if (!g_sync_manager) {
+		LOG_LOGD("Sync manager is not initialized yet");
+		initialize_connection();
 	}
 
-	if (capability != NULL && strstr(capability, "http://tizen.org/account/capability/") == NULL) {
-		LOG_LOGC("sync client: invalid capability");
-
+	if (sync_capability != NULL) {
+		if (!(strcmp(sync_capability, "http://tizen.org/sync/capability/calendar")) ||
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/contact")) ||
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/image")) ||
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/video")) ||
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/sound")) ||
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/music"))) {
+			LOG_LOGC("sync client: capability [%s] ", sync_capability);
+		} else {
+			LOG_LOGD("sync client: invalid capability");
+			return SYNC_ERROR_INVALID_PARAMETER;
+		}
+	} else {
+		LOG_LOGD("sync client: sync_capability is NULL");
 		return SYNC_ERROR_INVALID_PARAMETER;
 	}
 
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
+
+	LOG_LOGC("sync client: %s requesting data change callback", g_sync_manager->appid);
+
+	int ret = ACCOUNT_ERROR_NONE;
 	int id = -1;
-	if (!is_account_less_sync) {
-		int ret = account_get_account_id(account, &id);
+	if (account) {
+		ret = account_get_account_id(account, &id);
 		if (ret != 0) {
 			LOG_LOGC("sync client: account_get_account_id failure");
-
-			return SYNC_ERROR_INVALID_PARAMETER;
+			return SYNC_ERROR_SYSTEM;
 		}
-		LOG_LOGC("sync client: account_get_account_id = %d", id);
-	}
+		LOG_LOGC("appid [%s] accid [%d] capability [%s] ", g_sync_manager->appid, id, sync_capability);
+	} else
+		LOG_LOGC("appid [%s] capability [%s] ", g_sync_manager->appid, sync_capability);
 
 	GError *error = NULL;
-	tizen_sync_manager_call_remove_periodic_sync_job_sync(g_sync_manager->ipcObj, is_account_less_sync, id, capability, g_sync_manager->appid, NULL, &error);
-	if (error != NULL) {
-		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+	GVariant *user_data = marshal_bundle(sync_job_user_data);
 
-		return SYNC_ERROR_IO_ERROR;
+	bool is_success = tizen_sync_manager_call_add_data_change_sync_job_sync(g_sync_manager->ipcObj, id, sync_capability, sync_option, user_data, sync_job_id, NULL, &error);
+	if (!is_success || error) {
+		int error_code = _sync_get_error_code(is_success, error);
+		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+		g_clear_error(&error);
+
+		return error_code;
+	}
+
+	return SYNC_ERROR_NONE;
+}
+
+
+int sync_manager_remove_sync_job(int sync_job_id)
+{
+	if (!g_sync_manager) {
+		LOG_LOGD("Sync manager is not initialized yet");
+		initialize_connection();
+	}
+	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
+	SYNC_LOGE_RET_RES(sync_job_id >= 1 && sync_job_id <= 100, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is inappropriate value");
+
+	LOG_LOGC("sync client: %s removing sync job with sync_job_id [%d] ", g_sync_manager->appid, sync_job_id);
+
+	GError *error = NULL;
+	bool is_success = tizen_sync_manager_call_remove_sync_job_sync(g_sync_manager->ipcObj, sync_job_id, NULL, &error);
+
+	if (!is_success || error) {
+		int error_code = _sync_get_error_code(is_success, error);
+		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+		g_clear_error(&error);
+
+		return error_code;
+	}
+	return SYNC_ERROR_NONE;
+}
+
+
+int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *user_data)
+{
+	if (!sync_job_cb) {
+		LOG_LOGD("sync client: sync_job_cb is NULL");
+		return SYNC_ERROR_INVALID_PARAMETER;
+	}
+
+	if (!g_sync_manager) {
+		LOG_LOGD("Sync manager is not initialized yet");
+		initialize_connection();
+	}
+
+	g_sync_manager->sync_job_cb = sync_job_cb;
+
+	GError *error = NULL;
+	GVariant *sync_job_list_variant = NULL;
+	gboolean is_success = tizen_sync_manager_call_get_all_sync_jobs_sync(g_sync_manager->ipcObj, &sync_job_list_variant, NULL, &error);
+
+	if (!is_success || error) {
+		int error_code = _sync_get_error_code(is_success, error);
+		LOG_LOGC("sync client: gdbus error [%s]", error->message);
+		g_clear_error(&error);
+
+		return error_code;
+	} else {
+		unmarshal_sync_job_list(sync_job_list_variant, sync_job_cb, user_data);
 	}
 
 	return SYNC_ERROR_NONE;
@@ -428,9 +432,6 @@ int sync_manager_remove_periodic_sync_job(account_h account, const char *capabil
 
 int _sync_manager_enable_sync()
 {
-	if (!g_sync_manager)
-		sync_manager_connect();
-
 	GError *error = NULL;
 	tizen_sync_manager_call_set_sync_status_sync(g_sync_manager->ipcObj, true, NULL, &error);
 	if (error != NULL) {
@@ -445,9 +446,6 @@ int _sync_manager_enable_sync()
 
 int _sync_manager_disable_sync()
 {
-	if (!g_sync_manager)
-		sync_manager_connect();
-
 	GError *error = NULL;
 	tizen_sync_manager_call_set_sync_status_sync(g_sync_manager->ipcObj, false, NULL, &error);
 	if (error != NULL) {

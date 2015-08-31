@@ -39,7 +39,6 @@ public:
 				LOG_LOGD("heap error");
 			}
 		}
-
 		return __pInstance;
 	}
 	static void Destroy(void)

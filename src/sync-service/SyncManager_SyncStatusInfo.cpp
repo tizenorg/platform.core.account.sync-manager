@@ -77,6 +77,11 @@ SyncStatusInfo::SyncStatusInfo(string statusInfo)
 	if (ss)
 	{
 		ss>>periodicSyncSize;
+        if (periodicSyncSize <= 0)
+        {
+            LOG_LOGD("statusInfo corrupted");
+            return;
+        }
 	}
 
 	this->capabilityId = capabilityId;

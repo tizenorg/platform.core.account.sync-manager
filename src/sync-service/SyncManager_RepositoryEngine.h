@@ -32,13 +32,11 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "SyncManager_DayStats.h"
-#include "SyncManager_HistoryItem.h"
 #include "SyncManager_CapabilityInfo.h"
 #include "SyncManager_SyncStatusInfo.h"
-#include "SyncManager_PendingJob.h"
-#include "SyncManager_PeriodicSyncJob.h"
 #include "SyncManager_SyncJob.h"
+#include "SyncManager_PeriodicSyncJob.h"
+
 
 
 /*namespace _SyncManager
@@ -47,11 +45,6 @@
 
 using namespace std;
 
-typedef struct backOff
-{
-	long time;
-	long delay;
-}backOff;
 
 class SyncJobQueue;
 class SyncJob;
@@ -61,57 +54,13 @@ class RepositoryEngine
 	friend class CapabilityInfo;
 
 public:
-
-	class AccountInfo
-	{
-	public:
-		account_h account;
-		string appId;
-		map<string, CapabilityInfo*> capabilities;
-		AccountInfo(account_h account, string appId) { this->account = account; this->appId = appId; }
-	};
-
-public:
 	static RepositoryEngine* GetInstance(void);
 
 	~RepositoryEngine(void);
 
-	long GetRandomOffsetInsec(void) { return __randomOffsetInSec; }
-
-	backOff* GetBackoffN(account_h account, const string capability);
-
-	long GetDelayUntilTime(account_h account, const string capability);
-
-	//Uncomment below code when implementing pending job logic
-	//list<PendingJob*> GetPendingJobs(void);
-
-	bool DeleteFromPending(PendingJob* pPendingJob);
-
-	PendingJob* InsertIntoPending(PendingJob* pPendingJob);
-
-	long CalculateDefaultFlexTime(long period);
-
-	void AddPeriodicSyncJob(string appId, PeriodicSyncJob* pJob, bool accountLess);
-
-	void RemovePeriodicSyncJob(string appId, PeriodicSyncJob* pJob);
-
-	vector<pair<CapabilityInfo*, SyncStatusInfo*> > GetCopyOfAllCapabilityAndSyncStatusN(void);
-
-	bool GetSyncAutomatically(account_h account, string capability);
-
-	int GetSyncable(account_h account, string capability);
-
-	void SetSyncable(string appId, account_h account, string capability, int syncable);
-
-	void SetPeriodicSyncTime(int capabilityId, PeriodicSyncJob* pJob , long long when);
-
-	void SetBackoffValue(string appId, account_h account, string providerName, long nextSyncTime, long nextDelay);
-
-	void RemoveAllBackoffValuesLocked(SyncJobQueue* pQueue);
+	void OnBooting();
 
 	void SaveCurrentState(void);
-
-	void CleanUp(string appId);
 
 public:
 	static const long NOT_IN_BACKOFF_MODE;
@@ -124,14 +73,6 @@ private:
 
 	const RepositoryEngine& operator=(const RepositoryEngine&);
 
-	void ReadAccountData(void);
-
-	void WriteAccountData(void);
-
-	void ReadStatusData(void);
-
-	void WriteStatusData(void);
-
 	void ReadSyncJobsData(void);
 
 	void WriteSyncJobsData(void);
@@ -140,31 +81,24 @@ private:
 
 	void WriteSyncAdapters(void);
 
-	CapabilityInfo* ParseCapabilities(xmlNodePtr cur);
+	void ParseCapabilities(xmlNodePtr cur);
 
-	void ParsePeriodicSyncs(xmlNodePtr cur, CapabilityInfo* pCapabilityInfo);
+	void ParsePeriodicSyncs(xmlNodePtr cur, xmlChar* pCapability);
 
 	void ParseExtras(xmlNodePtr cur, bundle* pExtra);
 
-	SyncJob* ParseSyncJobsN(xmlNodePtr cur);
-
-	CapabilityInfo* GetOrCreateCapabilityLocked(string appId, account_h account, const string capability, int id, bool toWriteToXml);
-
-	CapabilityInfo* GetCapabilityLocked(account_h account, const string capability, const char* pTag);
-
-	SyncStatusInfo* GetOrCreateSyncStatusLocked(int capabilityId);
-
-	pair<CapabilityInfo*, SyncStatusInfo*> CreateCopyOfCapabilityAndSyncStatusPairN(CapabilityInfo* pCapabilityInfo);
+	void ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage);
 
 private:
 	pthread_mutex_t __capabilityInfoMutex;
-	map<int, AccountInfo*> __accounts;
-	//list<PendingJob*> __pendingJobList;
+
+	vector<PeriodicSyncJob*> __pendingJobList;			// Pending periodic job list to be scheduled
+	//map<string, DataSyncJob*> __pendingDataSyncJobList;				// Data sync job list to be scheduled
+
+	map<string, CapabilityInfo*> __capabilities;
+	map<string, map<string, SyncJob*> > __Aggr;				// Data sync job list to be scheduled
 	map<int, SyncStatusInfo*> __syncStatus;
-	int __numPendingFinished;
-	int __nextCapabilityId;
-	map<int, CapabilityInfo*> __capabilities;
-	long __randomOffsetInSec;
+
 	int PENDING_FINISH_TO_WRITE;
 
 	static RepositoryEngine* __pInstance;
