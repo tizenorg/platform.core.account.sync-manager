@@ -29,7 +29,7 @@
 #include <account.h>
 #include <stdio.h>
 #include <iostream>
-#include "SyncManager_RepositoryEngine.h"
+#include "SyncManager_ISyncJob.h"
 #include "SyncManager_SyncDefines.h"
 
 /*namespace _SyncManager
@@ -42,28 +42,20 @@ extern "C"{
 
 using namespace std;
 
-class SyncJob
+class SyncJob : public ISyncJob
 {
-
 public:
-	SyncJob(void);
-
 	~SyncJob(void);
 
 	SyncJob(const SyncJob& job);
 
 	SyncJob& operator=(const SyncJob& job);
 
-	SyncJob(const string appId, account_h account, const string capability, bundle* pExtras, SyncReason reason, SyncSource source,
-			long runTimeFromNow, long flexTime, long backoff, long delayUntil, bool isParallelSyncsAllowed);
+	SyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type);
 
-	bool IsMeteredDisallowed(void);
-
-	bool IsInitialized(void);
+	void Reset(int accountId, bundle* pUserData, int syncOption);
 
 	bool IsExpedited(void);
-
-	bool IgnoreBackoff(void);
 
 	bool IsNoRetry(void);
 
@@ -71,28 +63,29 @@ public:
 
 	string GetExtrasInfo(bundle* pData);
 
-	void UpdateEffectiveRunTime(void);
-
 	int Compare(void* pOtherJob);
 
 	void SetJobExtraValue(const char* data, bool val);
 
-public:
-	string appId;
-	account_h account;
-	SyncReason reason;
-	SyncSource syncSource;
-	bundle* pExtras;
-	string capability;
-	string key;
-	bool isParallelSyncAllowed;
-	bool isExpedited;
-	long latestRunTime; //Elapsed real time in millis at which to run this sync.
-	long backoff; ///Set by the SyncManager in order to delay retries.
-	long delayUntil; //Specified by the adapter to delay subsequent sync operations.
-	long effectiveRunTime; //Elapsed real time in millis when this sync will be run.Depends on max(backoff, latestRunTime, and delayUntil).
-	long flexTime; //Amount of time before effectiveRunTime from which this sync can run
+	void IncrementWaitCounter();
 
+	virtual SyncType GetSyncType()
+	{
+		return __syncType;
+	}
+
+public:
+	string __appId;
+	int __accountId;
+	SyncReason __reason;
+	SyncSource __syncSource;
+	bundle* __pExtras;
+	string __syncJobName;
+	string __key;
+	bool __noRetry;
+	bool __isExpedited;
+	int __waitCounter;
+	//SyncType __syncType;
 	//PendingJob* pPendingJob;
 
 private:

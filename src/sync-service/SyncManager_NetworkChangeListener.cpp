@@ -104,14 +104,12 @@ NetworkChangeListener::IsDataConnectionPresent()
 	int ret;
 	connection_cellular_state_e state = CONNECTION_CELLULAR_STATE_OUT_OF_SERVICE;
 	ret = connection_get_cellular_state(connection, &state);
-	if (ret == CONNECTION_ERROR_NOT_SUPPORTED)
-	{
+	if (ret == CONNECTION_ERROR_NOT_SUPPORTED) {
 		LOG_LOGD("Telephony does not be supported on this target");
-	}
-	else if (ret != CONNECTION_ERROR_NONE)
-	{
+	} else if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Connection cellular failure %d, %s", ret, get_error_message(ret));
 	}
+
 	return (state == CONNECTION_CELLULAR_STATE_CONNECTED);
 }
 
@@ -119,7 +117,7 @@ NetworkChangeListener::IsDataConnectionPresent()
 int
 NetworkChangeListener::RegisterNetworkChangeListener(void)
 {
-	int ret = 0;
+	int ret = CONNECTION_ERROR_NONE;
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
 	if (ret != CONNECTION_ERROR_NONE)
 	{

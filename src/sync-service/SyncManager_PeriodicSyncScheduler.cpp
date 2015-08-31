@@ -47,9 +47,13 @@ PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
 	LOG_LOGD("Alarm id %d", alarm_id);
 
 	PeriodicSyncScheduler* pPeriodicSyncScheduler = (PeriodicSyncScheduler*) user_param;
-	PeriodicSyncJob* pSyncJob = pPeriodicSyncScheduler->__activePeriodicSyncJobs[alarm_id];
+	map<int, PeriodicSyncJob*>::iterator itr = pPeriodicSyncScheduler->__activePeriodicSyncJobs.find(alarm_id);
 
-	LOG_LOGD("Alarm expired for %s %s", pSyncJob->__appId.c_str(), pSyncJob->__syncJobName.c_str());
+	if(itr != pPeriodicSyncScheduler->__activePeriodicSyncJobs.end()) {
+		PeriodicSyncJob* pSyncJob = pPeriodicSyncScheduler->__activePeriodicSyncJobs[alarm_id];
+		LOG_LOGD("Alarm expired for [%s]", pSyncJob->__key.c_str());
+		SyncManager::GetInstance()->ScheduleSyncJob(pSyncJob, true);
+	}
 
 	/*SyncJob* pJob = new (std::nothrow) SyncJob(pSyncJob->__appId,
 												pSyncJob->__accountId,
@@ -57,8 +61,6 @@ PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
 												pSyncJob->__pExtras,
 												pSyncJob->__isExpedited
 												);*/
-
-	SyncManager::GetInstance()->ScheduleSyncJob(pSyncJob, true);
 
 	return true;
 }
@@ -71,12 +73,23 @@ PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
 
 	string jobKey = pSyncJob->__key;
 	map<string, int>::iterator iter = __activeAlarmList.find(jobKey);
+
 	if (iter != __activeAlarmList.end())
 	{
-		alarm_id_t prevAlarm = iter->second;
-		int ret = alarmmgr_remove_alarm(prevAlarm);
-		SYNC_LOGE_RET_RES(ret == ALARMMGR_RESULT_SUCCESS, SYNC_ERROR_SYSTEM, "alarm remove failed, %d", ret);
+		alarm_id_t alarm = iter->second;
+		int ret = alarmmgr_remove_alarm(alarm);
+		SYNC_LOGE_RET_RES(ret == ALARMMGR_RESULT_SUCCESS, SYNC_ERROR_SYSTEM, "alarm remove failed for [%s], [%d]", jobKey.c_str(), ret);
+
+		__activeAlarmList.erase(iter);
+		__activePeriodicSyncJobs.erase(alarm);
+		LOG_LOGD("Removed alarm for [%s], [%d]", jobKey.c_str(), alarm);
 	}
+	else
+	{
+		LOG_LOGD("No active alarm found for [%s]", jobKey.c_str());
+	}
+
+	return SYNC_ERROR_NONE;
 }
 
 
@@ -84,16 +97,13 @@ int
 PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 {
 	string jobKey = periodicSyncJob->__key;
-	map<string, int>::iterator iter = __activeAlarmList.find(jobKey);
-	if (iter != __activeAlarmList.end())
-	{
-		alarm_id_t prevAlarm = iter->second;
-		int ret = alarmmgr_remove_alarm(prevAlarm);
-		SYNC_LOGE_RET_RES(ret != ALARMMGR_RESULT_SUCCESS, SYNC_ERROR_SYSTEM, "alarm remove failed, %d", ret);
-	}
+
+	// Remove previous alarms, if set already
+	int ret = RemoveAlarmForPeriodicSyncJob(periodicSyncJob);
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, SYNC_ERROR_SYSTEM, "Failed to remove previous alarm for [%s], [%d]", jobKey.c_str(), ret);
 
 	alarm_id_t alarm_id;
-	int ret = alarmmgr_add_periodic_alarm_withcb(periodicSyncJob->__period, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
+	ret = alarmmgr_add_periodic_alarm_withcb(periodicSyncJob->__period, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
 	if (ret == ALARMMGR_RESULT_SUCCESS)
 	{
 		LOG_LOGD("Alarm added for %ld min, id %ld", periodicSyncJob->__period, alarm_id);

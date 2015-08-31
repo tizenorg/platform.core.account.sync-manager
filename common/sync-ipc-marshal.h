@@ -27,6 +27,13 @@ extern "C"
 {
 #endif
 
+
+#define KEY_SYNC_JOB_ID				"job_id"
+#define KEY_SYNC_JOB_NAME			"job_name"
+#define KEY_SYNC_JOB_ACC_ID			"job_acc_id"
+#define KEY_SYNC_JOB_CAPABILITY		"job_capability"
+#define KEY_SYNC_JOB_USER_DATA		"job_data"
+
 GVariant* marshal_bundle(bundle* extras);
 bundle* umarshal_bundle(GVariant* in_data);
 

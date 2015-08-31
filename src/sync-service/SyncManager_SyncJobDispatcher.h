@@ -24,7 +24,6 @@
 #define SYNC_SERVICE_SYNC_JOB_DISPATCHER_H
 
 #include "account.h"
-#include <alarm.h>
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_SyncJobQueue.h"
 #include "SyncManager_SyncWorkerResultListener.h"
@@ -45,12 +44,10 @@ public:
 
 	~SyncJobDispatcher(void);
 
-	int DispatchSyncJob(SyncJob syncJob);
+	int DispatchSyncJob(SyncJob* syncJob);
 
 	//ISyncWorkerResultListener
 	void OnEventReceived(Message msg);
-
-	static int OnAlarmExpired(alarm_id_t alarm_id, void *user_param);
 
 private:
 	SyncJobDispatcher(const SyncJobDispatcher&);
@@ -59,9 +56,7 @@ private:
 
 	void HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *pJob);
 
-	long long TryStartingNextJobLocked();
-
-	long long SchedulePeriodicSyncJobs(void);
+	void TryStartingNextJobLocked();
 
  };
 //}//_SyncManager

@@ -25,49 +25,40 @@
 /*namespace _SyncManager
 {*/
 
-PeriodicSyncJob::PeriodicSyncJob(void)
-{
-	//Empty
-}
-
 
 PeriodicSyncJob::~PeriodicSyncJob(void)
 {
-	if (pExtras)
-	{
-		bundle_free(pExtras);
-	}
+
 }
 
 
-PeriodicSyncJob::PeriodicSyncJob(account_h account, string capability, bundle* pExtras, long period, long flexTime)
-	: accountHandle(account)
-	, capability(capability.c_str())
-	, period(period)
-	, flexTime(flexTime)
+PeriodicSyncJob::PeriodicSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, long frequency)
+	: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
+	, __period(frequency)
 {
-	this->pExtras = bundle_dup(pExtras);
+
 }
 
 
 PeriodicSyncJob::PeriodicSyncJob(const PeriodicSyncJob& other)
+			: SyncJob(other)
 {
-	this->accountHandle = other.accountHandle;
-	this->capability = other.capability;
-	this->pExtras = bundle_dup(other.pExtras);
-	this->period = other.period;
-	this->flexTime = other.flexTime;
+/*	this->__accountHandle = other.__accountHandle;
+	this->__capability = other.__capability;
+	this->__pExtras = bundle_dup(other.__pExtras);
+	this->__period = other.__period;
+	this->__syncAdapter = other.__syncAdapter;*/
 }
 
 
 PeriodicSyncJob&
 PeriodicSyncJob::operator = (const PeriodicSyncJob& other)
 {
-	this->accountHandle = other.accountHandle;
-	this->capability = other.capability;
-	this->pExtras = bundle_dup(other.pExtras);
-	this->period = other.period;
-	this->flexTime = other.flexTime;
+	/*this->__accountHandle = other.__accountHandle;
+	this->__capability = other.__capability;
+	this->__pExtras = bundle_dup(other.__pExtras);
+	this->__period = other.__period;
+	this->__syncAdapter = other.__syncAdapter;*/
 
 	return *this;
 }
@@ -75,14 +66,15 @@ PeriodicSyncJob::operator = (const PeriodicSyncJob& other)
 
 bool
 PeriodicSyncJob::operator==(const PeriodicSyncJob& other)
-{
-	if ((SyncManager::GetInstance())->AreAccountsEqual(this->accountHandle, other.accountHandle)
-			&& (this->capability).compare(other.capability) == 0
-			&& this->period == other.period
+{/*
+	if ((SyncManager::GetInstance())->AreAccountsEqual(this->__accountHandle, other.__accountHandle)
+			&& (this->__capability).compare(other.__capability) == 0
+			&& this->__period == other.__period
+			&& this->__syncAdapter == other.__syncAdapter
 			&& IsExtraEqual((PeriodicSyncJob*)&other))
 	{
 		return true;
-	}
+	}*/
 	return false;
 }
 
@@ -90,8 +82,8 @@ PeriodicSyncJob::operator==(const PeriodicSyncJob& other)
 bool
 PeriodicSyncJob::IsExtraEqual(PeriodicSyncJob* pJob)
 {
-	bundle* pExtra1 = this->pExtras;
-	bundle* pExtra2 = pJob->pExtras;
+	/*bundle* pExtra1 = this->__pExtras;
+	bundle* pExtra2 = pJob->__pExtras;
 
 	if (pExtra2 == NULL || pExtra1 == NULL)
 	{
@@ -138,9 +130,16 @@ PeriodicSyncJob::IsExtraEqual(PeriodicSyncJob* pJob)
 	}
 
 	bundle_free_exported_argv(argc1, &argv1);
-	bundle_free_exported_argv(argc2, &argv2);
+	bundle_free_exported_argv(argc2, &argv2);*/
 
 	return true;
+}
+
+void
+PeriodicSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, long frequency)
+{
+	SyncJob::Reset(accountId, pUserData, syncOption);
+	__period = frequency;
 }
 
 //}//_SyncManager

@@ -29,12 +29,14 @@
 #include <stdio.h>
 #include <account.h>
 #include <package-manager.h>
+#include <media_content_type.h>
 #include "SyncManager_SyncJobQueue.h"
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_NetworkChangeListener.h"
 #include "SyncManager_StorageChangeListener.h"
 #include "SyncManager_BatteryStatusListener.h"
-#include "SyncManager_DataChangeListener.h"
+#include "SyncManager_DataChangeSyncScheduler.h"
+#include "SyncManager_PeriodicSyncScheduler.h"
 #include "SyncManager_SyncJobDispatcher.h"
 #include "SyncManager_SyncService.h"
 #include "SyncManager_SyncWorker.h"
@@ -52,6 +54,7 @@ class SyncStatusInfo;
 class RepositoryEngine;
 class SyncJob;
 class SyncAdapterAggregator;
+class SyncJobsAggregator;
 
 using namespace std;
 
@@ -64,13 +67,15 @@ public:
 
 	bool GetSyncSetting();
 
-	int RequestSync(string appId, int account, const char* capability, bundle* pExtras);
+	int AddOnDemandSync(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId);
 
-	int CancelSync(string appId, account_h account, const char* capability);
+	int CancelSync(SyncJob* pJob);
 
-	int AddPeriodicSyncJob(string appId, int account, const char* capability, bundle* pExtras, long pollFrequency);
+	int AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, long period);
 
-	int RemovePeriodicSync(string appId, account_h account, const char* capability, bundle* pExtras);
+	int AddDataSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, const char* pCapability);
+
+	int RemoveSyncJob(string packageId, int syncJobId);
 
 	SyncJobQueue* GetSyncJobQueue(void) const;
 
@@ -87,19 +92,19 @@ public:
 
 	void OnBatteryStatusChanged(int value);
 
-	void OnCalendarDataChanged(int value);
-
-	void OnContactsDataChanged(int value);
-
 	void OnUPSModeChanged(bool enable);
 
 	RepositoryEngine* GetSyncRepositoryEngine(void);
 
 	bool AreAccountsEqual(account_h account1, account_h account2);
 
-	int GetSyncable(account_h account, string capability);
+	bool GetSyncSupport(int accountId);
 
 	SyncAdapterAggregator* GetSyncAdapterAggregator();
+
+	SyncJobsAggregator* GetSyncJobsAggregator();
+
+	void AddSyncAdapter(string packageId, string svcAppId);
 
 	void AddRunningAccount(int account_id, int pid);
 
@@ -107,23 +112,17 @@ public:
 
 	void UpdateRunningAccounts(void);
 
-	void ScheduleSync(string appId, int accountId, string capability, int reason, bundle* pExtra,
-			long long flexTimeInMillis, long long runTimeInMillis, bool onlyForUnknownSyncableState);
-
-	void ScheduleAccountLessSync(string appId, int reason, bundle* pExtras, long long flexTimeInMillis,
-							long long runTimeInMillis, bool onlyForUnknownSyncableState);
-
 	void ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm = true);
 
 	void SendSyncCompletedOrCancelledMessage(SyncJob *pJob, int result);
 
 	void AlertForChange();
 
-	void OnResultReceived(SyncStatus res, string appId, account_h account, const char* capability);
+	void OnResultReceived(SyncStatus res, string svcAppId, string packageId, const char* syncJobName);
 
 	long long GetElapsedTime(void);
 
-	string GetPkgIdByAppId(const char* pAppId);
+	string GetPkgIdByPID(int pid);
 
 	string GetPkgIdByCommandline(const char* pCommandLine);
 
@@ -163,21 +162,15 @@ private:
 
 	int SetPkgMgrClientStatusChangedListener(void);
 
-	void ClearScheduledSyncJobs(string appId, account_h account, string capability);
+	void ClearScheduledSyncJobs(SyncJob* pSyncJob);
 
-	void CancelActiveSyncJob(string appId, account_h account, string capability);
+	void CancelActiveSyncJob(SyncJob* pSyncJob);
 
 	bool IsActiveAccount(vector<account_h> accounts, account_h account);
 
-	void ClearBackoffValue(SyncJob* pJob);
-
 	void TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob);
 
-	void SetDelayTimeValue(SyncJob* pJob, long delayUntilSeconds);
-
 	bool IsJobActive(CurrentSyncContext *pCurrSync);
-
-	void IncreaseBackoffValue(SyncJob* pJob);
 
 	void SendCancelSyncsMessage(SyncJob* pSyncJob);
 
@@ -203,17 +196,20 @@ private:
 	NetworkChangeListener* __pNetworkChangeListener;
 	StorageChangeListener* __pStorageListener;
 	BatteryStatusListener* __pBatteryStatusListener;
-	DataChangeListener* __pDataChangeListener;
+	DataChangeSyncScheduler* __pDataChangeSyncScheduler;
+	PeriodicSyncScheduler* __pPeriodicSyncScheduler;
 
 	RepositoryEngine* __pSyncRepositoryEngine;
 	SyncJobQueue* __pSyncJobQueue;
 	SyncJobDispatcher* __pSyncJobDispatcher;
+	map<string, string> __syncAdapterList;
+
 	SyncAdapterAggregator* __pSyncAdapterAggregator;
+	SyncJobsAggregator* __pSyncJobsAggregator;
 	CurrentSyncJobQueue* __pCurrentSyncJobQueue;
 	account_subscribe_h __accountSubscriptionHandle;
 	map<int, int> __runningAccounts;
 	//vector<account_h> __runningAccounts;
-	long __randomOffsetInMillis;
 
 	pthread_mutex_t __syncJobQueueMutex;
 	pthread_mutex_t __currJobQueueMutex;
