@@ -41,6 +41,7 @@ BuildRequires: pkgconfig(alarm-service)
 BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(calendar-service2)
 BuildRequires: pkgconfig(contacts-service2)
+BuildRequires: pkgconfig(capi-content-media-content)
 BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: python-xml
 #BuildRequires: pkgconfig(vasum)
