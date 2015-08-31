@@ -26,6 +26,7 @@
 #include <account.h>
 #include <bundle.h>
 #include <map>
+#include <queue>
 #include "SyncManager_CurrentSyncContext.h"
 
 /*namespace _SyncManager
@@ -41,11 +42,11 @@ public:
 
 	~CurrentSyncJobQueue(void);
 
-	int AddSyncJobToCurrentSyncQueue(SyncJob syncJob);
+	int AddSyncJobToCurrentSyncQueue(SyncJob* syncJob);
 
 	bool IsJobActive(CurrentSyncContext *pCurrSync);
 
-	int RemoveSyncJobFromCurrentSyncQueue(CurrentSyncContext* pSyncContext);
+	int RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext);
 
 	CurrentSyncContext* DoesAccAuthExist(account_h account, string auth);
 
@@ -59,6 +60,7 @@ public:
 
 private:
 	map<const string, CurrentSyncContext*> __currentSyncJobQueue;
+	priority_queue<string> __name;
 };
 
 //}//_SyncManager

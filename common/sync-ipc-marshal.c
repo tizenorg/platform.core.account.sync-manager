@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include "sync-log.h"
+#include "sync_manager.h"
 #include "sync-ipc-marshal.h"
 
 
@@ -27,6 +28,7 @@ extern "C"
 void
 bundle_iterate_cb(const char *key, const char *val, void *data)
 {
+	// LOG_LOGD("marshal bundle key %s val %s", key, val);
 	g_variant_builder_add((GVariantBuilder *)data, "{sv}",
 			key,
 			g_variant_new_string(val));
@@ -41,6 +43,67 @@ marshal_bundle(bundle *extras)
 	bundle_iterate(extras, bundle_iterate_cb, (void *)&builder);
 	return g_variant_builder_end(&builder);
 }
+
+
+void
+unmarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, void* user_data)
+{
+	GVariantIter iter;
+	GVariantIter* iter_job = NULL;
+	const gchar *key = NULL;
+	GVariant *value = NULL;
+	g_variant_iter_init (&iter, variant);
+
+	while (g_variant_iter_loop (&iter, "a{sv}", &iter_job))
+	{
+		int sync_job_id;
+		account_h account = NULL;
+		char* sync_job_name = NULL;
+		char* sync_capability = NULL;
+		bundle* job_user_data = NULL;
+
+		while (g_variant_iter_loop(iter_job, "{sv}", &key, &value))
+		{
+			if (!g_strcmp0(key, KEY_SYNC_JOB_ID))
+			{
+				sync_job_id = g_variant_get_int32 (value);
+			}
+
+			if (!g_strcmp0(key, KEY_SYNC_JOB_ACC_ID))
+			{
+				int account_id = g_variant_get_int32 (value);
+				if (account_id != -1)
+				{
+					account_create(&account);
+					account_query_account_by_account_id(account_id, &account);
+				}
+			}
+
+			if (!g_strcmp0(key, KEY_SYNC_JOB_NAME))
+			{
+				sync_job_name = (char*) g_variant_get_string(value, NULL);
+			}
+			else if (!g_strcmp0(key, KEY_SYNC_JOB_CAPABILITY))
+			{
+				sync_capability = (char*) g_variant_get_string (value, NULL);
+			}
+			else if (!g_strcmp0(key, KEY_SYNC_JOB_USER_DATA))
+			{
+				job_user_data = umarshal_bundle(value);
+			}
+		}
+		if (!callback(account, sync_job_name, sync_capability, sync_job_id, job_user_data, user_data))
+		{
+			account_destroy(account);
+			bundle_free(job_user_data);
+			break;
+		}
+		account_destroy(account);
+		bundle_free(job_user_data);
+	}
+}
+
+
 
 bundle*
 umarshal_bundle(GVariant *in_data)
@@ -75,8 +138,8 @@ umarshal_bundle(GVariant *in_data)
 		if (bundle_add(extras, key, g_variant_get_string(value, NULL)) != 0)
 			LOG_LOGD(" error in bundle_add");
 	}
-	return extras;
 
+	return extras;
 }
 
 #ifdef __cplusplus
