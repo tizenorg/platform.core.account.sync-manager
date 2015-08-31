@@ -34,7 +34,7 @@
 class CurrentSyncContext
 {
 public:
-	CurrentSyncContext(const SyncJob pSyncJob);
+	CurrentSyncContext(SyncJob* pSyncJob);
 	CurrentSyncContext(const CurrentSyncContext& job);
 	~CurrentSyncContext(void);
 	SyncJob *GetSyncJob() const;
@@ -44,7 +44,7 @@ public:
 
 
 private:
-	SyncJob* __pCurrentSyncJob; //owned
+	SyncJob* __pCurrentSyncJob;
 	long __startTime;
 	long __timerId;
 

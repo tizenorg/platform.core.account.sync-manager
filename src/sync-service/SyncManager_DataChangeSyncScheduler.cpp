@@ -132,6 +132,10 @@ DataChangeSyncScheduler::SubscribeCalendarCallback(void)
 	int err = VALUE_UNDEFINED;
 
 	err = calendar_connect_with_flags(CALENDAR_CONNECT_FLAG_RETRY);
+
+	if (err != CALENDAR_ERROR_NONE)
+		LOG_LOGD("Calendar connection failed : %d, %s", err, get_error_message(err));
+
 	SYNC_LOGE_RET_RES(err == CALENDAR_ERROR_NONE, SYNC_ERROR_INVALID_OPERATION, "Calendar Connection Failed");
 
 	err = calendar_db_add_changed_cb(_calendar_book._uri, OnCalendarBookChanged, this);

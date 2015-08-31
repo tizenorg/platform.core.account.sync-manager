@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <node name="/org/tizen/sync/manager">
 	<interface name="org.tizen.sync.manager">
-		<method name="add_sync_job">
-			<arg type="b" name="account_less_sync" direction="in" />
+		<method name="add_on_demand_sync_job">
 			<arg type="i" name="account_id" direction="in" />
+			<arg type="s" name="sync_job_name" direction="in" />
+			<arg type="i" name="sync_option" direction="in" />
 			<arg type="a{sv}" name="extra" direction="in" />
-			<arg type="s" name="capability" direction="in" />
-			<arg type="s" name="app_id" direction="in" />
-		</method>
-		<method name="remove_sync_job">
-			<arg type="b" name="account_less_sync" direction="in" />
-			<arg type="i" name="account_id" direction="in" />
-			<arg type="s" name="capability" direction="in" />
-			<arg type="s" name="app_id" direction="in" />
+			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
 		<method name="add_periodic_sync_job">
-			<arg type="b" name="account_less_sync" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
+			<arg type="s" name="sync_job_name" direction="in" />
+			<arg type="i" name="poll_frequency" direction="in" />
+			<arg type="i" name="sync_option" direction="in" />
 			<arg type="a{sv}" name="extra" direction="in" />
-			<arg type="s" name="capability" direction="in" />
-			<arg type="t" name="poll_frequency" direction="in" />
-			<arg type="s" name="app_id" direction="in" />
+			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
-		<method name="remove_periodic_sync_job">
-			<arg type="b" name="account_less_sync" direction="in" />
+		<method name="add_data_change_sync_job">
 			<arg type="i" name="account_id" direction="in" />
-			<arg type="s" name="capability" direction="in" />
-			<arg type="s" name="app_id" direction="in" />
+			<arg type="s" name="sync_capability" direction="in" />
+			<arg type="i" name="sync_option" direction="in" />
+			<arg type="a{sv}" name="extra" direction="in" />
+			<arg type="i" name="sync_job_id" direction="out" />
+		</method>
+		<method name="get_all_sync_jobs">
+			<arg type="aa{sv}" name="sync_jobs" direction="out" />
+		</method>
+		<method name="remove_sync_job">
+			<arg type="i" name="sync_job_id" direction="in" />
 		</method>
 		<method name="add_sync_adapter">
-			<arg type="b" name="account_less_sa" direction="in" />
-			<arg type="s" name="capability" direction="in" />
+			<arg type="s" name="command_line" direction="in" />
+		</method>
+		<method name="remove_sync_adapter">
 			<arg type="s" name="command_line" direction="in" />
 		</method>
 		<method name="set_sync_status">

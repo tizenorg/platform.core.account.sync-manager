@@ -37,70 +37,89 @@ CapabilityInfo::CapabilityInfo(void)
 
 
 CapabilityInfo::~CapabilityInfo(void)
-{
+{/*
 	for (unsigned int i=0; i<periodicSyncList.size(); i++)
 	{
 		delete periodicSyncList[i];
 	}
+*/
 }
 
 
-// Create an authority with one periodic sync scheduled with empty bundle and syncing every day.
-CapabilityInfo::CapabilityInfo(string appId, account_h account, string capability, int id)
+CapabilityInfo::CapabilityInfo(string capability)
+			: __capability(capability)
 {
-	this->appId = appId;
-	this->accountHandle = account;
-	this->capability = capability;
-	this->id = id;
-	isEnabled = true;
-	syncable = -1;
-	backOffTime = -1;
-	backOffDelay = -1;
+
+}
+
+
+void
+CapabilityInfo::AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob)
+{
+	__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (account_id, pJob));
+}
+
+void
+CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob)
+{
+	int acc_id;
+	//int ret = account_get_account_id(pJob->accountHandle, &acc_id);
+	//LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "app account_get_account_id failed %d", ret);
+
+	//__periodicSyncList.erase(__periodicSyncList.find(acc_id));
+}
+
+
+
+bool
+CapabilityInfo::RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob)
+{
+	map<int, PeriodicSyncJob*>::iterator it = __periodicSyncList.find(account_id);
+	if (it == __periodicSyncList.end())
+	{
+		return false;
+	}
+	PeriodicSyncJob* pSyncJob = it->second;
+	if ( *pSyncJob == *pJob)
+	{
+		return true;
+	}
+	else
+		return false;
 }
 
 
 CapabilityInfo::CapabilityInfo(const CapabilityInfo& capabilityInfo)
 {
-	this->appId =  capabilityInfo.appId;
-	this->accountHandle = capabilityInfo.accountHandle;
-	this->capability = capabilityInfo.capability;
-	this->id = capabilityInfo.id;
-	this->isEnabled = capabilityInfo.isEnabled;
-	this->syncable = capabilityInfo.syncable;
-	this->backOffTime = capabilityInfo.backOffTime;
-	this->backOffDelay = capabilityInfo.backOffDelay;
-	this->delayUntil = capabilityInfo.delayUntil;
+	this->__capability = capabilityInfo.__capability;
 
-	for (unsigned int i = 0; i < capabilityInfo.periodicSyncList.size(); i++)
+	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
+
+	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr)
 	{
-		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(capabilityInfo.periodicSyncList[i]));
+		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(itr->second));
 		if (pJob)
 		{
-			(this->periodicSyncList).push_back(pJob);
+			__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (itr->first, pJob));
 		}
 	}
 }
 
+
 CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
 {
-	this->appId =  capabilityInfo.appId;
-	this->accountHandle = capabilityInfo.accountHandle;
-	this->capability = capabilityInfo.capability;
-	this->id = capabilityInfo.id;
-	this->isEnabled = capabilityInfo.isEnabled;
-	this->syncable = capabilityInfo.syncable;
-	this->backOffTime = capabilityInfo.backOffTime;
-	this->backOffDelay = capabilityInfo.backOffDelay;
-	this->delayUntil = capabilityInfo.delayUntil;
+	this->__capability = capabilityInfo.__capability;
 
-	for (unsigned int i = 0; i < capabilityInfo.periodicSyncList.size(); i++)
+	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
+	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr)
 	{
-		PeriodicSyncJob* pJob = new PeriodicSyncJob(*(capabilityInfo.periodicSyncList[i]));
+		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(itr->second));
 		if (pJob)
 		{
-			this->periodicSyncList.push_back(pJob);
+			__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (itr->first, pJob));
 		}
 	}
+
 	return *this;
 }
 

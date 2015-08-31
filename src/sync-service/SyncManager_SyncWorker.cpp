@@ -132,15 +132,12 @@ SyncWorker::Finalize(void)
 int
 SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg)
 {
+	SYNC_LOGE_RET_RES(__pChannel != NULL, SYNC_ERROR_SYSTEM, "IO channel is not setup");
+
 	LOG_LOGD("Adding a request to sync worker");
 
 	RequestData* pRequestData = new (std::nothrow) RequestData();
-	if (pRequestData == NULL)
-	{
-		LOG_LOGD("Failed to construct RequestData");
-	}
-
-	if (pRequestData != NULL && __pChannel != NULL)
+	if (pRequestData != NULL)
 	{
 		pRequestData->message = msg;
 		pRequestData->pResultListener = pSyncWorkerResultListener;
@@ -168,7 +165,6 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 		return SYNC_ERROR_NONE;
 	}
 
-	LOG_LOGD("SyncWorker addRequest failed");
 	return SYNC_ERROR_SYSTEM;
 }
 
@@ -215,7 +211,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 			pthread_mutex_unlock(&pSyncWorker->__pendingRequestsMutex);
 		}
 
-		LOG_LOGD("Event delegated successfully");
+		LOG_LOGD("Event handled successfully");
 		return TRUE;
 	}
 

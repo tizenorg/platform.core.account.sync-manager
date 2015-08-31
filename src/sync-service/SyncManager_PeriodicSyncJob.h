@@ -27,36 +27,38 @@
 #include <bundle.h>
 #include <bundle_internal.h>
 #include <account.h>
+#include "SyncManager_SyncJob.h"
 
 /*namespace _SyncManager
 {
 */
 using namespace std;
 
-class PeriodicSyncJob
+class PeriodicSyncJob : public SyncJob
 {
 public:
-
-	PeriodicSyncJob(void);
-
 	~PeriodicSyncJob(void);
 
-	PeriodicSyncJob(account_h account, string capability, bundle* pExtras, long period, long flexTime);
+	PeriodicSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, long frequency);
 
 	PeriodicSyncJob(const PeriodicSyncJob&);
 
 	PeriodicSyncJob& operator=(const PeriodicSyncJob&);
 
+	void Reset(int accountId, bundle* pUserData, int syncOption, long frequency);
+
 	bool operator==(const PeriodicSyncJob&);
 
 	bool IsExtraEqual(PeriodicSyncJob* pJob);
 
+	virtual SyncType GetSyncType()
+	{
+		return __syncType;
+	}
+private:
+
 public:
-	account_h accountHandle;
-	string capability;
-	bundle* pExtras;
-	long period;
-	long flexTime;
+	long __period;
 };
 //}//_SyncManager
 #endif// SYNC_SERVICE_PERIODIC_SYNC_H
