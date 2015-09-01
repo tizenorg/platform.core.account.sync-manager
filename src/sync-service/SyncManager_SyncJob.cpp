@@ -52,51 +52,30 @@ SyncJob::~SyncJob(void)
 
 SyncJob::SyncJob(const SyncJob& job)
 {
-	/*this->__appId = job.__appId;
-	this->__account = job.__account;
-	int id, id2;
-	if (job.account != NULL)
-	{
-		int ret = account_get_account_id(job.__account, &id);
-		if (ret != 0)
-		{
-			LOG_LOGD("Failed to get account id");
-			return;
-		}
-		if (this->account == 0)
-		{
-			LOG_LOGD("acc null");
-		}
-		ret = account_get_account_id(this->__account, &id2);
-		if (ret != 0)
-		{
-			LOG_LOGD("Failed to get account id2");
-			return;
-		}
-	}
-	this->__syncJobName = job.__syncJobName.c_str();
-	this->__pExtras = bundle_dup(job.__pExtras);
-	this->__reason = job.__reason;
-	this->__syncSource = job.__syncSource;
-	this->__isExpedited = job.__isExpedited;
-	this->__key = job.__key.c_str();*/
+	__appId = job.__appId;
+	__accountId = job.__accountId;
+	__syncJobName = job.__syncJobName;
+	__pExtras = bundle_dup(job.__pExtras);
+	__isExpedited = job.__isExpedited;
+	__key = job.__key;
+	__waitCounter = job.__waitCounter;
+	__noRetry = job.__noRetry;
 }
 
 
 SyncJob&
 SyncJob::operator = (const SyncJob& job)
 {
-/*	this->__appId = job.__appId;
-	LOG_LOGD("__appId %s", this->__appId.c_str());
-	this->__account = job.__account;
-	this->__syncJobName = job.__syncJobName;
-	this->__pExtras = bundle_dup(job.pExtras);
-	this->__reason = job.__reason;
-	this->__syncSource = job.__syncSource;
-	this->__isExpedited = job.__isExpedited;
-	this->__key = job.__key;
+	__appId = job.__appId;
+	__accountId = job.__accountId;
+	__syncJobName = job.__syncJobName;
+	__pExtras = bundle_dup(job.__pExtras);
+	__isExpedited = job.__isExpedited;
+	__key = job.__key;
+	__waitCounter = job.__waitCounter;
+	__noRetry = job.__noRetry;
 
-	return *this;*/
+	return *this;
 }
 
 
@@ -188,27 +167,12 @@ SyncJob::Reset(int accountId, bundle* pUserData, int syncOption)
 	__accountId = accountId;
 	__noRetry = syncOption & SYNC_OPTION_NO_RETRY;
 	__isExpedited = syncOption & SYNC_OPTION_EXPEDITED;
-	if (__pExtras)
-	{
+	if (__pExtras) {
 		bundle_free(__pExtras);
 		__pExtras = bundle_dup(pUserData);
 	}
 }
 
-
-/*
- * This compare is based on earliest effective runtime
- */
-int
-SyncJob::Compare(void* pObj)
-{
-	SyncJob* pOtherJob = (SyncJob*)pObj;
-	if (__isExpedited != pOtherJob->__isExpedited)
-	{
-		return __isExpedited ? -1 : 1;
-	}
 }
 
-
-}
 //}//_SyncManager

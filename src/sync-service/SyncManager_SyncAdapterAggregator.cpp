@@ -83,7 +83,7 @@ SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
 	string PkgId(pAppId);
 	if (PkgId.empty())
 	{
-		PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
+		//PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
 		if (PkgId.empty())
 			return NULL;
 	}
@@ -95,6 +95,7 @@ SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
 	}
 
 	LOG_LOGD("Sync adapter not found for account provider id %s", pAppId);
+
 	return NULL;
 }
 

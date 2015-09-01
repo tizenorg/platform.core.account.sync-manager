@@ -122,9 +122,9 @@ public:
 
 	long long GetElapsedTime(void);
 
-	string GetPkgIdByPID(int pid);
+	string GetPkgIdByAppId(const char* pAppId);
 
-	string GetPkgIdByCommandline(const char* pCommandLine);
+	//string GetPkgIdByCommandline(const char* pCommandLine);
 
 	void HandleShutdown(void);
 
