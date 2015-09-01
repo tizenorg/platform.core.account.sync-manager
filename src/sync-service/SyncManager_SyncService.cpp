@@ -83,11 +83,16 @@ void convert_to_path(char app_id[])
 int
 SyncService::StartService()
 {
-	__pSyncMangerIntacnce = SyncManager::GetInstance();
-	if (__pSyncMangerIntacnce == NULL)
-	{
+	__pSyncManagerInstance = SyncManager::GetInstance();
+	if (__pSyncManagerInstance == NULL) {
 		LOG_LOGD("Failed to initialize sync manager");
 		return -1;
+	}
+
+	bool ret = __pSyncManagerInstance->Construct();
+	if (!ret) {
+		LOG_LOGD("Sync Manager Construct failed");
+
 	}
 
 	return 0;
@@ -221,7 +226,7 @@ SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJ
 {
 	LOG_LOGD("Trigger stop sync %s", appId);
 
-	int id = -1;
+	//int id = -1;
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
 	if (pSyncAdapter == NULL)
@@ -239,7 +244,8 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 {
 	int ret = SYNC_ERROR_NONE;
 	int syncJobId = -1;
-	SyncJobsAggregator* pSyncJobsAggregator = __pSyncMangerIntacnce->GetSyncJobsAggregator();
+
+	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
 	if (pSyncJob)
@@ -259,7 +265,7 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
 		LOG_LOGD("New sync request. Adding sync job with Sync job name [%s] Sync job id [%d]", pSyncJobName, syncJobId);
-		ret = __pSyncMangerIntacnce->AddOnDemandSync(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId);
+		ret = __pSyncManagerInstance->AddOnDemandSync(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId);
 	}
 
 	if (ret == SYNC_ERROR_NONE)
@@ -275,7 +281,7 @@ int
 SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, unsigned long pollFrequency, int* pSyncJobId)
 {
 	int ret = SYNC_ERROR_NONE;
-	SyncJobsAggregator* pSyncJobsAggregator = __pSyncMangerIntacnce->GetSyncJobsAggregator();
+	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 	int syncJobId = -1;
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
@@ -296,7 +302,7 @@ SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobNam
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
 		LOG_LOGD("New sync request. Adding sync job with Sync job name [%s] Sync job id [%d]", pSyncJobName, syncJobId);
-		ret = __pSyncMangerIntacnce->AddPeriodicSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pollFrequency);
+		ret = __pSyncManagerInstance->AddPeriodicSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pollFrequency);
 	}
 
 	if (ret == SYNC_ERROR_NONE)
@@ -311,7 +317,7 @@ int
 SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, const char* pCapability, int* pSyncJobId)
 {
 	int ret = SYNC_ERROR_NONE;
-	SyncJobsAggregator* pSyncJobsAggregator = __pSyncMangerIntacnce->GetSyncJobsAggregator();
+	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 	int syncJobId = -1;
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
@@ -332,7 +338,7 @@ SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, i
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
 		LOG_LOGD("New sync request. Adding sync job with Sync job name [%s] Sync job id [%d]", pSyncJobName, syncJobId);
-		ret = __pSyncMangerIntacnce->AddDataSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pCapability);
+		ret = __pSyncManagerInstance->AddDataSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pCapability);
 	}
 
 	if (ret == SYNC_ERROR_NONE)
@@ -401,37 +407,32 @@ sync_adapter_handle_send_result( TizenSyncAdapter* pObject, GDBusMethodInvocatio
 	guint pid = get_caller_pid(pInvocation);
 
 	string pkgIdStr;
-	int ret;
-	char appId[1024] = {0,};
-	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
+	char* pAppId = NULL;
+	int ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		char pkgId[1024] = {0,};
-		ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
-		if(ret != AUL_R_OK)
-		{
-			LOG_LOGD("Get pkg name by PID failed for [%s] ret = %d ", appId, ret);
-		}
-		else
-		{
-			pkgIdStr.append(pkgId);
-		}
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
-		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
 	}
 
 	if (!pkgIdStr.empty())
 	{
-		LOG_LOGD("Sync result received from [%s]: sync_job_name [%s] result [%d]", appId, sync_job_name, sync_result);
+		LOG_LOGD("Sync result received from [%s]: sync_job_name [%s] result [%d]", pAppId, sync_job_name, sync_result);
 
-		SyncManager::GetInstance()->OnResultReceived((SyncStatus)sync_result, appId, pkgIdStr, sync_job_name);
+		SyncManager::GetInstance()->OnResultReceived((SyncStatus)sync_result, pAppId, pkgIdStr, sync_job_name);
+		free(pAppId);
 	}
 	else
-		LOG_LOGD("Get package Id fail %d", ret);
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	tizen_sync_adapter_complete_send_result(pObject, pInvocation);
 
@@ -476,21 +477,36 @@ sync_manager_add_on_demand_sync_job(TizenSyncManager* pObject, GDBusMethodInvoca
 	LOG_LOGD("Received On-Demand Sync request");
 
 	guint pid = get_caller_pid(pInvocation);
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByPID(pid);
-	int ret = SYNC_ERROR_SYSTEM;
-	int sync_job_id = 0;
-	if(!pkgId.empty())
+	string pkgIdStr;
+	char* pAppId = NULL;
+	int ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		LOG_LOGD("Params acc[%d] name[%s] option[%d] package[%s]", accountId, pSyncJobName, sync_option, pkgId.c_str());
-		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
-		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
-		ret = SyncService::GetInstance()->RequestOnDemandSync(pkgId.c_str(), pSyncJobName, accountId, pBundle, sync_option, &sync_job_id);
-		bundle_free(pBundle);
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+		free(pAppId);
 	}
 	else
 	{
-		LOG_LOGD("Failed to get package id");
+		LOG_LOGD("Request seems to be from app-id less/command line based request");
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
 	}
+
+	int sync_job_id = 0;
+	if(!pkgIdStr.empty())
+	{
+		LOG_LOGD("Params acc[%d] name[%s] option[%d] package[%s]", accountId, pSyncJobName, sync_option, pkgIdStr.c_str());
+		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
+		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
+		ret = SyncService::GetInstance()->RequestOnDemandSync(pkgIdStr.c_str(), pSyncJobName, accountId, pBundle, sync_option, &sync_job_id);
+		bundle_free(pBundle);
+	}
+	else
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	if (ret != SYNC_ERROR_NONE)
 	{
@@ -511,15 +527,35 @@ gboolean
 sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, gint sync_job_id)
 {
 	LOG_LOGD("Request to remove sync job %d", sync_job_id);
-	int ret = SYNC_ERROR_SYSTEM;
-	guint pid = get_caller_pid(pInvocation);
 
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByPID(pid);
-	if(!pkgId.empty())
+	guint pid = get_caller_pid(pInvocation);
+	string pkgIdStr;
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
+
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		LOG_LOGD("package id [%s]", pkgId.c_str());
-		ret = SyncManager::GetInstance()->RemoveSyncJob(pkgId, sync_job_id);
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+		free(pAppId);
 	}
+	else
+	{
+		LOG_LOGD("Request seems to be from app-id less/command line based request");
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
+	}
+	if(!pkgIdStr.empty())
+	{
+		LOG_LOGD("package id [%s]", pkgIdStr.c_str());
+		ret = SyncManager::GetInstance()->RemoveSyncJob(pkgIdStr, sync_job_id);
+	}
+	else
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	if (ret != SYNC_ERROR_NONE)
 	{
@@ -531,6 +567,7 @@ sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* p
 		tizen_sync_manager_complete_remove_sync_job(pObject, pInvocation);
 
 	LOG_LOGD("sync service: remove sync job ends");
+
 	return true;
 }
 
@@ -545,7 +582,6 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 {
 	LOG_LOGD("Received Period Sync request");
 
-	int ret = SYNC_ERROR_NONE;
 	guint pid = get_caller_pid(pInvocation);
 /*
 	ret = _check_privilege_by_pid(ALARM_SET_LABEL, WRITE_PERM, true, pid);
@@ -556,16 +592,38 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 		return true;
 	}
 */
+	string pkgIdStr;
+
 	int sync_job_id = 0;
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByPID(pid);
-	if(!pkgId.empty())
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
+
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		LOG_LOGD("Params acc[%d] name[%s] option[%d] period[%d] package[%s]", accountId, pSyncJobName, sync_option, sync_interval, pkgId.c_str());
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+		free(pAppId);
+	}
+	else
+	{
+		LOG_LOGD("Request seems to be from app-id less/command line based request");
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
+	}
+	if(!pkgIdStr.empty())
+	{
+		LOG_LOGD("Params acc[%d] name[%s] option[%d] period[%d] package[%s]", accountId, pSyncJobName, sync_option, sync_interval, pkgIdStr.c_str());
 		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
-		ret = SyncService::GetInstance()->RequestPeriodicSync(pkgId.c_str(), pSyncJobName, accountId, pBundle, sync_option, sync_interval, &sync_job_id);
+		ret = SyncService::GetInstance()->RequestPeriodicSync(pkgIdStr.c_str(), pSyncJobName, accountId, pBundle, sync_option, sync_interval, &sync_job_id);
 		bundle_free(pBundle);
 	}
+	else
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	if (ret != SYNC_ERROR_NONE)
 	{
@@ -577,6 +635,7 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 		tizen_sync_manager_complete_add_periodic_sync_job(pObject, pInvocation, sync_job_id);
 
 	LOG_LOGD("sync service: add periodic sync job ends");
+
 	return true;
 }
 
@@ -589,7 +648,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 																	GVariant* pSyncJobUserData)
 {
 	LOG_LOGD("Received data change Sync request");
-	int ret = SYNC_ERROR_NONE;
+
 	guint pid = get_caller_pid(pInvocation);
 /*
 	const char *capability = (char *)pCapabilityArg;
@@ -608,18 +667,39 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 		}
 	}
 */
+	string pkgIdStr;
 	int sync_job_id = 0;
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByPID(pid);
-	if(!pkgId.empty())
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
+
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		LOG_LOGD("Params account [%d] job_name [%s] sync_option[%d] sync_job_id[%d] package [%s] ", accountId, pCapabilityArg, sync_option, sync_job_id, pkgId.c_str());
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+		free(pAppId);
+	}
+	else
+	{
+		LOG_LOGD("Request seems to be from app-id less/command line based request");
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
+	}
+	if(!pkgIdStr.empty())
+	{
+		LOG_LOGD("Params account [%d] job_name [%s] sync_option[%d] sync_job_id[%d] package [%s] ", accountId, pCapabilityArg, sync_option, sync_job_id, pkgIdStr.c_str());
 
 		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
-		ret = SyncService::GetInstance()->RequestDataSync(pkgId.c_str(), pCapabilityArg, accountId, pBundle, sync_option, pCapabilityArg, &sync_job_id);
+		ret = SyncService::GetInstance()->RequestDataSync(pkgIdStr.c_str(), pCapabilityArg, accountId, pBundle, sync_option, pCapabilityArg, &sync_job_id);
 
 		bundle_free(pBundle);
 	}
+	else
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	if (ret != SYNC_ERROR_NONE)
 	{
@@ -631,6 +711,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 		tizen_sync_manager_complete_add_data_change_sync_job(pObject, pInvocation, sync_job_id);
 
 	LOG_LOGD("sync service: add data sync job ends");
+
 	return true;
 }
 
@@ -667,29 +748,26 @@ gboolean
 sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine)
 {
 	LOG_LOGD("Received sync adapter registration request");
-	guint pid = get_caller_pid(pInvocation);
-	int ret = SYNC_ERROR_SYSTEM;
+
 	string pkgIdStr;
-	char appId[1024] = {0,};
-	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
+	guint pid = get_caller_pid(pInvocation);
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
+
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		char pkgId[1024] = {0,};
-		int ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
-		if(ret != AUL_R_OK)
-		{
-			LOG_LOGD("Get pkgid by PID failed for [%s] ret = %d ", appId, ret);
-		}
-		else
-		{
-			pkgIdStr.append(pkgId);
-		}
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
-		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
 	}
 
 	if(!pkgIdStr.empty())
@@ -706,13 +784,18 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 			if (g_dbus_interface_skeleton_export(interface, gdbusConnection, object_path, &error))
 			{
 				g_signal_connect(syncAdapterObj, "handle-send-result", G_CALLBACK(sync_adapter_handle_send_result), NULL);
-				g_signal_connect(syncAdapterObj, "handle-init-complete", G_CALLBACK(sync_adapter_handle_init_complete), NULL);
+				//g_signal_connect(syncAdapterObj, "handle-init-complete", G_CALLBACK(sync_adapter_handle_init_complete), NULL);
 
 				SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
-				pAggregator->AddSyncAdapter(pkgIdStr.c_str(), appId);
+				if (pAggregator == NULL) {
+					LOG_LOGD("sync adapter aggregator is NULL");
+					tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
+					return true;
+				}
+				pAggregator->AddSyncAdapter(pkgIdStr.c_str(), pAppId);
 
-				LOG_LOGD("inserting sync adapter ipc %s", appId);
-				g_hash_table_insert(g_hash_table, strdup(appId), syncAdapterObj);
+				LOG_LOGD("inserting sync adapter ipc %s", pAppId);
+				g_hash_table_insert(g_hash_table, strdup(pAppId), syncAdapterObj);
 				ret = SYNC_ERROR_NONE;
 			}
 			else
@@ -739,7 +822,7 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	else
 		tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
 
-	LOG_LOGD("End");
+	LOG_LOGD("sync service: add sync adapter ends");
 
 	return true;
 }
@@ -749,29 +832,26 @@ gboolean
 sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine)
 {
 	LOG_LOGD("Request to remove sync adapter");
+
 	guint pid = get_caller_pid(pInvocation);
 	string pkgIdStr;
-	int ret;
-	char appId[1024] = {0,};
-	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
+
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
 	{
-		char pkgId[1024] = {0,};
-		ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
-		if(ret != AUL_R_OK)
-		{
-			LOG_LOGD("Get pkgid by PID failed for [%s] ret = %d ", appId, ret);
-		}
-		else
-		{
-			pkgIdStr.append(pkgId);
-		}
+		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
-		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
 	}
 
 	if(!pkgIdStr.empty())
@@ -780,11 +860,14 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 		pAggregator->RemoveSyncAdapter(pkgIdStr.c_str());
 		LOG_LOGD("Sync adapter removed for package [%s]", pkgIdStr.c_str());
 	}
+	else
+		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
-	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
+	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, pAppId);
 	if (pSyncAdapter == NULL)
 	{
-		LOG_LOGD("Failed to lookup syncadapter gdbus object for [%s]", appId);
+		LOG_LOGD("Failed to lookup syncadapter gdbus object for [%s]", pAppId);
+		free(pAppId);
 	}
 	else
 	{
@@ -795,7 +878,7 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 	tizen_sync_manager_complete_remove_sync_adapter(pObject, pInvocation);
 
-	LOG_LOGD("End");
+	LOG_LOGD("sync service: remove sync adapter ends");
 
 	return true;
 }
@@ -833,12 +916,29 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 {
 	LOG_LOGD("Received request to get Sync job ids");
 
-	int ret = SYNC_ERROR_SYSTEM;
-
 	guint pid = get_caller_pid(pInvocation);
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByPID(pid);
+	string pkgId;
+	char* pAppId;
+	int ret = APP_MANAGER_ERROR_NONE;
 
-	GVariant* outSyncJobList;
+	ret = app_manager_get_app_id(pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE)
+	{
+		pkgId = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+		free(pAppId);
+	}
+	else
+	{
+		LOG_LOGD("Request seems to be from app-id less/command line based request");
+		/*
+		char commandLine[1024] = {0,};
+		ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
+		if (ret == AUL_R_OK)
+			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		*/
+	}
+
+	GVariant* outSyncJobList = NULL;
 	GVariantBuilder builder;
 
 	if(!pkgId.empty())
@@ -883,7 +983,7 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 	else
 		tizen_sync_manager_complete_get_all_sync_jobs(pObject, pInvocation, outSyncJobList);
 
-	LOG_LOGD("End");
+	LOG_LOGD("sync service: get all sync jobs ends");
 
 	return true;
 }

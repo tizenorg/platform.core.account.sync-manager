@@ -91,14 +91,14 @@ make %{?jobs:-j%jobs}
 %install
 %make_install
 mkdir -p %{buildroot}%{_unitdir_user}/default.target.wants
-install -m 644 %SOURCE1 %{buildroot}%{_unitdir_user}/sync-manager.service
+install -m 0644 %SOURCE1 %{buildroot}%{_unitdir_user}/sync-manager.service
 ln -s ../sync-manager.service %{buildroot}%{_unitdir_user}/default.target.wants/sync-manager.service
 
-#mkdir -p %{buildroot}/usr/share/dbus-1/services
-#install -m 0644 %SOURCE2 %{buildroot}/usr/share/dbus-1/services/org.tizen.sync.service
+mkdir -p %{buildroot}/usr/share/dbus-1/services
+install -m 0644 %SOURCE2 %{buildroot}/usr/share/dbus-1/services/org.tizen.sync.service
 
-#mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/session.d
-#install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/dbus-1/session.d/
+mkdir -p %{buildroot}%{_sysconfdir}/dbus-1/session.d
+install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/dbus-1/session.d/org.tizen.sync.conf
 
 #mkdir -p %{buildroot}%{TZ_SYS_DATA}/sync-manager
 
@@ -119,13 +119,13 @@ rm -rf %{buildroot}
 %files -n sync-service
 %manifest sync-service.manifest
 %defattr(-,root,root,-)
-#%config %{_sysconfdir}/dbus-1/session.d/org.tizen.sync.conf
+%config %{_sysconfdir}/dbus-1/session.d/org.tizen.sync.conf
 %{_bindir}/*
 #%{_unitdir}/*
 #%{TZ_SYS_DATA}/sync-manager/
 %{_unitdir_user}/sync-manager.service
 %{_unitdir_user}/default.target.wants/sync-manager.service
-#usr/share/dbus-1/services/org.tizen.sync.service
+/usr/share/dbus-1/services/org.tizen.sync.service
 
 %files -n libcore-sync-client
 %manifest libcore-sync-client.manifest
