@@ -25,6 +25,7 @@ extern "C"
 {
 #endif
 
+
 void
 bundle_iterate_cb(const char *key, const char *val, void *data)
 {
@@ -33,6 +34,7 @@ bundle_iterate_cb(const char *key, const char *val, void *data)
 			key,
 			g_variant_new_string(val));
 }
+
 
 GVariant*
 marshal_bundle(bundle *extras)
@@ -46,7 +48,7 @@ marshal_bundle(bundle *extras)
 
 
 void
-unmarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, void* user_data)
+umarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, void* user_data)
 {
 	GVariantIter iter;
 	GVariantIter* iter_job = NULL;
@@ -56,7 +58,7 @@ unmarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, vo
 
 	while (g_variant_iter_loop (&iter, "a{sv}", &iter_job))
 	{
-		int sync_job_id;
+		int sync_job_id = 0;
 		account_h account = NULL;
 		char* sync_job_name = NULL;
 		char* sync_capability = NULL;
@@ -92,12 +94,14 @@ unmarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, vo
 				job_user_data = umarshal_bundle(value);
 			}
 		}
+
 		if (!callback(account, sync_job_name, sync_capability, sync_job_id, job_user_data, user_data))
 		{
 			account_destroy(account);
 			bundle_free(job_user_data);
 			break;
 		}
+
 		account_destroy(account);
 		bundle_free(job_user_data);
 	}

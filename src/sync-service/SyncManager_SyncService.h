@@ -72,7 +72,7 @@ private:
 	void InitializeDbus();
 
 private:
-	SyncManager* __pSyncMangerIntacnce;
+	SyncManager* __pSyncManagerInstance;
 };
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_SERVICE_H

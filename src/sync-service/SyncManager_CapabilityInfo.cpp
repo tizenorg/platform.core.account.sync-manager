@@ -62,11 +62,13 @@ CapabilityInfo::AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob)
 void
 CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob)
 {
+	/*
 	int acc_id;
-	//int ret = account_get_account_id(pJob->accountHandle, &acc_id);
-	//LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "app account_get_account_id failed %d", ret);
+	int ret = account_get_account_id(pJob->accountHandle, &acc_id);
+	LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "app account_get_account_id failed %d", ret);
 
-	//__periodicSyncList.erase(__periodicSyncList.find(acc_id));
+	__periodicSyncList.erase(__periodicSyncList.find(acc_id));
+	*/
 }
 
 

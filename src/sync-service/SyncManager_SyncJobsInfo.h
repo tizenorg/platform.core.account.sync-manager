@@ -49,7 +49,7 @@ public:
 
 	int RemoveSyncJob(string syncJobName);
 
-	int AddSyncJob(string syncJobName, ISyncJob* pSyncJob);
+	void AddSyncJob(string syncJobName, ISyncJob* pSyncJob);
 
 	int GetNextSyncJobId();
 

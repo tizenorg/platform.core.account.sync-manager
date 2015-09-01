@@ -42,9 +42,9 @@ typedef enum {
 
 #define SYNC_THREAD 0		/*As sync adapter itself runs in service app*/
 
-#define SYNC_MANAGER_DBUS_SERVICE				"org.tizen.sync"
-#define SYNC_MANAGER_DBUS_PATH					"/org/tizen/sync/manager"
-#define SYNC_ADAPTER_COMMON_DBUS_PATH			"/org/tizen/sync/adapter"
+#define SYNC_MANAGER_DBUS_SERVICE "org.tizen.sync"
+#define SYNC_MANAGER_DBUS_PATH "/org/tizen/sync/manager"
+#define SYNC_ADAPTER_COMMON_DBUS_PATH "/org/tizen/sync/adapter"
 
 
 typedef struct sync_adapter_s {
@@ -101,6 +101,9 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	bundle_free(sync_job_user_data);
 	LOG_LOGD("Sync completed");
 
+	if (ret == SYNC_STATUS_FAILURE)
+		return false;
+
 	return true;
 }
 
@@ -138,7 +141,7 @@ __sync_adapter_on_stop_sync(
 int __register_sync_adapter(bool flag)
 {
 	GError *error = NULL;
-	GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
@@ -176,7 +179,7 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
 		if (__register_sync_adapter(true) == SYNC_ERROR_NONE) {
 			pid_t pid = getpid();
 			GError *error = NULL;
-			GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+			GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 			SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_SYSTEM, "System error occured %s", error->message);
 
 			char obj_path[50];

@@ -112,11 +112,13 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 	case SYNC_STATUS_CANCELLED:
 		LOG_LOGD("Handle Sync event : SYNC_STATUS_CANCELLED");
 		SyncService::GetInstance()->TriggerStopSync(pJob->__appId.c_str(), pJob->__accountId, pJob->__syncJobName.c_str(), (pJob->GetSyncType() == SYNC_TYPE_DATA_CHANGE), pJob->__pExtras);
+		delete pJob;
 		break;
 
 	default:
 		break;
 	}
+
 }
 
 void

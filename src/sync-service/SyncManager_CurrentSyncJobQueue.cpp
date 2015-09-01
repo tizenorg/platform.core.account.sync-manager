@@ -181,14 +181,19 @@ CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* p
 string
 CurrentSyncJobQueue::ToKey(account_h account, string capability)
 {
-	int ret;
+	int ret = ACCOUNT_ERROR_NONE;
 	string key;
 	char* pName;
 	int id;
 	stringstream ss;
 
 	ret = account_get_user_name(account, &pName);
+	if (ret != ACCOUNT_ERROR_NONE)
+		LOG_LOGD("Account get user name failed because of [%s]", get_error_message(ret));
+
 	ret = account_get_account_id(account, &id);
+	if (ret != ACCOUNT_ERROR_NONE)
+		LOG_LOGD("Account get account id failed because of [%s]", get_error_message(ret));
 
 	ss<<id;
 	key.append("id:").append(ss.str()).append("name:").append(pName).append("capability:").append(capability.c_str());

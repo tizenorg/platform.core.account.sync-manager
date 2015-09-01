@@ -30,6 +30,7 @@
 #include <glib.h>
 #include <aul.h>
 #include <pkgmgr-info.h>
+#include <app_manager.h>
 #include <tzplatform_config.h>
 #include "sync-error.h"
 #include "SyncManager_SyncManager.h"
@@ -51,32 +52,6 @@
 
 int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
 #define ID_FOR_ACCOUNT_LESS_SYNC -2
-
-template<>
-SyncManager*
-Singleton< SyncManager >::GetInstance()
-{
-	if (__pInstance == NULL)
-	{
-		__pInstance = new (std::nothrow) SyncManager();
-		if (__pInstance == NULL)
-		{
-			LOG_LOGD("Sync Manager creation failed");
-		}
-		else
-		{
-			if (!__pInstance->Construct())
-			{
-				LOG_LOGD("Sync Manager initialization failed");
-
-				delete __pInstance;
-			}
-
-		}
-	}
-	return __pInstance;
-
-}
 
 
 void
@@ -310,7 +285,7 @@ SyncManager::OnDNetStatusChanged(bool connected)
 {
 	LOG_LOGD("Data network change detected %d", connected);
 
-	bool wasConnected = __isSimDataConnectionPresent;
+	//bool wasConnected = __isSimDataConnectionPresent;
 	__isSimDataConnectionPresent = connected;
 	if (__isSimDataConnectionPresent)
 	{
@@ -324,7 +299,7 @@ SyncManager::OnWifiStatusChanged(bool connected)
 {
 	LOG_LOGD("Wifi network change detected %d", connected);
 
-	bool wasConnected = __isWifiConnectionPresent;
+	//bool wasConnected = __isWifiConnectionPresent;
 	__isWifiConnectionPresent = connected;
 	if (__isWifiConnectionPresent)
 	{
@@ -406,36 +381,8 @@ static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkg
 
 
 string
-SyncManager::GetPkgIdByPID(int pid)
+SyncManager::GetPkgIdByAppId(const char* pAppId)
 {
-	string pkgIdStr;
-	char appId[1024] = {0,};
-
-	int ret = SYNC_ERROR_SYSTEM;
-	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
-	{
-		char pkgId[1024] = {0,};
-		int ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
-		if(ret != AUL_R_OK)
-		{
-			LOG_LOGD("Get pkgid by PID failed for [%s] ret = %d ", appId, ret);
-		}
-		else
-		{
-			pkgIdStr.append(pkgId);
-		}
-	}
-	else
-	{
-		char commandLine[1024] = {0,};
-		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
-
-		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = GetPkgIdByCommandline(commandLine);
-	}
-
-	return pkgIdStr;
-/*
 	pkgmgrinfo_appinfo_h handle;
 	string pkgId;
 
@@ -459,10 +406,10 @@ SyncManager::GetPkgIdByPID(int pid)
 	{
 		LOG_LOGD("Failed to get pkgmgr AppInfoHandle from App Id [%s]", pAppId);
 	}
-	return pkgId;*/
+	return pkgId;
 }
 
-
+/*
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
@@ -495,8 +442,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 	return pkgId;
 }
-
-
+*/
 
 void
 SyncManager::RegisterForNetworkChange(void)
@@ -778,13 +724,12 @@ SyncManager::Construct(void)
 
 	LOG_LOGD("wifi %d, sim %d storage %d", __isWifiConnectionPresent, __isSimDataConnectionPresent, __isStorageLow);
 
-	__pDataChangeSyncScheduler->RegisterDataChangeListeners();
-
 	LOG_LOGD("Register event listeners");
 	RegisterForNetworkChange();
 	RegisterForStorageChange();
 	RegisterForBatteryStatus();
 	RegisterForUPSModeChange();
+	RegisterForDataChange();
 
 	LOG_LOGE_BOOL(pthread_mutex_init(&__syncJobQueueMutex, NULL) == 0, "__syncJobQueueMutex init failed");
 	LOG_LOGE_BOOL(pthread_mutex_init(&__currJobQueueMutex, NULL) == 0, "__currJobQueueMutex init failed");
@@ -794,7 +739,7 @@ SyncManager::Construct(void)
 
 	LOG_LOGE_BOOL(SetPkgMgrClientStatusChangedListener() == 0, "Failed to register for uninstall callback.");
 
-
+/*
 #if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
 	UpdateRunningAccounts();
 
@@ -807,7 +752,7 @@ SyncManager::Construct(void)
 		LOG_LOGD("Failed to register callback for account updation");
 	}
 #endif
-
+*/
 
 	Initialize();
 
@@ -980,7 +925,7 @@ SyncManager::SendCancelSyncsMessage(SyncJob* pJob)
 	LOG_LOGD("SyncManager::SendCancelSyncsMessage :sending MESSAGE_CANCEL");
 	Message msg;
 	msg.type = SYNC_CANCEL;
-	msg.pSyncJob = pJob;
+	msg.pSyncJob = new SyncJob(*pJob);
 	FireEvent(__pSyncJobDispatcher, msg);
 }
 

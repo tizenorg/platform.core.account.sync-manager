@@ -77,8 +77,11 @@ char *proc_get_cmdline_self()
 	int ret;
 
 	ret = read_proc("/proc/self/cmdline", cmdline, sizeof(cmdline));
-	if (ret <= 0)
+	if (ret <= 0) {
+		LOG_LOGD("Can not read /proc/self/cmdline");
 		return NULL;
+	}
+	LOG_LOGD("sync client: cmdLine [%s]", cmdline);
 
 	return strdup(cmdline);
 }
@@ -135,7 +138,7 @@ static int initialize_connection()
 
 	GDBusConnection *connection = NULL;
 	GError *error = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
 			G_DBUS_PROXY_FLAGS_NONE,
@@ -423,7 +426,7 @@ int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *us
 
 		return error_code;
 	} else {
-		unmarshal_sync_job_list(sync_job_list_variant, sync_job_cb, user_data);
+		umarshal_sync_job_list(sync_job_list_variant, sync_job_cb, user_data);
 	}
 
 	return SYNC_ERROR_NONE;

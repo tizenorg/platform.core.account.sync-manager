@@ -63,8 +63,6 @@ public:
 
 	string GetExtrasInfo(bundle* pData);
 
-	int Compare(void* pOtherJob);
-
 	void SetJobExtraValue(const char* data, bool val);
 
 	void IncrementWaitCounter();
@@ -76,17 +74,17 @@ public:
 
 public:
 	string __appId;
-	int __accountId;
-	SyncReason __reason;
-	SyncSource __syncSource;
-	bundle* __pExtras;
 	string __syncJobName;
-	string __key;
-	bool __noRetry;
+	int __accountId;
+	bundle* __pExtras;
 	bool __isExpedited;
-	int __waitCounter;
+	bool __noRetry;
 	//SyncType __syncType;
 	//PendingJob* pPendingJob;
+	SyncReason __reason;
+	SyncSource __syncSource;
+	string __key;
+	int __waitCounter;
 
 private:
 
