@@ -99,7 +99,8 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 	string jobKey = periodicSyncJob->__key;
 
 	// Remove previous alarms, if set already
-	int ret = RemoveAlarmForPeriodicSyncJob(periodicSyncJob);
+	int ret = SYNC_ERROR_NONE;
+	ret = RemoveAlarmForPeriodicSyncJob(periodicSyncJob);
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, SYNC_ERROR_SYSTEM, "Failed to remove previous alarm for [%s], [%d]", jobKey.c_str(), ret);
 
 	alarm_id_t alarm_id;
@@ -114,8 +115,11 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 	else
 	{
 		LOG_LOGD("Failed to add Alarm added for %ld min, ret %dd", periodicSyncJob->__period, ret);
+		return SYNC_ERROR_SYSTEM;
 	}
 
 	LOG_LOGD("Active periodic alarm count, %d", __activePeriodicSyncJobs.size());
+
+	return SYNC_ERROR_NONE;
 }
 

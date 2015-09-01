@@ -124,7 +124,7 @@ public:
 
 	string GetPkgIdByPID(int pid);
 
-	string GetPkgIdByCommandline(const char* pCommandLine);
+	//string GetPkgIdByCommandline(const char* pCommandLine);
 
 	void HandleShutdown(void);
 

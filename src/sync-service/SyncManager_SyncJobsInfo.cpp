@@ -46,7 +46,7 @@ SyncJobsInfo::SyncJobsInfo(string packageId)
 }
 
 
-int
+void
 SyncJobsInfo::AddSyncJob(string syncJobName, ISyncJob* pSyncJob)
 {
 	__syncJobsList.insert(make_pair(syncJobName, pSyncJob));

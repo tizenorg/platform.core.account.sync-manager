@@ -101,6 +101,9 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	bundle_free(sync_job_user_data);
 	LOG_LOGD("Sync completed");
 
+	if (ret == SYNC_STATUS_FAILURE)
+		return false;
+
 	return true;
 }
 
