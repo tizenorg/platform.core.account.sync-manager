@@ -83,10 +83,15 @@ void convert_to_path(char app_id[])
 int
 SyncService::StartService()
 {
-	__pSyncMangerIntacnce = SyncManager::GetInstance();
-	if (__pSyncMangerIntacnce == NULL)
-	{
+	SyncManager* pSyncManager = SyncManager::GetInstance();
+	if (pSyncManager == NULL) {
 		LOG_LOGD("Failed to initialize sync manager");
+		return -1;
+	}
+
+	bool ret = pSyncManager->Construct();
+	if (!ret) {
+		LOG_LOGD("Sync Manager Construct failed");
 		return -1;
 	}
 
@@ -221,7 +226,7 @@ SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJ
 {
 	LOG_LOGD("Trigger stop sync %s", appId);
 
-	int id = -1;
+	//int id = -1;
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
 	if (pSyncAdapter == NULL)
@@ -401,7 +406,7 @@ sync_adapter_handle_send_result( TizenSyncAdapter* pObject, GDBusMethodInvocatio
 	guint pid = get_caller_pid(pInvocation);
 
 	string pkgIdStr;
-	int ret;
+	int ret = SYNC_ERROR_SYSTEM;
 	char appId[1024] = {0,};
 	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
 	{
@@ -418,10 +423,10 @@ sync_adapter_handle_send_result( TizenSyncAdapter* pObject, GDBusMethodInvocatio
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
+		//char commandLine[1024] = {0,};
 		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		//pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
 	}
 
 	if (!pkgIdStr.empty())
@@ -545,7 +550,7 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 {
 	LOG_LOGD("Received Period Sync request");
 
-	int ret = SYNC_ERROR_NONE;
+	int ret = SYNC_ERROR_SYSTEM;
 	guint pid = get_caller_pid(pInvocation);
 /*
 	ret = _check_privilege_by_pid(ALARM_SET_LABEL, WRITE_PERM, true, pid);
@@ -589,7 +594,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 																	GVariant* pSyncJobUserData)
 {
 	LOG_LOGD("Received data change Sync request");
-	int ret = SYNC_ERROR_NONE;
+	int ret = SYNC_ERROR_SYSTEM;
 	guint pid = get_caller_pid(pInvocation);
 /*
 	const char *capability = (char *)pCapabilityArg;
@@ -686,10 +691,10 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
+		//char commandLine[1024] = {0,};
 		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		//pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
 	}
 
 	if(!pkgIdStr.empty())
@@ -709,6 +714,11 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 				g_signal_connect(syncAdapterObj, "handle-init-complete", G_CALLBACK(sync_adapter_handle_init_complete), NULL);
 
 				SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
+				if (pAggregator == NULL) {
+					LOG_LOGD("sync adapter aggregator is NULL");
+					tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
+					return true;
+				}
 				pAggregator->AddSyncAdapter(pkgIdStr.c_str(), appId);
 
 				LOG_LOGD("inserting sync adapter ipc %s", appId);
@@ -751,7 +761,7 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	LOG_LOGD("Request to remove sync adapter");
 	guint pid = get_caller_pid(pInvocation);
 	string pkgIdStr;
-	int ret;
+	int ret = SYNC_ERROR_SYSTEM;
 	char appId[1024] = {0,};
 	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
 	{
@@ -768,10 +778,10 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
+		//char commandLine[1024] = {0,};
 		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
+		//pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
 	}
 
 	if(!pkgIdStr.empty())

@@ -505,8 +505,7 @@ RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra)
 void
 RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 {
-
-	xmlChar* pAppId = xmlGetProp(cur, XML_ATTR_JOB_APP_ID);
+	//xmlChar* pAppId = xmlGetProp(cur, XML_ATTR_JOB_APP_ID);
 	xmlChar* pAccId = xmlGetProp(cur, XML_ATTR_JOB_ACCOUNT_ID);
 	xmlChar* pJobId = xmlGetProp(cur, XML_ATTR_JOB_ID);
 	xmlChar* pJobName = xmlGetProp(cur, XML_ATTR_JOB_NAME);
@@ -536,10 +535,12 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 		case SYNC_TYPE_DATA_CHANGE:
 		{
 			SyncManager::GetInstance()->AddDataSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, (char*)pJobName);
+			break;
 		}
 		case SYNC_TYPE_ON_DEMAND:
 		{
 			SyncManager::GetInstance()->AddOnDemandSync((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption,jobId);
+			break;
 		}
 		case SYNC_TYPE_PERIODIC:
 		{
@@ -547,6 +548,13 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 			int period = (pPeriod == NULL)? 1800 : atoi((char*) pPeriod);
 
 			SyncManager::GetInstance()->AddPeriodicSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, period);
+			break;
+		}
+		case SYNC_TYPE_UNKNOWN:
+		default:
+		{
+			LOG_LOGD("failed add sync job: sync type is SYNC_TYPE_UNKNOWN");
+			break;
 		}
 	}
 }

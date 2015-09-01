@@ -70,7 +70,6 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 {
 	LOG_LOGD("On Media Content Data Changed");
 
-	media_content_type_e value = media_type;
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
 
 	switch (media_type) {
@@ -346,10 +345,13 @@ DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability)
 }
 
 
+/* capability can be called as syncJobName in SyncManager  */
 int
 DataChangeSyncScheduler::AddDataSyncJob(string capability, DataSyncJob* dataSyncJob)
 {
 	__dataChangeSyncJobs.insert(make_pair(capability, dataSyncJob));
+
+	return SYNC_ERROR_NONE;
 }
 
 

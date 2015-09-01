@@ -52,32 +52,6 @@
 int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
 #define ID_FOR_ACCOUNT_LESS_SYNC -2
 
-template<>
-SyncManager*
-Singleton< SyncManager >::GetInstance()
-{
-	if (__pInstance == NULL)
-	{
-		__pInstance = new (std::nothrow) SyncManager();
-		if (__pInstance == NULL)
-		{
-			LOG_LOGD("Sync Manager creation failed");
-		}
-		else
-		{
-			if (!__pInstance->Construct())
-			{
-				LOG_LOGD("Sync Manager initialization failed");
-
-				delete __pInstance;
-			}
-
-		}
-	}
-	return __pInstance;
-
-}
-
 
 void
 SyncManager::SetSyncSetting(bool enable)
@@ -310,7 +284,7 @@ SyncManager::OnDNetStatusChanged(bool connected)
 {
 	LOG_LOGD("Data network change detected %d", connected);
 
-	bool wasConnected = __isSimDataConnectionPresent;
+	//bool wasConnected = __isSimDataConnectionPresent;
 	__isSimDataConnectionPresent = connected;
 	if (__isSimDataConnectionPresent)
 	{
@@ -324,7 +298,7 @@ SyncManager::OnWifiStatusChanged(bool connected)
 {
 	LOG_LOGD("Wifi network change detected %d", connected);
 
-	bool wasConnected = __isWifiConnectionPresent;
+	//bool wasConnected = __isWifiConnectionPresent;
 	__isWifiConnectionPresent = connected;
 	if (__isWifiConnectionPresent)
 	{
@@ -415,7 +389,7 @@ SyncManager::GetPkgIdByPID(int pid)
 	if(aul_app_get_appid_bypid(pid, appId, sizeof(appId) - 1) == AUL_R_OK)
 	{
 		char pkgId[1024] = {0,};
-		int ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
+		ret = aul_app_get_pkgname_bypid(pid, pkgId, (int)(sizeof(pkgId) - 1));
 		if(ret != AUL_R_OK)
 		{
 			LOG_LOGD("Get pkgid by PID failed for [%s] ret = %d ", appId, ret);
@@ -427,11 +401,10 @@ SyncManager::GetPkgIdByPID(int pid)
 	}
 	else
 	{
-		char commandLine[1024] = {0,};
+		//char commandLine[1024] = {0,};
 		//ret = aul_app_get_cmdline_bypid(pid, commandLine, sizeof(commandLine) - 1);
-
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
-		pkgIdStr = GetPkgIdByCommandline(commandLine);
+		//pkgIdStr = GetPkgIdByCommandline(commandLine);
 	}
 
 	return pkgIdStr;
@@ -462,7 +435,7 @@ SyncManager::GetPkgIdByPID(int pid)
 	return pkgId;*/
 }
 
-
+/*
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
@@ -495,8 +468,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 	return pkgId;
 }
-
-
+*/
 
 void
 SyncManager::RegisterForNetworkChange(void)

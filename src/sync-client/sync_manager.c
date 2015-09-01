@@ -423,7 +423,7 @@ int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *us
 
 		return error_code;
 	} else {
-		unmarshal_sync_job_list(sync_job_list_variant, sync_job_cb, user_data);
+		umarshal_sync_job_list(sync_job_list_variant, sync_job_cb, user_data);
 	}
 
 	return SYNC_ERROR_NONE;
