@@ -855,25 +855,6 @@ SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
 }
 
 
-long long
-SyncManager::GetElapsedTime(void)
-{
-	long long elapsedTime = 0;
-	double a = 0.0, b = 0.0;
-	FILE *fp = fopen("/proc/uptime", "r");
-
-	if (fp != NULL)
-	{
-		if(fscanf(fp, "%lf %lf", &a, &b) && a > 0)
-		{
-			elapsedTime = (long long)(a) * 1000ll;
-		}
-		fclose(fp);
-	}
-
-	return elapsedTime;
-}
-
 SyncAdapterAggregator*
 SyncManager::GetSyncAdapterAggregator()
 {

@@ -121,6 +121,7 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 
 }
 
+
 void
 SyncJobDispatcher::OnEventReceived(Message msg)
 {
@@ -251,11 +252,14 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 		LOG_LOGD("Non priority size.%d", jobQueue.size());
 	}
 
-	int ret = DispatchSyncJob(syncJobToRun);
-	if (ret != SYNC_ERROR_NONE)
+	if (syncJobToRun != NULL)
 	{
-		SyncManager::GetInstance()->ScheduleSyncJob(syncJobToRun, false);
-		LOG_LOGD("Failed to dispatch sync job. Adding it back to job queue");
+		int ret = DispatchSyncJob(syncJobToRun);
+		if (ret != SYNC_ERROR_NONE)
+		{
+			SyncManager::GetInstance()->ScheduleSyncJob(syncJobToRun, false);
+			LOG_LOGD("Failed to dispatch sync job. Adding it back to job queue");
+		}
 	}
 	pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 }

@@ -63,6 +63,22 @@ SyncJob::SyncJob(const SyncJob& job)
 }
 
 
+SyncJob&
+SyncJob::operator = (const SyncJob& job)
+{
+	__appId = job.__appId;
+	__accountId = job.__accountId;
+	__syncJobName = job.__syncJobName;
+	__pExtras = bundle_dup(job.__pExtras);
+	__isExpedited = job.__isExpedited;
+	__key = job.__key;
+	__waitCounter = job.__waitCounter;
+	__noRetry = job.__noRetry;
+
+	return *this;
+}
+
+
 void
 SyncJob::CleanBundle(bundle* pData)
 {

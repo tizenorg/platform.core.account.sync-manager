@@ -120,8 +120,6 @@ public:
 
 	void OnResultReceived(SyncStatus res, string svcAppId, string packageId, const char* syncJobName);
 
-	long long GetElapsedTime(void);
-
 	string GetPkgIdByAppId(const char* pAppId);
 
 	//string GetPkgIdByCommandline(const char* pCommandLine);

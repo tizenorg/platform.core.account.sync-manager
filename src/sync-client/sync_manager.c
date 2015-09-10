@@ -166,6 +166,7 @@ static int initialize_connection()
 	int ret = app_manager_get_app_id(pid, &appId);
 	if (ret != APP_MANAGER_ERROR_NONE)
 		appId = proc_get_cmdline_self();
+
 	g_sync_manager->ipcObj = ipcObj;
 	g_sync_manager->appid = appId;
 
@@ -233,18 +234,15 @@ int get_interval(sync_period_e period)
 
 int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
-	if (!g_sync_manager) {
-		LOG_LOGD("Sync manager is not initialized yet");
-		initialize_connection();
-	}
-
 	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
 	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
+
 	LOG_LOGC("sync client: %s requesting one time sync", g_sync_manager->appid);
 
-	int ret = ACCOUNT_ERROR_NONE;
 	int id = -1;
 	if (account) {
 		ret = account_get_account_id(account, &id);
@@ -270,26 +268,22 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
 	if (*sync_job_id == -1)
 		return SYNC_ERROR_QUOTA_EXCEEDED;
 
-
 	return SYNC_ERROR_NONE;
 }
 
 
 int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_name, sync_period_e sync_period, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
-	if (!g_sync_manager) {
-		LOG_LOGD("Sync manager is not initialized yet");
-		initialize_connection();
-	}
-
 	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
 	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_30MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
 	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
+
 	LOG_LOGC("sync client: %s requesting periodic sync", g_sync_manager->appid);
 
-	int ret = ACCOUNT_ERROR_NONE;
 	int id = -1;
 	if (account) {
 		ret = account_get_account_id(account, &id);
@@ -321,11 +315,6 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
 
 int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
-	if (!g_sync_manager) {
-		LOG_LOGD("Sync manager is not initialized yet");
-		initialize_connection();
-	}
-
 	if (sync_capability != NULL) {
 		if (!(strcmp(sync_capability, "http://tizen.org/sync/capability/calendar")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/contact")) ||
@@ -346,9 +335,11 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
+
 	LOG_LOGC("sync client: %s requesting data change callback", g_sync_manager->appid);
 
-	int ret = ACCOUNT_ERROR_NONE;
 	int id = -1;
 	if (account) {
 		ret = account_get_account_id(account, &id);
@@ -378,12 +369,11 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 
 int sync_manager_remove_sync_job(int sync_job_id)
 {
-	if (!g_sync_manager) {
-		LOG_LOGD("Sync manager is not initialized yet");
-		initialize_connection();
-	}
 	SYNC_LOGE_RET_RES(g_sync_manager->ipcObj != NULL, SYNC_ERROR_SYSTEM, "sync manager is not connected");
 	SYNC_LOGE_RET_RES(sync_job_id >= 1 && sync_job_id <= 100, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is inappropriate value");
+
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
 	LOG_LOGC("sync client: %s removing sync job with sync_job_id [%d] ", g_sync_manager->appid, sync_job_id);
 
@@ -397,6 +387,7 @@ int sync_manager_remove_sync_job(int sync_job_id)
 
 		return error_code;
 	}
+
 	return SYNC_ERROR_NONE;
 }
 
@@ -408,10 +399,8 @@ int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *us
 		return SYNC_ERROR_INVALID_PARAMETER;
 	}
 
-	if (!g_sync_manager) {
-		LOG_LOGD("Sync manager is not initialized yet");
-		initialize_connection();
-	}
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
 	g_sync_manager->sync_job_cb = sync_job_cb;
 
@@ -435,6 +424,9 @@ int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *us
 
 int _sync_manager_enable_sync()
 {
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
+
 	GError *error = NULL;
 	tizen_sync_manager_call_set_sync_status_sync(g_sync_manager->ipcObj, true, NULL, &error);
 	if (error != NULL) {
@@ -449,6 +441,9 @@ int _sync_manager_enable_sync()
 
 int _sync_manager_disable_sync()
 {
+	int ret = initialize_connection();
+	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
+
 	GError *error = NULL;
 	tizen_sync_manager_call_set_sync_status_sync(g_sync_manager->ipcObj, false, NULL, &error);
 	if (error != NULL) {

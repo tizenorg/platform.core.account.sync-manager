@@ -901,7 +901,7 @@ marshal_sync_job(ISyncJob* syncJob)
 		else
 			g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_NAME, g_variant_new_string (pSyncJob->__syncJobName.c_str()));
 
-		///LOG_LOGD("job name and id [%s] [%d]", pSyncJob->__syncJobName.c_str(), pSyncJob->GetSyncJobId());
+		//LOG_LOGD("job name and id [%s] [%d]", pSyncJob->__syncJobName.c_str(), pSyncJob->GetSyncJobId());
 
 		g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_USER_DATA, marshal_bundle(pSyncJob->__pExtras));
 	}
@@ -962,19 +962,20 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 					g_variant_builder_add_value(&builder, marshal_sync_job(syncJob));
 					itr++;
 				}
-
 				outSyncJobList = g_variant_builder_end(&builder);
-				ret = SYNC_ERROR_NONE;
 			}
-			else
-			{
-				LOG_LOGD("Package has no pending sync jobs");
-			}
-
+		}
+		else
+		{
+			LOG_LOGD("sync service: registered sync jobs are not found");
 		}
 	}
+	else
+	{
+		LOG_LOGD("Sync jobs information not found for package [%s], pkgId.str()");
+	}
 
-	if (ret != SYNC_ERROR_NONE)
+	if (outSyncJobList == NULL)
 	{
 		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);

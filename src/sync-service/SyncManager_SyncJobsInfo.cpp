@@ -24,6 +24,7 @@
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_SyncJobsInfo.h"
 #include "SyncManager_SyncManager.h"
+#include "sync-error.h"
 
 
 /*namespace _SyncManager
@@ -46,12 +47,14 @@ SyncJobsInfo::SyncJobsInfo(string packageId)
 }
 
 
-void
+int
 SyncJobsInfo::AddSyncJob(string syncJobName, ISyncJob* pSyncJob)
 {
 	__syncJobsList.insert(make_pair(syncJobName, pSyncJob));
 	__syncIdList.insert(make_pair(pSyncJob->GetSyncJobId(), pSyncJob));
 	__syncJobId[pSyncJob->GetSyncJobId()] = true;
+
+	return SYNC_ERROR_NONE;
 }
 
 
@@ -94,7 +97,7 @@ SyncJobsInfo::RemoveSyncJob(int syncJobId)
 		}
 	}
 
-	return 0;
+	return SYNC_ERROR_NONE;
 }
 
 
@@ -117,7 +120,8 @@ SyncJobsInfo::RemoveSyncJob(string syncJobname)
 	{
 		LOG_LOGD("Sync job name doesnt exists in package [%s] for job name [%s]", __packageId.c_str(), syncJobname.c_str());
 	}
-	return 0;
+
+	return SYNC_ERROR_NONE;
 }
 
 

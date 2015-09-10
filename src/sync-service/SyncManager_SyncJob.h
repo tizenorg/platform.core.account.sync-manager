@@ -49,6 +49,8 @@ public:
 
 	SyncJob(const SyncJob& job);
 
+	SyncJob& operator=(const SyncJob& job);
+
 	SyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type);
 
 	void Reset(int accountId, bundle* pUserData, int syncOption);

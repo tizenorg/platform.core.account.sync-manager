@@ -29,7 +29,7 @@ extern "C"
 void
 bundle_iterate_cb(const char *key, const char *val, void *data)
 {
-	// LOG_LOGD("marshal bundle key %s val %s", key, val);
+	//LOG_LOGD("marshal bundle key %s val %s", key, val);
 	g_variant_builder_add((GVariantBuilder *)data, "{sv}",
 			key,
 			g_variant_new_string(val));
@@ -58,7 +58,7 @@ umarshal_sync_job_list(GVariant* variant, sync_manager_sync_job_cb callback, voi
 
 	while (g_variant_iter_loop (&iter, "a{sv}", &iter_job))
 	{
-		int sync_job_id = 0;
+		int sync_job_id = -1;
 		account_h account = NULL;
 		char* sync_job_name = NULL;
 		char* sync_capability = NULL;
@@ -131,14 +131,14 @@ umarshal_bundle(GVariant *in_data)
 
 	GVariantIter iter;
 	gchar *key = NULL;
-	/*gchar *value = NULL;*/
+	//gchar *value = NULL;
 	GVariant *value = NULL;
 
 	g_variant_iter_init(&iter, in_data);;
 
 	while (g_variant_iter_next(&iter, "{sv}", &key, &value))
 	{
-		/*LOG_LOGD("umarshal bundle key %s val %s", key, (char*) g_variant_get_string (value, NULL));*/
+		//LOG_LOGD("umarshal bundle key %s val %s", key, (char*) g_variant_get_string (value, NULL));
 		if (bundle_add(extras, key, g_variant_get_string(value, NULL)) != 0)
 			LOG_LOGD(" error in bundle_add");
 	}

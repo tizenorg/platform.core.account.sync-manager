@@ -114,7 +114,7 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 	}
 	else
 	{
-		LOG_LOGD("Failed to add Alarm added for %ld min, ret %dd", periodicSyncJob->__period, ret);
+		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);
 		return SYNC_ERROR_SYSTEM;
 	}
 

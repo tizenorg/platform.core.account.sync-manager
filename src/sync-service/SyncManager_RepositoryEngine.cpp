@@ -381,6 +381,11 @@ RepositoryEngine::WriteSyncJobsData(void)
 		for (it = packageJobs.begin(); it != packageJobs.end(); it++)
 		{
 			SyncJob* pJob = dynamic_cast<SyncJob*> (it->second);
+			if (pJob == NULL)
+			{
+				LOG_LOGD("Invalid sync job entry");
+				continue;
+			}
 
 			jobNode = xmlNewChild(packageNode, NULL, XML_NODE_SYNC_JOB, NULL);
 			xmlNewProp(jobNode, XML_ATTR_JOB_APP_ID, (const xmlChar*)(pJob->__appId.c_str()));
@@ -415,6 +420,11 @@ RepositoryEngine::WriteSyncJobsData(void)
 			if (pJob->GetSyncType() == SYNC_TYPE_PERIODIC)
 			{
 				PeriodicSyncJob* pPeriodJob = dynamic_cast<PeriodicSyncJob*> (pJob);
+				if (pPeriodJob == NULL)
+				{
+					LOG_LOGD("Invalid periodic sync job entry");
+					continue;
+				}
 				ss<<(int)pPeriodJob->__period;
 				xmlNewProp(jobNode, XML_ATTR_PERIODIC_SYNC_PEIOD, (const xmlChar*)ss.str().c_str());
 				ss.str(string());

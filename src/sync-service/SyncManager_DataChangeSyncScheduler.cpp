@@ -367,6 +367,7 @@ DataChangeSyncScheduler::RemoveDataSyncJob(DataSyncJob* dataSyncJob)
 		if (it->second == dataSyncJob)
 		{
 			__dataChangeSyncJobs.erase(it);
+			break;
 		}
 	}
 }
