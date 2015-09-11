@@ -31,7 +31,9 @@
 #include <aul.h>
 #include <app_manager.h>
 #include <pkgmgr-info.h>
-//#include <security-server.h>
+#include <cynara-client.h>
+#include <cynara-session.h>
+#include <cynara-creds-gdbus.h>
 #include "sync-error.h"
 #include "SyncManager_SyncManager.h"
 #include "sync-manager-stub.h"
@@ -43,7 +45,9 @@
 #include "SyncManager_SyncAdapterAggregator.h"
 #include "SyncManager_SyncJobsAggregator.h"
 
-static GDBusConnection* gdbusConnection = NULL;
+
+static GDBusConnection *gdbusConnection = NULL;
+static cynara *pCynara;
 
 /*namespace _SyncManager
 {*/
@@ -52,11 +56,10 @@ static GDBusConnection* gdbusConnection = NULL;
 #define SYNC_ADAPTER_DBUS_PATH "/org/tizen/sync/adapter/"
 #define SYNC_ERROR_DOMAIN "sync-manager"
 #define SYNC_ERROR_PREFIX "org.tizen.sync.Error"
-#define ALARM_SET_LABEL  "alarm-server::alarm"
-#define CALENDAR_READ_LABEL  "calendar-service::svc"
-#define CONTACT_READ_LABEL  "contacts-service::svc"
-#define READ_PERM "r"
-#define WRITE_PERM "w"
+#define PRIV_ALARM_SET "http://tizen.org/privilege/alarm.set"
+#define PRIV_CALENDAR_READ "http://tizen.org/privilege/calendar.read"
+#define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
+
 
 GDBusObjectManagerServer* pServerManager = NULL;
 
@@ -80,6 +83,7 @@ void convert_to_path(char app_id[])
 	}
 }
 
+
 int
 SyncService::StartService()
 {
@@ -92,13 +96,21 @@ SyncService::StartService()
 	bool ret = __pSyncManagerInstance->Construct();
 	if (!ret) {
 		LOG_LOGD("Sync Manager Construct failed");
+		return -1;
+	}
 
+	int cynara_result = cynara_initialize(&pCynara, NULL);
+	if (cynara_result != CYNARA_API_SUCCESS) {
+		LOG_LOGD("Cynara Initialization is failed");
+		return -1;
 	}
 
 	return 0;
 }
 
+
 TizenSyncAdapter* adapter;
+
 
 GDBusErrorEntry _sync_errors[] =
 {
@@ -115,6 +127,7 @@ GDBusErrorEntry _sync_errors[] =
 	{SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, SYNC_ERROR_PREFIX".SyncAdapterIsNotFound"},
 };
 
+
 static GQuark
 _sync_error_quark (void)
 {
@@ -128,49 +141,161 @@ _sync_error_quark (void)
 	return (GQuark) quark_volatile;
 }
 
-/*
+
+static guint
+get_caller_pid(GDBusMethodInvocation* pMethodInvocation)
+{
+	guint pid = -1;
+	const char *name = NULL;
+	name = g_dbus_method_invocation_get_sender(pMethodInvocation);
+	if (name == NULL)
+	{
+		LOG_LOGD("GDbus error: Failed to get sender name");
+		return -1;
+	}
+
+	GError *error = NULL;
+	GDBusConnection* conn = g_dbus_method_invocation_get_connection(pMethodInvocation);
+	GVariant *ret = g_dbus_connection_call_sync(conn,	"org.freedesktop.DBus",
+														"/org/freedesktop/DBus",
+														"org.freedesktop.DBus",
+														"GetConnectionUnixProcessID",
+														g_variant_new("(s)", name),
+														NULL,
+														G_DBUS_CALL_FLAGS_NONE,
+														-1,
+														NULL,
+														&error);
+
+	if (ret != NULL)
+	{
+		g_variant_get(ret, "(u)", &pid);
+		g_variant_unref(ret);
+	}
+
+	return pid;
+}
+
+
 static int
-_check_privilege_by_pid(const char *label, const char *access_perm, bool check_root, int pid) {
-	guchar *cookie = NULL;
-	gsize size = 0;
-	int retval = 0;
-	char buf[128] = {0,};
-	FILE *fp = NULL;
-	char title[128] = {0,};
-	int uid = -1;
+__get_data_for_checking_privilege(GDBusMethodInvocation *invocation, char **client, char **session, char **user)
+{
+	GDBusConnection *gdbus_conn = NULL;
+	char *sender = NULL;
+	int ret = CYNARA_API_SUCCESS;
 
-	if (check_root) {
-		// Gets the userID from /proc/pid/status to check if the process is the root or not.
-		snprintf(buf, sizeof(buf), "/proc/%d/status", pid);
-		fp = fopen(buf, "r");
-		if(fp) {
-			while (fgets(buf, sizeof(buf), fp) != NULL) {
-				if(strncmp(buf, "Uid:", 4) == 0) {
-					sscanf(buf, "%s %d", title, &uid);
-					break;
-				}
-			}
-			fclose(fp);
-		}
+	gdbus_conn = g_dbus_method_invocation_get_connection(invocation);
+	if (gdbus_conn == NULL) {
+		LOG_LOGD("sync service: g_dbus_method_invocation_get_connection failed");
+		return -1;
 	}
 
-	if (uid != 0) {	// Checks the privilege only when the process is not the root
-		retval = security_server_check_privilege_by_pid(pid, label, access_perm);
-
-		if (retval < 0) {
-			if (retval == SECURITY_SERVER_API_ERROR_ACCESS_DENIED) {
-				LOG_ERRORD("permission denied, app don't has \"%s %s\" smack rule.", label, access_perm);
-			} else {
-				LOG_ERRORD("Error has occurred in security_server_check_privilege_by_cookie() %d", retval);
-			}
-			return SYNC_ERROR_PERMISSION_DENIED;
-		}
+	sender = (char*) g_dbus_method_invocation_get_sender(invocation);
+	if (sender == NULL) {
+		LOG_LOGD("sync service: g_dbus_method_invocation_get_sender failed");
+		return -1;
 	}
 
-	LOG_LOGD("The process(%d) was authenticated successfully.", pid);
+	ret = cynara_creds_gdbus_get_user(gdbus_conn, sender, USER_METHOD_DEFAULT, user);
+	if (ret != CYNARA_API_SUCCESS) {
+		LOG_LOGD("sync service: cynara_creds_gdbus_get_user failed, ret = %d", ret);
+		return -1;
+	}
+
+	ret = cynara_creds_gdbus_get_client(gdbus_conn, sender, CLIENT_METHOD_DEFAULT, client);
+	if (ret != CYNARA_API_SUCCESS) {
+		LOG_LOGD("sync service: cynara_creds_gdbus_get_client failed, ret = %d", ret);
+		return -1;
+	}
+
+	guint pid = get_caller_pid(invocation);
+	LOG_LOGD("client Id = [%u]", pid);
+
+	*session = cynara_session_from_pid(pid);
+	if (*session == NULL) {
+		LOG_LOGD("sync service: cynara_session_from_pid failed");
+		return -1;
+	}
+
 	return SYNC_ERROR_NONE;
 }
-*/
+
+
+static int
+__check_privilege_by_cynara(const char *client, const char *session, const char *user, const char *privilege)
+{
+	int ret = CYNARA_API_ACCESS_ALLOWED;
+	char err_buf[128] = {0,};
+
+	ret = cynara_check(pCynara, client, session, user, privilege);
+	switch (ret) {
+		case CYNARA_API_ACCESS_ALLOWED:
+			LOG_LOGD("sync service: cynara_check success, privilege [%s], error [CYNARA_API_ACCESS_ALLOWED]", privilege);
+			return SYNC_ERROR_NONE;
+		case CYNARA_API_ACCESS_DENIED:
+			LOG_LOGD("sync service: cynara_check failed, privilege [%s], error [CYNARA_API_ACCESS_DENIED]", privilege);
+			return SYNC_ERROR_PERMISSION_DENIED;
+		default:
+			cynara_strerror(ret, err_buf, sizeof(err_buf));
+			LOG_LOGD("sync service: cynara_check error [%s], privilege [%s] is required", err_buf, privilege);
+			return SYNC_ERROR_PERMISSION_DENIED;
+	}
+}
+
+
+int _check_privilege(GDBusMethodInvocation *invocation, const char *privilege)
+{
+	int ret = SYNC_ERROR_NONE;
+	char *client = NULL;
+	char *session = NULL;
+	char *user = NULL;
+
+	ret = __get_data_for_checking_privilege(invocation, &client, &session, &user);
+	if (ret != SYNC_ERROR_NONE) {
+		LOG_LOGD("sync service: __get_data_for_checking_privilege is failed, ret [%d]", ret);
+		g_free(client);
+		g_free(user);
+		if (session != NULL)
+			g_free(session);
+		return SYNC_ERROR_PERMISSION_DENIED;
+	}
+
+	ret = __check_privilege_by_cynara(client, session, user, privilege);
+	if (ret != SYNC_ERROR_NONE) {
+		LOG_LOGD("sync service: __check_privilege_by_cynara is failed, ret [%d]", ret);
+		g_free(client);
+		g_free(user);
+		if (session != NULL)
+			g_free(session);
+		return SYNC_ERROR_PERMISSION_DENIED;
+	}
+
+	g_free(client);
+	g_free(user);
+	if (session != NULL)
+		g_free(session);
+
+	return SYNC_ERROR_NONE;
+}
+
+
+int _check_privilege_alarm_set(GDBusMethodInvocation *invocation)
+{
+	return _check_privilege(invocation, PRIV_ALARM_SET);
+}
+
+
+int _check_privilege_calendar_read(GDBusMethodInvocation *invocation)
+{
+	return _check_privilege(invocation, PRIV_CALENDAR_READ);
+}
+
+
+int _check_privilege_contact_read(GDBusMethodInvocation *invocation)
+{
+	return _check_privilege(invocation, PRIV_CONTACT_READ);
+}
+
 
 int
 SyncService::TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras)
@@ -217,7 +342,6 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 	}
 
 	return SYNC_ERROR_NONE;
-
 }
 
 
@@ -354,44 +478,11 @@ SyncService::HandleShutdown(void)
 {
 	LOG_LOGD("Shutdown Starts");
 
+	cynara_finish(pCynara);
+
 	SyncManager::GetInstance()->HandleShutdown();
 
 	LOG_LOGD("Shutdown Ends");
-}
-
-
-static guint
-get_caller_pid(GDBusMethodInvocation* pMethodInvocation)
-{
-	guint pid = -1;
-	const char *name = NULL;
-	name = g_dbus_method_invocation_get_sender(pMethodInvocation);
-	if (name == NULL)
-	{
-		LOG_LOGD("GDbus error: Failed to get sender name");
-		return -1;
-	}
-
-	GError *error = NULL;
-	GDBusConnection* conn = g_dbus_method_invocation_get_connection(pMethodInvocation);
-	GVariant *ret = g_dbus_connection_call_sync(conn,	"org.freedesktop.DBus",
-														"/org/freedesktop/DBus",
-														"org.freedesktop.DBus",
-														"GetConnectionUnixProcessID",
-														g_variant_new("(s)", name),
-														NULL,
-														G_DBUS_CALL_FLAGS_NONE,
-														-1,
-														NULL,
-														&error);
-
-	if (ret != NULL)
-	{
-		g_variant_get(ret, "(u)", &pid);
-		g_variant_unref(ret);
-	}
-
-	return pid;
 }
 
 
@@ -582,21 +673,20 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 {
 	LOG_LOGD("Received Period Sync request");
 
-	guint pid = get_caller_pid(pInvocation);
-/*
-	ret = _check_privilege_by_pid(ALARM_SET_LABEL, WRITE_PERM, true, pid);
+	int ret = SYNC_ERROR_NONE;
+
+	ret = _check_privilege_alarm_set(pInvocation);
 	if (ret != SYNC_ERROR_NONE) {
-		GError* error = g_error_new (_sync_error_quark(), ret, "permission denied error");
-		g_dbus_method_invocation_return_gerror (pInvocation, error);
+		GError *error = g_error_new(_sync_error_quark(), ret, "sync service: alarm.set permission denied");
+		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 		return true;
 	}
-*/
-	string pkgIdStr;
 
+	guint pid = get_caller_pid(pInvocation);
+	string pkgIdStr;
 	int sync_job_id = 0;
 	char* pAppId;
-	int ret = APP_MANAGER_ERROR_NONE;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
 	if (ret == APP_MANAGER_ERROR_NONE)
@@ -649,28 +739,33 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 {
 	LOG_LOGD("Received data change Sync request");
 
-	guint pid = get_caller_pid(pInvocation);
-/*
+	int ret = SYNC_ERROR_NONE;
+
 	const char *capability = (char *)pCapabilityArg;
 	if (!strcmp(capability, "http://tizen.org/sync/capability/calendar") ||
 		!strcmp(capability, "http://tizen.org/sync/capability/contact")) {
 		if (!strcmp(capability, "http://tizen.org/sync/capability/calendar"))
-			ret = _check_privilege_by_pid(CALENDAR_READ_LABEL, READ_PERM, true, pid);
+			ret = _check_privilege_calendar_read(pInvocation);
 		else
-			ret = _check_privilege_by_pid(CONTACT_READ_LABEL, READ_PERM, true, pid);
+			ret = _check_privilege_contact_read(pInvocation);
 
 		if (ret != SYNC_ERROR_NONE) {
-			GError* error = g_error_new (_sync_error_quark(), ret, "permission denied error");
-			g_dbus_method_invocation_return_gerror (pInvocation, error);
+			GError* error = NULL;
+			if (!strcmp(capability, "http://tizen.org/sync/capability/calendar"))
+				error = g_error_new(_sync_error_quark(), ret, "sync service: calendar.read permission denied");
+			else
+				error = g_error_new(_sync_error_quark(), ret, "sync service: contact.read permission denied");
+
+			g_dbus_method_invocation_return_gerror(pInvocation, error);
 			g_clear_error(&error);
 			return true;
 		}
 	}
-*/
+
+	guint pid = get_caller_pid(pInvocation);
 	string pkgIdStr;
 	int sync_job_id = 0;
 	char* pAppId;
-	int ret = APP_MANAGER_ERROR_NONE;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
 	if (ret == APP_MANAGER_ERROR_NONE)
