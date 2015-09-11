@@ -97,6 +97,9 @@ SET(PACKAGES
 		gio-unix-2.0
 		alarm-service
 		bundle
+		cynara-client
+		cynara-session
+		cynara-creds-gdbus
 		calendar-service2
 		contacts-service2
 		libtzplatform-config
