@@ -29,10 +29,9 @@
 /*namespace _SyncManager
 {*/
 
-CurrentSyncContext::CurrentSyncContext(const SyncJob pSyncJob)
+CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob)
 {
-	__pCurrentSyncJob = new (std::nothrow) SyncJob(pSyncJob);
-	LOG_LOGE_VOID(__pCurrentSyncJob, "Failed to construct SyncJob in CurrentSyncContext");
+	__pCurrentSyncJob = pSyncJob;
 }
 
 
@@ -40,24 +39,15 @@ CurrentSyncContext::CurrentSyncContext(const CurrentSyncContext& currContext)
 {
 	__startTime = currContext.GetStartTime();
 	__timerId = currContext.GetTimerId();
-	__pCurrentSyncJob = new (std::nothrow) SyncJob(*(currContext.GetSyncJob()));
+	__pCurrentSyncJob = currContext.GetSyncJob();
 	LOG_LOGE_VOID(__pCurrentSyncJob, "Failed to construct SyncJob in CurrentSyncContext");
 }
 
 
 CurrentSyncContext::~CurrentSyncContext(void)
 {
-	LOG_LOGD("CurrentSyncContext::~CurrentSyncContext Starts");
-
-	if (__pCurrentSyncJob)
-	{
-		delete __pCurrentSyncJob;
-		__pCurrentSyncJob = NULL;
-	}
-
-	LOG_LOGD("CurrentSyncContext::~CurrentSyncContext End");
-
 }
+
 
 SyncJob*
 CurrentSyncContext::GetSyncJob() const

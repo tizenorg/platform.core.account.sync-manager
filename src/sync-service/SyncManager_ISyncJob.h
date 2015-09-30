@@ -15,46 +15,68 @@
  */
 
 /**
- * @file	SyncManager_PendingJob.h
- * @brief	This is the header file for the PendingJob class.
+ * @file	SyncManager_ISyncJob.h
+ * @brief	This is the header file for the SyncJob class.
  */
 
-#ifndef SYNC_SERVICE_PENDING_JOB_H
-#define SYNC_SERVICE_PENDING_JOB_H
 
-#include <string>
-#include <account.h>
-#include <bundle.h>
-#include <map>
+#ifndef SYNC_SERVICE_ISYNC_JOB_H
+#define SYNC_SERVICE_ISYNC_JOB_H
+
 
 /*namespace _SyncManager
 {
 */
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 using namespace std;
 
-class PendingJob
+enum SyncType
 {
-public:
-	PendingJob(void);
-
-	~PendingJob(void);
-
-	PendingJob(string appId, account_h account, int reason, int source, string capability,
-			   bundle* pExtra, bool isExpedited);
-
-	PendingJob(const PendingJob&);
-
-public:
-	string appId;
-	account_h account;
-	int reason;
-	int syncSource;
-	string capability;
-	bundle* pExtras;
-	bool isExpedited;
-	int capabilityId;
+	SYNC_TYPE_ON_DEMAND = 0,
+	SYNC_TYPE_PERIODIC,
+	SYNC_TYPE_DATA_CHANGE,
+	SYNC_TYPE_UNKNOWN
 };
 
+class ISyncJob
+{
+public:
+	ISyncJob()
+		: __syncJobId(-1)
+	{
+
+	}
+
+	ISyncJob(int syncJobId, SyncType type)
+			: __syncJobId(syncJobId)
+			, __syncType(type)
+	{
+
+	}
+
+	virtual ~ISyncJob()
+	{
+
+	}
+
+	virtual SyncType GetSyncType() = 0;
+
+	virtual int GetSyncJobId()
+	{
+		return __syncJobId;
+	}
+
+protected:
+	int __syncJobId;
+	SyncType __syncType;
+};
+
+#ifdef __cplusplus
+}
+#endif
 //}//_SyncManager
-#endif // SYNC_SERVICE_PENDING_JOB_H
+#endif//SYNC_SERVICE_ISYNC_JOB_H

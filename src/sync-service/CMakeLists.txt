@@ -49,10 +49,7 @@ SET(SRCS
 	SyncManager_SyncService.cpp
 	SyncManager_NetworkChangeListener.cpp
 	SyncManager_StorageChangeListener.cpp
-	SyncManager_DayStats.cpp
-	SyncManager_HistoryItem.cpp
 	SyncManager_CurrentSyncJobQueue.cpp
-	SyncManager_PendingJob.cpp
 	SyncManager_RepositoryEngine.cpp
 	SyncManager_BatteryStatusListener.cpp
 	SyncManager_SyncJob.cpp
@@ -62,11 +59,13 @@ SET(SRCS
 	SyncManager_SyncJobDispatcher.cpp
 	${CMAKE_SOURCE_DIR}/common/sync-ipc-marshal.c
 	SyncManager_SyncWorker.cpp
-	SyncManager_ProviderSettings.cpp
-	SyncManager_SettingsDbHelper.cpp
 	SyncManager_CurrentSyncContext.cpp
-	SyncManager_DataChangeListener.cpp
-	SyncManager_SyncAdapterAggregator.cpp)
+	SyncManager_DataChangeSyncScheduler.cpp
+	SyncManager_PeriodicSyncScheduler.cpp
+	SyncManager_SyncAdapterAggregator.cpp
+	SyncManager_SyncJobsAggregator.cpp
+	SyncManager_SyncJobsInfo.cpp
+	SyncManager_DataSyncJob.cpp)
 
 
 #IF(_SEC_FEATURE_CONTAINER_ENABLE)
@@ -98,10 +97,13 @@ SET(PACKAGES
 		gio-unix-2.0
 		alarm-service
 		bundle
+		cynara-client
+		cynara-session
+		cynara-creds-gdbus
 		calendar-service2
 		contacts-service2
 		libtzplatform-config
-)
+		capi-content-media-content)
 
 IF(_SEC_FEATURE_CONTAINER_ENABLE)
 	SET(PACKAGES ${PACKAGES} vasum)

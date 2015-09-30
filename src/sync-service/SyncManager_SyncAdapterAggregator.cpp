@@ -34,7 +34,6 @@
 #include "SyncManager_SyncAdapterAggregator.h"
 
 
-
 /*namespace _SyncManager
 {*/
 using namespace std;
@@ -48,32 +47,21 @@ SyncAdapterAggregator::SyncAdapterAggregator(void)
 
 SyncAdapterAggregator::~SyncAdapterAggregator(void)
 {
-	for (multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != __syncAdapterList.end(); ++it)
-	{
-		delete it->second;
-	}
+
 }
 
 
 void
-SyncAdapterAggregator::AddSyncAdapter(const char* pAccountProviderId, const char* pServiceAppId, const char* pCapability)
+SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServiceAppId)
 {
-	if (pAccountProviderId != NULL && pServiceAppId != NULL)
+	if (HasSyncAdapter(pPackageId))
 	{
-		if (HasSyncAdapter(pAccountProviderId, pServiceAppId, pCapability))
-		{
-			LOG_LOGD("Sync adapter already registered for account provider id %s and capability %s", pAccountProviderId, pCapability);
-		}
-		else
-		{
-			LOG_LOGD("Registering sync-adapter %s for [%s,%s]", pServiceAppId, pAccountProviderId, pCapability);
-			SyncAdapter* pSyncAdapter = new (std::nothrow) SyncAdapter(pAccountProviderId, pServiceAppId, pCapability);
-			__syncAdapterList.insert(std::pair<string, SyncAdapter*> (pAccountProviderId, pSyncAdapter));
-		}
+		LOG_LOGD("Sync adapter already registered for package [%s]", pPackageId);
 	}
 	else
 	{
-		LOG_LOGD("Invalid parameter");
+		LOG_LOGD("Registering sync-adapter [%s] for package [%s]", pServiceAppId, pPackageId);
+		__syncAdapterList.insert(std::pair<string, string> (pPackageId, pServiceAppId));
 	}
 }
 
@@ -81,145 +69,72 @@ SyncAdapterAggregator::AddSyncAdapter(const char* pAccountProviderId, const char
 void
 SyncAdapterAggregator::dumpSyncAdapters()
 {
-	for (multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != __syncAdapterList.end(); ++it)
+	//for (multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != __syncAdapterList.end(); ++it)
 	{
-		SyncAdapter* pSyncAdapter = it->second;
-		LOG_LOGD("account provider ID %s => service app Id %s & capability %s", (*it).first.c_str(), pSyncAdapter->__pAppId, pSyncAdapter->__pCapability);
+		//SyncAdapter* pSyncAdapter = it->second;
+		//LOG_LOGD("account provider ID %s => service app Id %s & syncJobName %s", (*it).first.c_str(), pSyncAdapter->__pAppId, pSyncAdapter->__pCapability);
 	}
 }
 
 
-char*
-SyncAdapterAggregator::GetSyncAdapter(account_h account, string capability)
-{
-	char* pAccountProviderId = NULL;
-
-	account_get_package_name(account, &pAccountProviderId);
-	LOG_LOGE_NULL(pAccountProviderId != NULL, "Account provider app id not found");
-
-	string pkgId = SyncManager::GetInstance()->GetPkgIdByAppId(pAccountProviderId);
-
-	pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret;
-
-	ret = __syncAdapterList.equal_range(pkgId.c_str());
-
-	for(multimap<string, SyncAdapter*>::iterator it = ret.first; it != ret.second; ++it)
-	{
-		SyncAdapter* pSyncAdapter = it->second;
-		if (pSyncAdapter->__pCapability != NULL && !capability.compare(pSyncAdapter->__pCapability))
-		{
-			free(pAccountProviderId);
-			return pSyncAdapter->__pAppId;
-		}
-	}
-	LOG_LOGD("Sync adapter not found for account provider id %s and capability %s", pAccountProviderId, capability.c_str());
-	free(pAccountProviderId);
-	return NULL;
-}
-
-
-char*
+const char*
 SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
 {
-	string PkgId = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
+	string PkgId(pAppId);
 	if (PkgId.empty())
 	{
-		PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
+		//PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
 		if (PkgId.empty())
 			return NULL;
 	}
 
-	multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.find(PkgId.c_str());
+	map<string, string>::iterator it = __syncAdapterList.find(PkgId.c_str());
 	if (it != __syncAdapterList.end())
 	{
-		SyncAdapter* pSyncAdapter = it->second;
-		if (pSyncAdapter)
-		{
-			return pSyncAdapter->__pAppId;
-		}
+		return it->second.c_str();
 	}
 
 	LOG_LOGD("Sync adapter not found for account provider id %s", pAppId);
+
 	return NULL;
 }
 
 
 bool
-SyncAdapterAggregator::HasSyncAdapter(const char* pAccountProviderId, const char* pServiceAppId, const char* pCapability)
+SyncAdapterAggregator::HasServiceAppId(const char* pAccountProviderId)
 {
 	bool result = false;
-	if (__syncAdapterList.empty() == true)
-	{
-		return result;
-	}
-	pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret;
+	/*pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret;
 	ret = __syncAdapterList.equal_range(pAccountProviderId);
 
 	for(multimap<string, SyncAdapter*>::iterator it = ret.first; it != ret.second; ++it)
 	{
-		SyncAdapter* pSyncAdapter = it->second;
-		if (!strcmp(pServiceAppId, pSyncAdapter->__pAppId))
-		{
-			if (pCapability == NULL)
-			{
-				result = true;
-			}
-			else if (!strcmp(pCapability, pSyncAdapter->__pCapability))
-			{
-				result = true;
-			}
-		}
-	}
+		LOG_LOGD("Sync Adapter is found by using caller package name successfully");
+		result = true;
+	}*/
 	return result;
 }
 
 
-void
-SyncAdapterAggregator::HandlePackageUninstalled(const char* pAppId)
+bool
+SyncAdapterAggregator::HasSyncAdapter(const char* pPackageId)
 {
-	multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.find(pAppId);
-
-	if (it != __syncAdapterList.end())
-	{
-		int count = __syncAdapterList.count(pAppId);
-		LOG_LOGD("Removing all the sync adapters for account provider: %s count: %d", pAppId, count);
-		pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret = __syncAdapterList.equal_range(pAppId);
-		for(multimap<string, SyncAdapter*>::iterator it = ret.first; it != ret.second; ++it)
-		{
-			delete it->second;
-		}
-		__syncAdapterList.erase(pAppId);
-	}
-	else
-	{
-		RemoveSyncAdapter(pAppId, NULL);
-	}
+	map<string, string>::iterator it = __syncAdapterList.find(pPackageId);
+	return it != __syncAdapterList.end();
 }
 
 
+void
+SyncAdapterAggregator::HandlePackageUninstalled(const char* pPackageId)
+{
+	__syncAdapterList.erase(pPackageId);
+}
+
 
 void
-SyncAdapterAggregator::RemoveSyncAdapter(const char* pServiceAppId, const char* pCapability)
+SyncAdapterAggregator::RemoveSyncAdapter(const char* pPackageId)
 {
-	multimap<string, SyncAdapter*>::iterator endItr = __syncAdapterList.end();
-
-	LOG_LOGD("Removing sync service app : %s", pServiceAppId);
-
-	for(multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != endItr; ++it)
-	{
-		SyncAdapter* pSyncAdapter = it->second;
-		if (pCapability == NULL && !strcmp(pServiceAppId, pSyncAdapter->__pAppId))
-		{
-			delete pSyncAdapter;
-			__syncAdapterList.erase(it);
-			continue;
-		}
-		if (pCapability != NULL && !strcmp(pServiceAppId, pSyncAdapter->__pAppId))
-		{
-			delete pSyncAdapter;
-			__syncAdapterList.erase(it);
-		}
-	}
+	__syncAdapterList.erase(pPackageId);
 }
 
 //}//_SyncManager

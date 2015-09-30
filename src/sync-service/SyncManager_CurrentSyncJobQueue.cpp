@@ -46,23 +46,22 @@ CurrentSyncJobQueue::~CurrentSyncJobQueue(void)
 
 
 int
-CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob syncJob)
+CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 {
 	LOG_LOGD("Active Sync Jobs Queue size : Before = %d", __currentSyncJobQueue.size());
 
-	string jobKey;
-	jobKey.append(syncJob.key.c_str());
-
 	map<const string, CurrentSyncContext*>::iterator it;
-	it = __currentSyncJobQueue.find(jobKey);
+	it = __currentSyncJobQueue.find(syncJob->__key);
 
 	if (it != __currentSyncJobQueue.end())
 	{
+		LOG_LOGD("Sync already in progress");
 		return SYNC_ERROR_ALREADY_IN_PROGRESS;
 	}
 	else
 	{
-		LOG_LOGD("Create new Sync context");
+		LOG_LOGD("Create a Sync context");
+
 		CurrentSyncContext* pCurrentSyncContext = new (std::nothrow) CurrentSyncContext(syncJob);
 		if (!pCurrentSyncContext)
 		{
@@ -72,7 +71,7 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob syncJob)
 		//adding timeout of 30 seconds
 		pCurrentSyncContext->SetTimerId(g_timeout_add (300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
 		pair<map<const string, CurrentSyncContext*>::iterator,bool> ret;
-		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(jobKey, pCurrentSyncContext));
+		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(syncJob->__key, pCurrentSyncContext));
 		if (ret.second == false)
 		{
 			 return SYNC_ERROR_ALREADY_IN_PROGRESS;
@@ -93,7 +92,7 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 	if (pSyncContext)
 	{
 		LOG_LOGD("CurrentSyncJobQueue::onTimerExpired sending sync-cancelled message");
-		SyncJob* pJob = new (std::nothrow) SyncJob(*(pSyncContext->GetSyncJob()));
+		SyncJob* pJob = pSyncContext->GetSyncJob();
 		if (pJob)
 		{
 			SyncManager::GetInstance()->CloseCurrentSyncContext(pSyncContext);
@@ -102,7 +101,7 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 		}
 		else
 		{
-			LOG_LOGD("Failed to construct SyncJob");
+			LOG_LOGD("Failed to get SyncJob");
 		}
 	}
 	else
@@ -129,6 +128,7 @@ CurrentSyncJobQueue::GetOperations(void)
 	return opsList;
 }
 
+
 bool
 CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 {
@@ -142,7 +142,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 	}
 
 	string jobKey;
-	jobKey.append(pCurrSync->GetSyncJob()->key);
+	jobKey.append(pCurrSync->GetSyncJob()->__key);
 
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(jobKey);
@@ -158,7 +158,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 }
 
 int
-CurrentSyncJobQueue::RemoveSyncJobFromCurrentSyncQueue(CurrentSyncContext* pSyncContext)
+CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext)
 {
 	 LOG_LOGD("Remove sync job from Active Sync Jobs queue");
 	if (pSyncContext == NULL)
@@ -167,18 +167,9 @@ CurrentSyncJobQueue::RemoveSyncJobFromCurrentSyncQueue(CurrentSyncContext* pSync
 		return SYNC_ERROR_INVALID_PARAMETER;
 	}
 
-	string key;
 	SyncJob* pSyncJob = pSyncContext->GetSyncJob();
-	if (pSyncJob->account != NULL)
-	{
-		 key = CurrentSyncJobQueue::ToKey(pSyncJob->account, pSyncJob->capability);
-	}
-	else
-	{
-		key.append("id:").append(pSyncJob->appId);
-	}
 
-	map<const string, CurrentSyncContext*>::iterator it = __currentSyncJobQueue.find(key);
+	map<const string, CurrentSyncContext*>::iterator it = __currentSyncJobQueue.find(pSyncJob->__key);
 	CurrentSyncContext* pCurrContext = it->second;
 	__currentSyncJobQueue.erase(it);
 	LOG_LOGD("Active Sync Jobs queue size, After = %d", __currentSyncJobQueue.size());
@@ -190,19 +181,21 @@ CurrentSyncJobQueue::RemoveSyncJobFromCurrentSyncQueue(CurrentSyncContext* pSync
 string
 CurrentSyncJobQueue::ToKey(account_h account, string capability)
 {
-	int ret;
+	int ret = ACCOUNT_ERROR_NONE;
 	string key;
 	char* pName;
 	int id;
 	stringstream ss;
 
 	ret = account_get_user_name(account, &pName);
+	if (ret != ACCOUNT_ERROR_NONE)
+		LOG_LOGD("Account get user name failed because of [%s]", get_error_message(ret));
+
 	ret = account_get_account_id(account, &id);
+	if (ret != ACCOUNT_ERROR_NONE)
+		LOG_LOGD("Account get account id failed because of [%s]", get_error_message(ret));
 
 	ss<<id;
-
-	//TODO Add the package name and extra.
-	//Key = id:{value}+name:{value}+capability:{value};
 	key.append("id:").append(ss.str()).append("name:").append(pName).append("capability:").append(capability.c_str());
 
 	return key;

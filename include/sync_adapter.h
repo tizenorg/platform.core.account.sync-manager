@@ -44,75 +44,53 @@ extern "C" {
  * @brief Callback function for Sync Adapter's start sync request.
  *
  * @since_tizen 2.4
+ * @remarks	This API only can be called at a service application.
  *
- * @param[in] account          An account handle on which sync operation was requested or @c NULL in case of account less sync operation
- * @param[in] extra            Extras data which contains additional sync information
- * @param[in] capability       A string representing Provider ID of data control or capability of account or @c NULL in case of account less sync operation
+ * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
+ * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
+ * @param[in] sync_capability		A string representing a sync job which has been operated because of data change or @c NULL in the case of on demand or periodic sync operation
+ * @param[in] sync_job_user_data	User data which contains additional information related registered sync job
  *
  * @return @c true if sync operation is success, @c false otherwise
  *
- * @pre The callback must be set using sync_adapter_set_callbacks().
- * @pre sync_manager_add_sync_job() or sync_manager_add_periodic_sync_job() calls this callback.
+ * @pre The callback must be set by using sync_adapter_set_callbacks().
+ * @pre sync_manager_on_demand_sync_job() calls this callback.
+ * @pre sync_manager_add_periodic_sync_job() calls this callback.
+ * @pre sync_manager_add_data_change_sync_job() calls this callback.
  *
- * @see sync_adapter_init()
  * @see sync_adapter_set_callbacks()
- * @see sync_manager_add_sync_job()
+ * @see sync_manager_on_demand_sync_job()
  * @see sync_manager_add_periodic_sync_job()
+ * @see sync_manager_add_data_change_sync_job()
  */
-typedef bool (*sync_adapter_start_sync_cb)(account_h account, bundle* extras, const char* capability);
+typedef bool (*sync_adapter_start_sync_cb)(account_h account, const char *sync_job_name, const char *sync_capability, bundle *sync_job_user_data);
 
 
 /**
  * @brief Callback function for Sync Adapter's cancel sync request.
  *
  * @since_tizen 2.4
+ * @remarks	This API only can be called at a service application after calling sync_manager_remove_sync_job().
  *
- * @param[in] account      An account handle on which sync operation was requested or @c NULL in case of account less sync operation
- * @param[in] capability   A string representing Provider ID of data control or capability of account or @c NULL in case of account less sync operation
+ * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
+ * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
+ * @param[in] sync_capability		A string representing a sync job which has been operated because of data change or @c NULL in the case of on demand and periodic sync operation
+ * @param[in] sync_job_user_data	User data which contains additional information related registered sync job
  *
- * @pre The callback must be set using sync_adapter_set_callbacks().
- * @pre sync_manager_remove_sync_job() or sync_manager_remove_periodic_sync_job() calls this callback.
+ * @pre The callback must be set by using sync_adapter_set_callbacks().
+ * @pre sync_manager_remove_sync_job() calls this callback in the case there is removable sync job.
  *
- * @see sync_adapter_init()
  * @see sync_adapter_set_callbacks()
  * @see sync_manager_remove_sync_job()
- * @see sync_manager_remove_periodic_sync_job()
  */
-typedef void (*sync_adapter_cancel_sync_cb)(account_h account, const char* capability);
-
-
-/**
- * @brief Initializes Sync Adapter's instance.
- *
- * @since_tizen 2.4
- * @remarks Destroy this instance using sync_adapter_destroy().
- *
- * @param[in] capability             Capability handled by this Sync Adapter application or @c NULL in case of account less sync operation
- *
- * @return @c 0 on success,
- *         otherwise a negative error value
- * @retval #SYNC_ERROR_NONE successful
- * @retval #SYNC_ERROR_OUT_OF_MEMORY Out of memory
- *
- * @see sync_adapter_destroy()
- */
-int sync_adapter_init(const char* capability);
-
-
-/**
- * @brief Destroys Sync Adapter's instance.
- *
- * @since_tizen 2.4
- *
- * @see sync_adapter_init()
- */
-void sync_adapter_destroy(void);
+typedef void (*sync_adapter_cancel_sync_cb)(account_h account, const char *sync_job_name, const char *sync_capability, bundle *sync_job_user_data);
 
 
 /**
  * @brief Sets client (Sync Aadapter) callback functions
  *
  * @since_tizen 2.4
+ * @remarks	This API only can be called by a service application. And it can be set by only one service application per a package.
  *
  * @param[in] on_start_cb       A callback function to be called by Sync Manager for performing sync operation
  * @param[in] on_cancel_cb      A callback function to be called by Sync Manager for cancelling sync operation
@@ -120,17 +98,16 @@ void sync_adapter_destroy(void);
  * @return @c 0 on success,
  *         otherwise a negative error value
  *
- * @retval #SYNC_ERROR_NONE                Successful
- * @retval #SYNC_ERROR_INVALID_PARAMETER   Invalid parameter
- * @retval #SYNC_ERROR_UNKNOWN             Unknown error
- * @retval #SYNC_ERROR_SYSTEM              System error
+ * @retval #SYNC_ERROR_NONE					Successful
+ * @retval #SYNC_ERROR_OUT_OF_MEMORY		Out of memory
+ * @retval #SYNC_ERROR_IO_ERROR				I/O error
+ * @retval #SYNC_ERROR_INVALID_PARAMETER	Invalid parameter
+ * @retval #SYNC_ERROR_QUOTA_EXCEEDED		Quota exceeded
+ * @retval #SYNC_ERROR_SYSTEM				System error
  *
- * @pre This function requires intialized Sync Adapter's instance.
- * @pre Call sync_adapter_init() before calling this function.
- *
- * @see sync_adapter_init()
  * @see sync_adapter_start_sync_cb()
  * @see sync_adapter_cancel_sync_cb()
+ * @see sync_adapter_unset_callbacks()
  */
 int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adapter_cancel_sync_cb on_cancel_cb);
 
@@ -146,10 +123,10 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
  * @retval #SYNC_ERROR_NONE                Successful
  * @retval #SYNC_ERROR_SYSTEM              System error
  *
- * @pre This function requires intialized Sync Adapter's instance.
  * @pre Call sync_adapter_set_callbacks() before calling this function.
  *
- * @see sync_adapter_init()
+ * @see sync_adapter_start_sync_cb()
+ * @see sync_adapter_cancel_sync_cb()
  * @see sync_adapter_set_callbacks()
  */
 int sync_adapter_unset_callbacks(void);

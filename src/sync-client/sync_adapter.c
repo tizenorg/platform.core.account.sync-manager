@@ -20,6 +20,8 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <app.h>
+#include <app_manager.h>
+#include <pkgmgr-info.h>
 #include <account.h>
 #include <bundle.h>
 #include <pthread.h>
@@ -40,15 +42,13 @@ typedef enum {
 
 #define SYNC_THREAD 0		/*As sync adapter itself runs in service app*/
 
+#define SYNC_MANAGER_DBUS_SERVICE "org.tizen.sync"
 #define SYNC_MANAGER_DBUS_PATH "/org/tizen/sync/manager"
 #define SYNC_ADAPTER_COMMON_DBUS_PATH "/org/tizen/sync/adapter"
-#define APP_CONTROL_OPERATION_START_SYNC "http://tizen.org/appcontrol/operation/start_sync"
-#define APP_CONTROL_OPERATION_CANCEL_SYNC "http://tizen.org/appcontrol/operation/cancel_sync"
 
 
 typedef struct sync_adapter_s {
 	TizenSyncAdapter *sync_adapter_obj;
-	pthread_t cur_thread;
 	bool __syncRunning;
 	sync_adapter_start_sync_cb start_sync_cb;
 	sync_adapter_cancel_sync_cb cancel_sync_cb;
@@ -59,211 +59,148 @@ static sync_adapter_s *g_sync_adapter = NULL;
 extern int read_proc(const char *path, char *buf, int size);
 extern char *proc_get_cmdline_self();
 
-typedef struct sync_thread_params_s {
-	TizenSyncAdapter *sync_adapter_obj;
-	int accountId;
-	bundle *extra;
-	char *capability;
-} sync_thread_params_s;
-
-
-void *run_sync(void *params)
-{
-	LOG_LOGD("Sync thread started");
-	sync_thread_params_s *sync_params = (sync_thread_params_s *)params;
-	if (sync_params == NULL || g_sync_adapter == NULL) {
-		LOG_LOGD("sync_params or g_sync_adapter is NULL");
-	} else {
-		account_h account = NULL;
-		int ret = 0;
-		if (sync_params->accountId != -1) {
-			ret = account_create(&account);
-			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_create() failed");
-
-			ret =  account_query_account_by_account_id(sync_params->accountId, &account);
-			SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, NULL, "account_query_account_by_account_id() failed %d");
-		}
-
-		ret = g_sync_adapter->start_sync_cb(account, sync_params->extra, sync_params->capability);
-
-		if (ret == 0)
-			tizen_sync_adapter_call_send_result_sync(sync_params->sync_adapter_obj, (int)SYNC_STATUS_SUCCESS, sync_params->accountId, sync_params->capability, NULL, NULL);
-		else
-			tizen_sync_adapter_call_send_result_sync(sync_params->sync_adapter_obj, (int)SYNC_STATUS_FAILURE, sync_params->accountId, sync_params->capability, NULL, NULL);
-
-		g_sync_adapter->cur_thread = 0;
-	}
-	free(sync_params);
-
-	return NULL;
-}
-
-
 gboolean
-sync_adapter_on_start_sync(
-		TizenSyncAdapter *pObject,
-		gint accountId,
-		GVariant *pBundleArg,
-		const gchar *pCapabilityArg)
+__sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
+											gint accountId,
+											const gchar *pSyncJobName,
+											gboolean is_data_sync,
+											GVariant *pSyncJobUserData)
 {
-	LOG_LOGD("On start sync called");
-	SYNC_LOGE_RET_RES(pObject != NULL, true, "sync adapter object is null");
+	SYNC_LOGE_RET_RES(pObject != NULL && pSyncJobName != NULL, true, "sync adapter object is null");
+	LOG_LOGD("Received start sync request in sync adapter: params account[%d] jobname [%s] Data sync [%s]", accountId, pSyncJobName, is_data_sync ? "YES" : "NO");
 
-	if (g_sync_adapter->cur_thread) {
-		LOG_LOGD("Sync thread running");
-		tizen_sync_adapter_call_send_result_sync(pObject, (int)SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS, accountId, pCapabilityArg, NULL, NULL);
+	if (g_sync_adapter->__syncRunning) {
+		LOG_LOGD("Sync already running");
+
+		tizen_sync_adapter_call_send_result_sync(pObject, (int)SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS, pSyncJobName, NULL, NULL);
 
 		return true;
 	}
 
-	bundle *ext = umarshal_bundle(pBundleArg);
-	SYNC_LOGE_RET_RES(ext != NULL, true, "unmarshalling failed");
+	g_sync_adapter->__syncRunning = true;
 
-	sync_thread_params_s *sync_params = (sync_thread_params_s *) malloc(sizeof(struct sync_thread_params_s));
-	SYNC_LOGE_RET_RES(sync_params != NULL, true, "Out of memory");
+	int ret = SYNC_STATUS_SUCCESS;
+	account_h account = NULL;
+	if (accountId != -1) {
+		account_create(&account);
+		account_query_account_by_account_id(accountId, &account);
+	}
+	bundle *sync_job_user_data = umarshal_bundle(pSyncJobUserData);
 
-	sync_params->sync_adapter_obj = pObject;
-	sync_params->accountId = accountId;
-	sync_params->extra = ext;
-	sync_params->capability = strdup(pCapabilityArg);
+	bool is_sync_success;
+	if (is_data_sync)
+		is_sync_success = g_sync_adapter->start_sync_cb(account, NULL, pSyncJobName, sync_job_user_data);
+	else
+		is_sync_success = g_sync_adapter->start_sync_cb(account, pSyncJobName, NULL, sync_job_user_data);
 
-	pthread_t thread;
-	int ret = pthread_create(&thread, NULL, run_sync, (void *) sync_params);
-	SYNC_LOGE_RET_RES(ret == 0, true, "pthread create failed");
+	if (!is_sync_success)
+		ret = SYNC_STATUS_FAILURE;
 
-	g_sync_adapter->cur_thread = thread;
+	tizen_sync_adapter_call_send_result_sync(pObject, (int)SYNC_STATUS_SUCCESS, pSyncJobName, NULL, NULL);
+	g_sync_adapter->__syncRunning = false;
+	bundle_free(sync_job_user_data);
+	LOG_LOGD("Sync completed");
+
+	if (ret == SYNC_STATUS_FAILURE)
+		return false;
 
 	return true;
 }
 
 
 gboolean
-sync_adapter_on_stop_sync(
+__sync_adapter_on_stop_sync(
 		TizenSyncAdapter *pObject,
 		gint accountId,
-		const gchar *pCapabilityArg)
+		const gchar *pSyncJobName,
+		gboolean is_data_sync,
+		GVariant *pSyncJobUserData)
 {
 	LOG_LOGD("handle stop in adapter");
+
 	SYNC_LOGE_RET_RES(pObject != NULL, true, "sync adapter object is null");
+	LOG_LOGD("Received stop sync request in sync adapter: params account[%d] jobname [%s] Data sync [%s]", accountId, pSyncJobName, is_data_sync ? "YES" : "NO");
 
 	account_h account = NULL;
-	int ret = 0;
 	if (accountId != -1) {
-		ret = account_create(&account);
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_create() failed");
-
-		ret =  account_query_account_by_account_id(accountId, &account);
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, true, "account_query_account_by_account_id() failed");
+		account_create(&account);
+		account_query_account_by_account_id(accountId, &account);
 	}
+	bundle *sync_job_user_data = umarshal_bundle(pSyncJobUserData);
 
-	if (g_sync_adapter->cur_thread)	{
-		 LOG_LOGD("Sync thread active. Cancellig it");
-		 pthread_cancel(g_sync_adapter->cur_thread);
-	} else {
-		 LOG_LOGD("Sync thread not active");
-	}
-
-	g_sync_adapter->cur_thread = 0;
-
-	g_sync_adapter->cancel_sync_cb(account, pCapabilityArg);
+	if (is_data_sync)
+		g_sync_adapter->cancel_sync_cb(account, NULL, pSyncJobName, sync_job_user_data);
+	else
+		g_sync_adapter->cancel_sync_cb(account, pSyncJobName, NULL, sync_job_user_data);
 
 	return true;
 }
 
-
-int sync_adapter_init(const char *capability)
+/* flag == true => register */
+/* flag == false => de-register */
+int __register_sync_adapter(bool flag)
 {
-	LOG_LOGD("capability %s", capability);
-
-	bool account_less_sa = true;
-	if (capability != NULL) {
-		if (!(strcmp(capability, "http://tizen.org/account/capability/calendar")) ||
-			!(strcmp(capability, "http://tizen.org/account/capability/contact"))) {
-			account_less_sa = false;
-		} else {
-			LOG_LOGD("sync client: invalid capability");
-			return SYNC_ERROR_INVALID_PARAMETER;
-		}
-	}
-
-	char *command_line = proc_get_cmdline_self();
-
 	GError *error = NULL;
-	GDBusConnection *connection = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+	GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
 
 	TizenSyncManager *ipcObj = tizen_sync_manager_proxy_new_sync(connection,
-			G_DBUS_PROXY_FLAGS_NONE,
-			"org.tizen.sync",
-			"/org/tizen/sync/manager",
-			NULL,
-			&error);
+																	G_DBUS_PROXY_FLAGS_NONE,
+																	SYNC_MANAGER_DBUS_SERVICE,
+																	SYNC_MANAGER_DBUS_PATH,
+																	NULL,
+																	&error);
 	SYNC_LOGE_RET_RES(error == NULL && ipcObj != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
 
-	tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, account_less_sa, capability, command_line, NULL, NULL);
+	char *command_line = proc_get_cmdline_self();
+	if (flag)
+		tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, command_line, NULL, &error);
+	else
+		tizen_sync_manager_call_remove_sync_adapter_sync(ipcObj, command_line, NULL, &error);
+
+	free(command_line);
+	SYNC_LOGE_RET_RES(error == NULL, SYNC_ERROR_IO_ERROR, "Register sync adapter failed %s", error->message);
+
+	return SYNC_ERROR_NONE;
+}
+
+
+int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adapter_cancel_sync_cb on_cancel_cb)
+{
+	SYNC_LOGE_RET_RES(on_start_cb != NULL && on_cancel_cb != NULL, SYNC_ERROR_INVALID_PARAMETER, "Callback parameters must be passed");
 
 	if (!g_sync_adapter) {
 		g_sync_adapter = (sync_adapter_s *) malloc(sizeof(struct sync_adapter_s));
 		SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Out of memory");
 
 		g_sync_adapter->sync_adapter_obj = NULL;
-		g_sync_adapter->cur_thread = 0;
+		g_sync_adapter->__syncRunning = false;
+
+		if (__register_sync_adapter(true) == SYNC_ERROR_NONE) {
+			pid_t pid = getpid();
+			GError *error = NULL;
+			GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+			SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_SYSTEM, "System error occured %s", error->message);
+
+			char obj_path[50];
+			snprintf(obj_path, 50, "%s/%d", SYNC_ADAPTER_COMMON_DBUS_PATH, pid);
+
+			TizenSyncAdapter *pSyncAdapter = tizen_sync_adapter_proxy_new_sync(connection,
+																			G_DBUS_PROXY_FLAGS_NONE,
+																			SYNC_MANAGER_DBUS_SERVICE,
+																			obj_path,
+																			NULL,
+																			&error);
+			SYNC_LOGE_RET_RES(error == NULL && pSyncAdapter != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
+
+			g_signal_connect(pSyncAdapter, "start-sync", G_CALLBACK(__sync_adapter_on_start_sync), NULL);
+			g_signal_connect(pSyncAdapter, "cancel-sync", G_CALLBACK(__sync_adapter_on_stop_sync), NULL);
+			g_sync_adapter->sync_adapter_obj = pSyncAdapter;
+		}
 	}
 
-	return SYNC_ERROR_NONE;
-}
-
-
-void sync_adapter_destroy(void)
-{
-	LOG_LOGD("sync_adapter_destroy");
-	if (g_sync_adapter) {
-		free(g_sync_adapter);
-		g_sync_adapter = NULL;
-	}
-}
-
-
-int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adapter_cancel_sync_cb on_cancel_cb)
-{
-	SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_SYSTEM, "sync_adapter_init should be called first");
-
-	if (on_start_cb == NULL || on_cancel_cb == NULL)
-		return SYNC_ERROR_INVALID_PARAMETER;
-
-	if (g_sync_adapter->sync_adapter_obj) {
-		g_sync_adapter->start_sync_cb = on_start_cb;
-		g_sync_adapter->cancel_sync_cb = on_cancel_cb;
-		return SYNC_ERROR_NONE;
-	}
-
-	pid_t pid = getpid();
-	GError *error = NULL;
-	GDBusConnection *connection = NULL;
-	connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
-	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_SYSTEM, "System error occured %s", error->message);
-
-	char obj_path[50];
-	snprintf(obj_path, 50, "%s/%d", SYNC_ADAPTER_COMMON_DBUS_PATH, pid);
-
-	TizenSyncAdapter *pSyncAdapter = tizen_sync_adapter_proxy_new_sync(connection,
-			G_DBUS_PROXY_FLAGS_NONE,
-			"org.tizen.sync",
-			obj_path,
-			NULL,
-			&error);
-	SYNC_LOGE_RET_RES(error == NULL && pSyncAdapter != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
-
-	tizen_sync_adapter_call_init_complete_sync(pSyncAdapter, NULL, NULL);
-	g_signal_connect(pSyncAdapter, "start-sync", G_CALLBACK(sync_adapter_on_start_sync), NULL);
-	g_signal_connect(pSyncAdapter, "cancel-sync", G_CALLBACK(sync_adapter_on_stop_sync), NULL);
-
-	g_sync_adapter->sync_adapter_obj = pSyncAdapter;
 	g_sync_adapter->start_sync_cb = on_start_cb;
 	g_sync_adapter->cancel_sync_cb = on_cancel_cb;
-
-	LOG_LOGD("sync adapter callbacks are set %s", obj_path);
 
 	return SYNC_ERROR_NONE;
 }
@@ -271,10 +208,17 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
 
 int sync_adapter_unset_callbacks()
 {
-	SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_SYSTEM, "sync_adapter_init should be called first");
+	SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_SYSTEM, "sync_adapter_set_callbacks should be called first");
 
+	__register_sync_adapter(false);
 	g_sync_adapter->start_sync_cb = NULL;
 	g_sync_adapter->cancel_sync_cb = NULL;
+
+	LOG_LOGD("sync_adapter_destroy");
+	if (g_sync_adapter) {
+		free(g_sync_adapter);
+		g_sync_adapter = NULL;
+	}
 
 	return SYNC_ERROR_NONE;
 }

@@ -52,17 +52,17 @@ using namespace std;
 class SyncAdapterAggregator
 {
 public:
-	void AddSyncAdapter(const char* pAccoutProviderAppId, const char* pServiceAppId, const char* pCapability);
+	void AddSyncAdapter(const char* pPackageId, const char* pServiceAppId);
 
-	bool HasSyncAdapter(const char* pAccountProviderId, const char* pServiceAppId, const char* pCapability);
+	bool HasServiceAppId(const char* pServiceAppId);
 
-	void RemoveSyncAdapter(const char* pServiceAppId, const char* pCapability);
+	bool HasSyncAdapter(const char* pPackageId);
 
-	char* GetSyncAdapter(account_h account, string capability);
+	void RemoveSyncAdapter(const char* pPackageId);
 
-	char* GetSyncAdapter(const char* pAppId);
+	const char* GetSyncAdapter(const char* pPackageId);
 
-	void HandlePackageUninstalled(const char* pAppId);
+	void HandlePackageUninstalled(const char* pPackageId);
 
 	void dumpSyncAdapters();
 
@@ -73,48 +73,6 @@ protected:
 
 	friend class Singleton<SyncManager>;
 
-
-class SyncAdapter
-{
-public:
-	SyncAdapter(const char* pAccoutProviderAppId, const char* pServiceAppId, const char* pCapability)
-	{
-		__pAccountProviderId = strdup(pAccoutProviderAppId);
-		__pCapability = (pCapability == NULL)? NULL : strdup(pCapability);
-		__pAppId = strdup(pServiceAppId);
-	}
-
-	~SyncAdapter(void)
-	{
-		if (__pAccountProviderId)
-		{
-			free(__pAccountProviderId);
-		}
-
-		if (__pCapability)
-		{
-			free(__pCapability);
-		}
-
-		if (__pAppId)
-		{
-			free(__pAppId);
-		}
-	}
-private:
-
-	SyncAdapter(const SyncAdapter&);
-
-	const SyncAdapter& operator=(const SyncAdapter&);
-
-public:
-	char* __pAccountProviderId;
-	char* __pCapability;
-	char* __pAppId;
-};
-
-
-
 private:
 
 	SyncAdapterAggregator(const SyncAdapterAggregator&);
@@ -122,7 +80,7 @@ private:
 	const SyncAdapterAggregator& operator=(const SyncAdapterAggregator&);
 
 private:
-	multimap<string, SyncAdapter*> __syncAdapterList;
+	map<string, string> __syncAdapterList;
 
 	friend class SyncManager;
 	friend class RepositoryEngine;

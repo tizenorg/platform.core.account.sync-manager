@@ -59,262 +59,70 @@ SyncJobQueue::~SyncJobQueue(void)
 }
 
 
-map<const string, SyncJob*>
-SyncJobQueue::GetSyncJobQueue(void) const
+list< SyncJob* >&
+SyncJobQueue::GetSyncJobQueue(void)
 {
-	return __syncJobsList;
+	return __syncJobsQueue;
 }
 
-//TODO Uncomment the below code when enabling pending job logic
-/*
-void SyncJobQueue::AddPendingJobs(string appId)
+
+list< SyncJob* >&
+SyncJobQueue::GetPrioritySyncJobQueue(void)
 {
-	LOG_LOGD("SyncJobQueue::addPendingJobs() Starts, appId[%s]", appId.c_str());
-
-	list<PendingJob*> pendingJobsList = __pSyncRepositoryEngine->GetPendingJobs();
-	for (int i = 0; i < pendingJobsList.size(); i++)
-	{
-		PendingJob* pPendingJob = pendingJobsList[i];
-		if (appId.compare(pPendingJob->appId) != 0)
-		{
-			continue;
-		}
-
-		backOff* pBackOff = __pSyncRepositoryEngine->GetBackoff(pPendingJob->account, pPendingJob->capability);
-		SyncJob* pSyncJob = new SyncJob(pPendingJob->appId, pPendingJob->account, pPendingJob->capability,
-										pPendingJob->pExtras, pPendingJob->reason, pPendingJob->syncSource,
-										0, 0, pBackOff != NULL ? pBackOff->time,
-										__pSyncRepositoryEngine->GetDelayUntilTime(pPendingJob->account, pPendingJob->capability),
-										false);
-		if (pSyncJob == NULL)
-		{
-			LOG_LOGD("Failed to construct SyncJob");
-			continue;
-		}
-		pSyncJob->isExpedited = pPendingJob->isExpedited;
-		pSyncJob->pPendingJob = pPendingJob;
-		int err = AddSyncJob(pSyncJob, pPendingJob);
-		if (err != SYNC_ERROR_NONE)
-		{
-			LOG_LOGD("Failed to add pending job to sync jobs list");
-		}
-	}
-	LOG_LOGD("SyncJobQueue::addPendingJobs() ends");
-}*/
-
-
-int
-SyncJobQueue::AddSyncJob(SyncJob job)
-{
-	return AddSyncJob(job, NULL);
+	return __prioritySyncJobsQueue;
 }
 
 
 int
-SyncJobQueue::AddSyncJob(SyncJob pSyncJob, PendingJob* pPendingJob)
+SyncJobQueue::AddSyncJob(SyncJob* pSyncJob)
 {
-	LOG_LOGD("Add to SyncJob Queue");
-	LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsList.size());
+	SyncJob* pSyncJobEntry = dynamic_cast< SyncJob* > (pSyncJob);
+	SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
-	/*
-	 * If there is an existing operation with same key, check if the new one should run sooner
-	 * Replace the run interval of existing with this new one
-	 */
-	string jobKey;
-
-	if (pSyncJob.key.empty())
+	if (pSyncJobEntry ->IsExpedited())
 	{
-		LOG_LOGD("Invalid key");
-		return SYNC_ERROR_IO_ERROR;
+		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
+		__prioritySyncJobsQueue.push_back(pSyncJob);
+		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
+	}
+	else
+	{
+		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
+		__syncJobsQueue.push_back(pSyncJob);
+		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
 	}
 
-	stringstream ss;
-	ss << pSyncJob.key;
-	jobKey = ss.str();
+	return SYNC_ERROR_NONE;
+}
 
-	//If a job with same key already exists but this one has smaller runtime,
-	// then replace the runTime of the existing sync job.
-	map<const string, SyncJob*>::iterator it;
-	it = __syncJobsList.find(jobKey);
 
-	if (it != __syncJobsList.end())
+int
+SyncJobQueue::RemoveSyncJob(SyncJob* pSyncJob)
+{
+	if (pSyncJob ->IsExpedited())
 	{
-		SyncJob* pOtherJob = it->second;
-		if (pSyncJob.Compare(pOtherJob) > 0)
-		{
-			return SYNC_ERROR_ALREADY_IN_PROGRESS;
-		}
-
-		pOtherJob->isExpedited = pSyncJob.isExpedited;
-		pOtherJob->latestRunTime = MIN(pSyncJob.latestRunTime, pOtherJob->latestRunTime);
-		pOtherJob->flexTime = pSyncJob.flexTime;
-
-		LOG_LOGD("SyncJob Queue size, After = %d", __syncJobsList.size());
-		return SYNC_ERROR_NONE;
+		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
+		__prioritySyncJobsQueue.remove(pSyncJob);
+		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
 	}
-
-	//TODO Uncomment the below code when enabling pending job logic
-	/*
-	pSyncJob->pPendingJob = pPendingJob;
-
-	if (pSyncJob->pPendingJob == NULL)
+	else
 	{
-		pPendingJob = new PendingJob(pSyncJob->appId, pSyncJob->account, pSyncJob->reason,
-													pSyncJob->syncSource, pSyncJob->capability, pSyncJob->pExtras, pSyncJob->isExpedited);
-		if (pPendingJob == NULL)
-		{
-			LOG_LOGD("Failed to create pending job instance.");
-			return SYNC_ERROR_OUT_OF_MEMORY;
-		}
-		pPendingJob = __pSyncRepositoryEngine->InsertIntoPending(pPendingJob);
-		if (pPendingJob == NULL)
-		{
-			LOG_LOGD("Failed to insert into pending jobs list");
-			return SYNC_ERROR_INVALID_OPERATION;
-		}
-		pSyncJob->pPendingJob = pPendingJob;
+		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
+		__syncJobsQueue.remove(pSyncJob);
+		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
 	}
-*/
-
-	SyncJob* pJob = new (std::nothrow) SyncJob(pSyncJob);
-	if (pJob == NULL)
-	{
-		LOG_LOGD("Failed to construct SyncJob");
-		return SYNC_ERROR_OUT_OF_MEMORY;
-	}
-
-	pair<map<const string, SyncJob*>::iterator,bool> ret;
-	ret = __syncJobsList.insert(pair<const string, SyncJob*>(jobKey, pJob));
-	if (ret.second == false)
-	{
-		LOG_LOGD("Key already exits");
-		return SYNC_ERROR_ALREADY_IN_PROGRESS;
-	}
-
-	LOG_LOGD("SyncJob Queue size, After = %d", __syncJobsList.size());
 
 	return SYNC_ERROR_NONE;
 }
 
 
 void
-SyncJobQueue::RemoveSyncJobsForApp(string appId)
+SyncJobQueue::UpdateAgeCount()
 {
-	LOG_LOGD("Removing job from sync queue for app id[%s]", appId.c_str());
-	map<const string, SyncJob*>::iterator it;
-	for (it = __syncJobsList.begin(); it != __syncJobsList.end(); it++)
+	list< SyncJob* >::iterator itr = __syncJobsQueue.begin();
+	while (itr != __syncJobsQueue.end())
 	{
-		SyncJob* pSyncJob = it->second;
-		if (pSyncJob && (pSyncJob->appId.compare(appId) == 0))
-		{
-			LOG_LOGD("Removing job[key:%s] from sync queue", pSyncJob->key.c_str());
-			RemoveSyncJob(pSyncJob->key);
-		}
-	}
-}
-
-
-int
-SyncJobQueue::RemoveSyncJob(string key)
-{
-	LOG_LOGD("Removing job and its corresponding pending operation, key[%s]", key.c_str());
-	map<const string, SyncJob*>::iterator it = __syncJobsList.find(key);
-	if (it == __syncJobsList.end())
-	{
-		LOG_LOGD("Can not find the key[%s] to remove", key.c_str());
-		return SYNC_ERROR_INVALID_OPERATION;
-	}
-
-	SyncJob* pJob = it->second;
-	if (__syncJobsList.erase(key) != 1)
-	{
-		LOG_LOGD("Failed to remove sync job from sync jobs list, key[%s]", key.c_str());
-		return SYNC_ERROR_INVALID_OPERATION;
-	}
-
-	//TODO Uncomment the below code when enabling pending job logic
-	/*if (!__pSyncRepositoryEngine->DeleteFromPending(pJob->pPendingJob))
-	{
-		LOG_LOGD("Unable to find pending job entry for syncjob, key[%s]", pSyncJob->key.c_str());
-	}*/
-
-	delete pJob;
-	pJob = NULL;
-	LOG_LOGD("Removed from __syncJobsList, size = %d", __syncJobsList.size());
-	return SYNC_ERROR_NONE;
-}
-
-
-void
-SyncJobQueue::OnBackoffChanged(account_h account, const string capability, long backoff)
-{
-	map<const string, SyncJob*>:: iterator it;
-	for (it = __syncJobsList.begin(); it != __syncJobsList.end(); it++)
-	{
-		SyncJob* pJob = it->second;
-		if (SyncManager::GetInstance()->AreAccountsEqual(pJob->account, account)  && !(pJob->capability.compare(capability)))
-		{
-			pJob->backoff = backoff;
-			pJob->UpdateEffectiveRunTime();
-		}
-	}
-}
-
-
-void
-SyncJobQueue::OnDelayUntilTimeChanged(account_h account, const string capability, long delayUntil)
-{
-	map<const string, SyncJob*>:: iterator it;
-	for (it = __syncJobsList.begin(); it != __syncJobsList.end(); it++)
-	{
-		SyncJob* pJob = it->second;
-		if (SyncManager::GetInstance()->AreAccountsEqual(pJob->account, account) && !(pJob->capability.compare(capability)))
-		{
-			pJob->delayUntil = delayUntil;
-			pJob->UpdateEffectiveRunTime();
-		}
-	}
-}
-
-
-void
-SyncJobQueue::RemoveSyncJob(string appId, account_h account, const string capability)
-{
-	map<const string, SyncJob*>:: iterator it;
-	for (it = __syncJobsList.begin(); it != __syncJobsList.end();)
-	{
-		SyncJob* pSyncJob = it->second;
-
-		if (account != NULL && !(SyncManager::GetInstance()->AreAccountsEqual(account, pSyncJob->account)))
-		{
-			it++;
-			continue;
-		}
-
-		if (!(capability.empty()) && pSyncJob->capability.compare(capability))
-		{
-			it++;
-			continue;
-		}
-
-		if (!(appId.empty()) && pSyncJob->appId.compare(appId))
-		{
-			it++;
-			continue;
-		}
-
-		LOG_LOGD("Removing job and its corresponding pending operation, key[%s]", pSyncJob->key.c_str());
-
-		//TODO Uncomment the below code when enabling pending job logic
-		/*if (!__pSyncRepositoryEngine->DeleteFromPending(pSyncJob->pPendingJob))
-		{
-			LOG_LOGD("Unable to find pending job for syncjob, key[%s]", pSyncJob->key.c_str());
-		}*/
-
-		__syncJobsList.erase(it++);
-		delete pSyncJob;
-		pSyncJob = NULL;
-		LOG_LOGD("Removed from syncJobsList, size = %d", __syncJobsList.size());
+		(*itr)->IncrementWaitCounter();
 	}
 }
 

@@ -45,17 +45,15 @@ public:
 
 	int StartService(void);
 
-	void TriggerStartSync(const char* appId,int accountId, bundle* pExtras, const char* pCapability);
+	int TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras);
 
-	void TriggerStopSync(const char* appId, account_h account, const char* pCapability);
+	void TriggerStopSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras);
 
-	void RequestSync(const char* appId, int accountId, bundle* pExtras, const char* pCapability);
+	int RequestOnDemandSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, int* pSyncJobId);
 
-	void CancelSync(const char* appId, account_h account, const char* pCapability);
+	int RequestPeriodicSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, unsigned long pollFrequency, int* pSyncJobId);
 
-	void AddPeriodicSyncJob(const char* appId, int accountId, bundle* pExtras, const char* pCapability, unsigned long pollFrequency);
-
-	void RemovePeriodicSyncJob(const char* appId, account_h account, bundle* pExtras, const char* pCapability);
+	int RequestDataSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, const char* pCapability, int* pSyncJobId);
 
 	void HandleShutdown(void);
 
@@ -72,6 +70,9 @@ private:
 	const SyncService& operator=(const SyncService&);
 
 	void InitializeDbus();
+
+private:
+	SyncManager* __pSyncManagerInstance;
 };
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_SERVICE_H

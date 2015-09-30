@@ -23,8 +23,7 @@
 #ifndef SYNC_SERVICE_SYNC_JOB_QUEUE_H
 #define SYNC_SERVICE_SYNC_JOB_QUEUE_H
 
-#include <map>
-#include <list>
+#include <queue>
 #include <bundle.h>
 #include <account.h>
 #include <stdio.h>
@@ -32,7 +31,6 @@
 #include <string>
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_SyncJob.h"
-#include "SyncManager_PendingJob.h"
 
 
 /*namespace _SyncManager
@@ -57,29 +55,20 @@ public:
 
 	SyncJobQueue(RepositoryEngine* pSyncRepositoryEngine);
 
-	map<const string, SyncJob*> GetSyncJobQueue(void) const;
+	list< SyncJob* >& GetSyncJobQueue(void);
 
-	//TODO Uncomment the below code when enabling pending job logic
-	//void AddPendingJobs(string appId);
+	list< SyncJob* >& GetPrioritySyncJobQueue(void);
 
-	int AddSyncJob(SyncJob pJob);
+	int AddSyncJob(SyncJob* pJob);
 
-	void RemoveSyncJobsForApp(string appId);
+	int RemoveSyncJob(SyncJob* pJob);
 
-	int RemoveSyncJob(string key);
-
-	void RemoveSyncJob(string appId, account_h account, const string capability);
-
-	void OnBackoffChanged(account_h account, const string capability, long backoff);
-
-	void OnDelayUntilTimeChanged(account_h account, const string capability, long delayUntil);
-
-private:
-	int AddSyncJob(SyncJob pJob, PendingJob* pPendingJob);
+	void UpdateAgeCount();
 
 private:
 	RepositoryEngine* __pSyncRepositoryEngine;
-	map<const string, SyncJob*> __syncJobsList;
+	list< SyncJob* > __syncJobsQueue;
+	list< SyncJob* > __prioritySyncJobsQueue;
 };
 
 #ifdef __cplusplus

@@ -8,6 +8,7 @@ includedir=@INCLUDEDIR@
 Name: Sync manager library
 Description: Sync manager client API
 Version: @VERSION@
+Requires: capi-base-common accounts-svc bundle
 Libs: -L${libdir} -lcore-sync-client
 Cflags: -I${includedir}
 

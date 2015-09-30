@@ -19,42 +19,57 @@
  * @brief	This is the header file for the CapabilityInfo class.
  */
 
-#ifndef SYNC_SERVICE_CAPABILITY_INFO_H
-#define SYNC_SERVICE_CAPABILITY_INFO_H
+#ifndef SYNC_SERVICE_SYNC_JOBS_INFO_H
+#define SYNC_SERVICE_SYNC_JOBS_INFO_H
 
 #include <string>
 #include <vector>
 #include <account.h>
-#include "SyncManager_PeriodicSyncJob.h"
+#include "SyncManager_ISyncJob.h"
+#include "SyncManager_SyncDefines.h"
 
 /*namespace _SyncManager
 {
 */
 using namespace std;
 
-class CapabilityInfo
+class SyncJobsInfo
 {
 public:
 
-	CapabilityInfo(void);
+	~SyncJobsInfo(void);
 
-	~CapabilityInfo(void);
+	SyncJobsInfo(string packageId);
 
-	CapabilityInfo(string capability);
+	ISyncJob* GetSyncJob(string syncJobName);
 
-	void AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob);
+	ISyncJob* GetSyncJob(int syncJobId);
 
-	void RemovePeriodicSyncJob(PeriodicSyncJob* pJob);
+	int RemoveSyncJob(int syncJobId);
 
-	bool RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob);
+	int RemoveSyncJob(string syncJobName);
 
-	CapabilityInfo(const CapabilityInfo& accountInfo);
+	int AddSyncJob(string syncJobName, ISyncJob* pSyncJob);
 
-	CapabilityInfo& operator =(const CapabilityInfo& capabilityInfo);
+	int GetNextSyncJobId();
+
+	int GetSyncJobsCount();
+
+	vector< int > GetSyncJobIdList();
+
+	map<int, ISyncJob*>& GetAllSyncJobs();
+
+private:
+
+	SyncJobsInfo(const SyncJobsInfo&);
+
+	const SyncJobsInfo& operator=(const SyncJobsInfo&);
 
 public:
-	string __capability;
-	map<int, PeriodicSyncJob*> __periodicSyncList;
+	map<string, ISyncJob*> __syncJobsList;
+	map<int, ISyncJob*> __syncIdList;
+	string __packageId;
+	bool __syncJobId[SYNC_JOB_LIMIT + 1];
 };
 //}//_SyncManager
-#endif // SYNC_SERVICE_CAPABILITY_INFO_H
+#endif // SYNC_SERVICE_SYNC_JOBS_INFO_H

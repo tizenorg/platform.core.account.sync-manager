@@ -30,12 +30,15 @@
 #include <glib.h>
 #include <aul.h>
 #include <pkgmgr-info.h>
+#include <app_manager.h>
 #include <tzplatform_config.h>
 #include "sync-error.h"
 #include "SyncManager_SyncManager.h"
 #include "SyncManager_SyncAdapterAggregator.h"
+#include "SyncManager_SyncJobsAggregator.h"
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_PeriodicSyncJob.h"
+#include "SyncManager_DataSyncJob.h"
 #include "sync_manager.h"
 
 
@@ -48,6 +51,7 @@
 #define SYNC_DATA_DIR tzplatform_mkpath(TZ_USER_DATA, "/sync-manager")
 
 int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
+#define ID_FOR_ACCOUNT_LESS_SYNC -2
 
 
 void
@@ -70,107 +74,71 @@ SyncManager::GetSyncSetting()
 
 
 int
-SyncManager::RequestSync(string appId, int accountId, const char* capability, bundle* pExtras)
+SyncManager::AddOnDemandSync(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId)
 {
-	if (accountId == -1)
+	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
+	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
+
+	if (accountId != -1 && !GetSyncSupport(accountId))
 	{
-		LOG_LOGD("Schedule account less sync");
-		ScheduleAccountLessSync(appId, REASON_USER_INITIATED, pExtras, 0, 0, false);
+		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
+
+		return SYNC_ERROR_SYSTEM;
 	}
-	else
-	{
-		LOG_LOGD("Schedule sync for account ID %d and capability %s", accountId, capability);
-		ScheduleSync(appId, accountId, capability, REASON_USER_INITIATED, pExtras, 0, 0, false);
-	}
+
+	SyncJob* pJob = new (std::nothrow) SyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_ON_DEMAND);
+	SYNC_LOGE_RET_RES(pJob != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Failed to construct SyncJob");
+
+	__pSyncJobsAggregator->AddSyncJob(pPackageId.c_str(), syncJobName, pJob);
+
+	ScheduleSyncJob(pJob);
 
 	return SYNC_ERROR_NONE;
 }
 
 
 int
-SyncManager::CancelSync(string appId, account_h account, const char* capability)
+SyncManager::CancelSync(SyncJob* pSyncJob)
 {
 	LOG_LOGD("SyncManager::CancelSync Starts");
 
-	ClearScheduledSyncJobs(appId, account, (capability != NULL)? capability : "");
-	CancelActiveSyncJob(appId, account, (capability != NULL)? capability : "");
+	ClearScheduledSyncJobs(pSyncJob);
+	CancelActiveSyncJob(pSyncJob);
 
 	LOG_LOGD("SyncManager::CancelSync Ends");
+
 	return SYNC_ERROR_NONE;
 }
 
 
 int
-SyncManager::AddPeriodicSyncJob(string appId, int accountId, const char* capability, bundle* pExtras, long period)
+SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, long period)
 {
-	if (period < 300)
+	if (period < 1800)
 	{
-		LOG_LOGD("Requested period %d, rounding up to 300 sec", period);
-		period = 300;
+		LOG_LOGD("Requested period %d is less than minimum, rounding up to 30 mins", period);
+
+		period = 1800;
 	}
 
-	long defaultFlexTime = __pSyncRepositoryEngine->CalculateDefaultFlexTime(period);
+	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
+	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
+	LOG_LOGD("Found sync adapter [%s]", pSyncAdapterApp);
 
-	if (accountId == -1)
+	if (accountId != -1 && !GetSyncSupport(accountId))
 	{
-		LOG_LOGD("Adding account less periodic sync for app [%s] period [%ld s]", appId.c_str(), period);
-
-		char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(appId.c_str());
-		if (pSyncAdapter == NULL)
-		{
-			LOG_LOGD("Sync adapter couldn't' be found for %s", appId.c_str());
-			return SYNC_ERROR_SYSTEM;
-		}
-
-		PeriodicSyncJob* pRequestedJob = new (std::nothrow) PeriodicSyncJob(NULL, "", pExtras, period, defaultFlexTime);
-		if (pRequestedJob == NULL)
-		{
-			LOG_LOGD("Failed to construct PeriodicSyncJob");
-			return SYNC_ERROR_OUT_OF_MEMORY;
-		}
-
-		__pSyncRepositoryEngine->AddPeriodicSyncJob(pSyncAdapter, pRequestedJob, true);
+		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
+		return SYNC_ERROR_SYSTEM;
 	}
-	else
+
+	PeriodicSyncJob* pRequestedJob = new (std::nothrow) PeriodicSyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_PERIODIC, period / 60);
+	SYNC_LOGE_RET_RES(pRequestedJob != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Failed to construct periodic SyncJob");
+
+	__pSyncJobsAggregator->AddSyncJob(pPackageId.c_str(), syncJobName, pRequestedJob);
+	__pPeriodicSyncScheduler->SchedulePeriodicSyncJob(pRequestedJob);
+	if (pRequestedJob->IsExpedited())
 	{
-		LOG_LOGD("Adding periodic sync for [%s] capability [%s] period[%ld s]", appId.c_str(), capability, period);
-
-		int pid = SyncManager::GetInstance()->GetAccountPid(accountId);
-
-		account_h account = NULL;
-		int ret = account_create(&account);
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, ret, "account access failed");
-
-		KNOX_CONTAINER_ZONE_ENTER(pid);
-		ret =  account_query_account_by_account_id(accountId, &account);
-		KNOX_CONTAINER_ZONE_EXIT();
-
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, ret, "account query failed");
-
-		account_sync_state_e syncSupport;
-		ret = account_get_sync_support(account,  &syncSupport);
-		SYNC_LOGE_RET_RES(ret == ACCOUNT_ERROR_NONE, ret, "account access failed");
-		if (syncSupport == ACCOUNT_SYNC_INVALID || syncSupport == ACCOUNT_SYNC_NOT_SUPPORT)
-		{
-			LOG_LOGD("The account does not support sync");
-			return SYNC_ERROR_INVALID_OPERATION;
-		}
-
-		char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(account, capability);
-		if (pSyncAdapter == NULL)
-		{
-			return SYNC_ERROR_SYSTEM;
-		}
-		LOG_LOGD("Found sync adapter [%s]", pSyncAdapter);
-
-		PeriodicSyncJob* pRequestedJob = new (std::nothrow) PeriodicSyncJob(account, capability, pExtras, period, defaultFlexTime);
-		if (pRequestedJob == NULL)
-		{
-			LOG_LOGD("Failed to construct PeriodicSyncJob");
-			return SYNC_ERROR_OUT_OF_MEMORY;
-		}
-
-		__pSyncRepositoryEngine->AddPeriodicSyncJob(pSyncAdapter, pRequestedJob, false);
+		ScheduleSyncJob(pRequestedJob);
 	}
 
 	return SYNC_ERROR_NONE;
@@ -178,38 +146,64 @@ SyncManager::AddPeriodicSyncJob(string appId, int accountId, const char* capabil
 
 
 int
-SyncManager::RemovePeriodicSync(string appId, account_h account, const char* capability, bundle* pExtras)
+SyncManager::AddDataSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, const char* pCapability)
 {
-	LOG_LOGD("SyncManager::removePeriodicSync Starts");
+	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
+	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
+	LOG_LOGD("Found sync adapter [%s]", pSyncAdapterApp);
 
-	if (appId.empty())
+	if (accountId != -1 && !GetSyncSupport(accountId))
 	{
-		LOG_LOGD("Invalid parameter");
-		return SYNC_ERROR_INVALID_PARAMETER;
-	}
-	//TODO check to write sync settings
-
-	PeriodicSyncJob* pJobToRemove = new (std::nothrow) PeriodicSyncJob(account, capability ? capability : "", pExtras, 0, 0);
-	if (pJobToRemove == NULL)
-	{
-		LOG_ERRORD("Failed to construct PeriodicSyncJob.");
-		return SYNC_ERROR_OUT_OF_MEMORY;
+		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
+		return SYNC_ERROR_SYSTEM;
 	}
 
-	__pSyncRepositoryEngine->RemovePeriodicSyncJob(appId, pJobToRemove);
+	DataSyncJob* pRequestedJob = new (std::nothrow) DataSyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_DATA_CHANGE, pCapability);
+	SYNC_LOGE_RET_RES(pRequestedJob != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Failed to construct periodic SyncJob");
 
-	delete pJobToRemove;
-	pJobToRemove = NULL;
-
-	int ret = CancelSync(appId, account, capability);
-	if (ret != SYNC_ERROR_NONE)
+	__pSyncJobsAggregator->AddSyncJob(pPackageId.c_str(), syncJobName, pRequestedJob);
+	__pDataChangeSyncScheduler->AddDataSyncJob(syncJobName, pRequestedJob);
+	if (pRequestedJob->IsExpedited())
 	{
-		LOG_LOGD("Failed to cancel sync while removing periodic sync");
-		return ret;
+		ScheduleSyncJob(pRequestedJob);
 	}
 
-	LOG_LOGD("SyncManager::removePeriodicSync Ends");
 	return SYNC_ERROR_NONE;
+}
+
+
+int
+SyncManager::RemoveSyncJob(string packageId, int syncJobId)
+{
+	LOG_LOGD("Starts");
+	int ret = SYNC_ERROR_NONE;
+
+	ISyncJob* pSyncJob = __pSyncJobsAggregator->GetSyncJob(packageId.c_str(), syncJobId);
+	SYNC_LOGE_RET_RES(pSyncJob != NULL, SYNC_ERROR_UNKNOWN, "Sync job for id [%d] doesnt exist or already removed", syncJobId);
+
+	SyncType syncType = pSyncJob->GetSyncType();
+	if (syncType == SYNC_TYPE_DATA_CHANGE)
+	{
+		DataSyncJob* dataSyncJob = dynamic_cast< DataSyncJob* > (pSyncJob);
+		SYNC_LOGE_RET_RES(dataSyncJob != NULL, SYNC_ERROR_SYSTEM, "Failed to cast %d", syncJobId);
+
+		__pDataChangeSyncScheduler->RemoveDataSyncJob(dataSyncJob);
+	}
+	else if(syncType == SYNC_TYPE_PERIODIC)
+	{
+		PeriodicSyncJob* periodicSyncJob = dynamic_cast< PeriodicSyncJob* > (pSyncJob);
+		SYNC_LOGE_RET_RES(periodicSyncJob != NULL, SYNC_ERROR_SYSTEM, "Failed to cast %d", syncJobId);
+
+		ret = __pPeriodicSyncScheduler->RemoveAlarmForPeriodicSyncJob(periodicSyncJob);
+		SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, SYNC_ERROR_SYSTEM, "Failed to remove %d", syncJobId);
+	}
+
+	SyncJob* pJob = dynamic_cast< SyncJob* > (pSyncJob);
+	CancelSync(pJob);
+
+	__pSyncJobsAggregator->RemoveSyncJob(packageId.c_str(), syncJobId);
+
+	return ret;
 }
 
 
@@ -224,16 +218,14 @@ int
 SyncManager::AddToSyncQueue(SyncJob* pJob)
 {
 	//No need to add mutex here, will be called during startup only
-	return __pSyncJobQueue->AddSyncJob(*pJob);
+	return __pSyncJobQueue->AddSyncJob(pJob);
 }
 
 
-//TODO: uncomment below lines for running accounts logic
 void
 SyncManager::AddRunningAccount(int account_id, int pid)
 {
 	__runningAccounts.insert(make_pair(account_id, pid));
-	//__runningAccounts.push_back(account_id);
 }
 
 
@@ -266,19 +258,17 @@ bool accountCb(account_h account, void* pUserData)
 void
 SyncManager::UpdateRunningAccounts(void)
 {
-#if defined(_SEC_FEATURE_CONTAINER_ENABLE)
-	return;
-#endif
+#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
 	__runningAccounts.clear();
 	if (account_foreach_account_from_db(accountCb, this) < 0)
 	{
 		LOG_LOGD("UpdateRunningAccounts: Can not fetch account from db");
 	}
-
-	//TODO check additional android logic
+#endif
 }
 
 
+#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
 bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData)
 {
 	//TODO: will go in enhancements
@@ -289,6 +279,7 @@ bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData)
 
 	return true;
 }
+#endif
 
 
 void
@@ -296,17 +287,10 @@ SyncManager::OnDNetStatusChanged(bool connected)
 {
 	LOG_LOGD("Data network change detected %d", connected);
 
-	bool wasConnected = __isSimDataConnectionPresent;
+	//bool wasConnected = __isSimDataConnectionPresent;
 	__isSimDataConnectionPresent = connected;
 	if (__isSimDataConnectionPresent)
 	{
-		if (!wasConnected)
-		{
-			LOG_LOGD("Reconnection detected: clearing all backoffs");
-			pthread_mutex_lock(&__syncJobQueueMutex);
-			__pSyncRepositoryEngine->RemoveAllBackoffValuesLocked(__pSyncJobQueue);
-			pthread_mutex_unlock(&__syncJobQueueMutex);
-		}
 		SendSyncCheckAlarmMessage();
 	}
 }
@@ -317,17 +301,10 @@ SyncManager::OnWifiStatusChanged(bool connected)
 {
 	LOG_LOGD("Wifi network change detected %d", connected);
 
-	bool wasConnected = __isWifiConnectionPresent;
+	//bool wasConnected = __isWifiConnectionPresent;
 	__isWifiConnectionPresent = connected;
 	if (__isWifiConnectionPresent)
 	{
-		if (!wasConnected)
-		{
-			LOG_LOGD("Reconnection detected: clearing all backoffs");
-			pthread_mutex_lock(&__syncJobQueueMutex);
-			__pSyncRepositoryEngine->RemoveAllBackoffValuesLocked(__pSyncJobQueue);
-			pthread_mutex_unlock(&__syncJobQueueMutex);
-		}
 		SendSyncCheckAlarmMessage();
 	}
 }
@@ -357,6 +334,7 @@ SyncManager::OnStorageStatusChanged(int value)
 		break;
 	}
 }
+
 
 void
 SyncManager::OnUPSModeChanged(bool enable)
@@ -390,75 +368,13 @@ SyncManager::OnBatteryStatusChanged(int value)
 }
 
 
-void SyncManager::OnCalendarDataChanged(int value)
-{
-	LOG_LOGD("SyncManager::OnCalendarDataChanged() Starts");
-
-	if (value == CALENDAR_BOOK_CHANGED) {
-		LOG_LOGD("Calendar Book Data Changed");
-	} else if (value == CALENDAR_EVENT_CHANGED) {
-		LOG_LOGD("Calendar Event Data Changed");
-	} else if (value == CALENDAR_TODO_CHANGED) {
-		LOG_LOGD("Calendar Todo Data Changed");
-	}
-
-	pthread_mutex_lock(&__syncJobQueueMutex);
-	__pSyncRepositoryEngine->RemoveAllBackoffValuesLocked(__pSyncJobQueue);
-	pthread_mutex_unlock(&__syncJobQueueMutex);
-
-	bundle *extra = bundle_create();
-	bundle_add(extra, "SYNC_OPTION_UPLOAD", "true");
-
-	ScheduleSync("org.tizen.calendar", -1, ACCOUNT_SUPPORTS_CAPABILITY_CALENDAR, REASON_DEVICE_DATA_CHANGED, extra, 0, 0, false);
-
-	SendSyncCheckAlarmMessage();
-
-	bundle_free(extra);
-	LOG_LOGD("SyncManager::OnCalendarDataChanged() Ends");
-}
-
-
-void SyncManager::OnContactsDataChanged(int value)
-{
-	LOG_LOGD("SyncManager::OnContactsDataChanged() Starts");
-
-	if (value == CONTACTS_DATA_CHANGED) {
-		LOG_LOGD("Contacts Data Changed");
-	}
-
-	pthread_mutex_lock(&__syncJobQueueMutex);
-	__pSyncRepositoryEngine->RemoveAllBackoffValuesLocked(__pSyncJobQueue);
-	pthread_mutex_unlock(&__syncJobQueueMutex);
-
-	bundle *extra = bundle_create();
-	bundle_add(extra, "SYNC_OPTION_UPLOAD", "true");
-
-	ScheduleSync("org.tizen.contacts", -1, ACCOUNT_SUPPORTS_CAPABILITY_CONTACT, REASON_DEVICE_DATA_CHANGED, extra, 0, 0, false);
-
-	SendSyncCheckAlarmMessage();
-
-	bundle_free(extra);
-	LOG_LOGD("SyncManager::OnContactsDataChanged() Ends");
-}
-
-
-static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,
-									const char* pVal, const void* pMsg, void* pData)
+static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,	const char* pVal, const void* pMsg, void* pData)
 {
 	LOG_LOGD("OnPackageUninstalled [type %s] type [pkdId:%s]", pPkgType, pPkgId);
-	pthread_mutex_t* pSyncJobQueueMutex = static_cast< pthread_mutex_t* > (pData);
 	if (!strcmp("end", pKey) && !strcmp("ok", pVal))
 	{
 		SyncManager::GetInstance()->GetSyncAdapterAggregator()->HandlePackageUninstalled(pPkgId);
-
-		RepositoryEngine::GetInstance()->CleanUp(pPkgId);
-
-		if (SyncManager::GetInstance()->GetSyncJobQueue())
-		{
-			pthread_mutex_lock(pSyncJobQueueMutex);
-			SyncManager::GetInstance()->GetSyncJobQueue()->RemoveSyncJobsForApp(pPkgId);
-			pthread_mutex_unlock(pSyncJobQueueMutex);
-		}
+		SyncManager::GetInstance()->GetSyncJobsAggregator()->HandlePackageUninstalled(pPkgId);
 	}
 
 	return 0;
@@ -491,41 +407,44 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 	{
 		LOG_LOGD("Failed to get pkgmgr AppInfoHandle from App Id [%s]", pAppId);
 	}
+
 	return pkgId;
 }
 
-
+/*
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
 	string pkgId;
-	char cmd[100];
-	memset(cmd, 0x00, sizeof(cmd));
-	snprintf(cmd, sizeof(cmd), "rpm -qf %s --queryformat '%{name}\\t'", pCommandLine);
-
-	FILE* pipe = popen(cmd, "r");
-	if (!pipe)
+	if (pCommandLine != NULL)
 	{
-		LOG_LOGD("Failed to open pipe.");
-		return pkgId;
-	}
+		char cmd[100];
+		memset(cmd, 0x00, sizeof(cmd));
+		snprintf(cmd, sizeof(cmd), "rpm -qf %s --queryformat '%{name}\\t'", pCommandLine);
 
-	char *buffer = NULL;
-	size_t len = 0;
-	while (!feof(pipe))
-	{
-		if (getdelim(&buffer, &len, '\t', pipe) != -1)
+		FILE* pipe = popen(cmd, "r");
+		if (!pipe)
 		{
-			pkgId = buffer;
+			LOG_LOGD("Failed to open pipe.");
+			return pkgId;
 		}
+
+		char *buffer = NULL;
+		size_t len = 0;
+		while (!feof(pipe))
+		{
+			if (getdelim(&buffer, &len, '\t', pipe) != -1)
+			{
+				pkgId = buffer;
+			}
+		}
+		pclose(pipe);
+		free(buffer);
 	}
-	pclose(pipe);
-	free(buffer);
 
 	return pkgId;
 }
-
-
+*/
 
 void
 SyncManager::RegisterForNetworkChange(void)
@@ -553,6 +472,7 @@ SyncManager::DeRegisterForNetworkChange(void)
 	}
 	return -1;
 }
+
 
 void OnUPSModeChangedCb(keynode_t* pKey, void* pData)
 {
@@ -645,9 +565,9 @@ SyncManager::DeRegisterForBatteryStatus(void)
 
 void SyncManager::RegisterForDataChange(void)
 {
-	if (__pDataChangeListener)
+	if (__pDataChangeSyncScheduler)
 	{
-		if(!__pDataChangeListener->RegisterDataChangeListener())
+		if(!__pDataChangeSyncScheduler->RegisterDataChangeListeners())
 		{
 			LOG_LOGD("Data listener : Success");
 		}
@@ -661,9 +581,9 @@ void SyncManager::RegisterForDataChange(void)
 
 int SyncManager::DeRegisterForDataChange(void)
 {
-	if (__pDataChangeListener)
+	if (__pDataChangeSyncScheduler)
 	{
-		return (__pDataChangeListener->DeRegisterDataChangeListener());
+		return (__pDataChangeSyncScheduler->DeRegisterDataChangeListeners());
 	}
 
 	return -1;
@@ -703,70 +623,26 @@ SyncManager::GetSyncRepositoryEngine(void)
 
 
 void
-SyncManager::ClearScheduledSyncJobs(string appId, account_h account, string capability)
+SyncManager::ClearScheduledSyncJobs(SyncJob* pSyncJob)
 {
 	pthread_mutex_lock(&__syncJobQueueMutex);
-	char* pSyncAdapter = NULL;
-	if (account != NULL)
-	{
-		pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(account, capability);
-		GetSyncRepositoryEngine()->SetBackoffValue(appId, account, capability, GetSyncRepositoryEngine()->NOT_IN_BACKOFF_MODE,
-											   GetSyncRepositoryEngine()->NOT_IN_BACKOFF_MODE);
-	}
-	else
-	{
-		pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(appId.c_str());
-	}
-
-	if (pSyncAdapter == NULL)
-	{
-		LOG_LOGD("Sync adapter not found for give job");
-		return;
-	}
-
-	__pSyncJobQueue->RemoveSyncJob(pSyncAdapter, account, capability);
-
+	__pSyncJobQueue->RemoveSyncJob(pSyncJob);
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
 
 
 void
-SyncManager::CancelActiveSyncJob(string appId, account_h account, string capability)
+SyncManager::CancelActiveSyncJob(SyncJob* pSyncJob)
 {
-	string key;
-	char* pSyncAdapter = NULL;
-
-	if (account != NULL && !capability.empty())
-	{
-		 key = CurrentSyncJobQueue::ToKey(account, capability);
-		 pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(account, capability);
-	}
-	else
-	{
-		key.append("id:").append(appId);
-		pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(appId.c_str());
-	}
-	if (pSyncAdapter == NULL)
-	{
-		LOG_LOGD("Sync adapter not found for give job");
-		return;
-	}
-
 	pthread_mutex_lock(&__currJobQueueMutex);
-	CurrentSyncContext *pCurrSyncContext = __pCurrentSyncJobQueue->GetCurrJobfromKey(key);
+	CurrentSyncContext *pCurrSyncContext = __pCurrentSyncJobQueue->GetCurrJobfromKey(pSyncJob->__key);
 	pthread_mutex_unlock(&__currJobQueueMutex);
 	if (pCurrSyncContext != NULL)
 	{
 		g_source_remove(pCurrSyncContext->GetTimerId());
-		SyncJob* pJob = new (std::nothrow) SyncJob(*(pCurrSyncContext->GetSyncJob()));
 		CloseCurrentSyncContext(pCurrSyncContext);
-		SendCancelSyncsMessage(pJob);
+		SendCancelSyncsMessage(pSyncJob);
 	}
-	else
-	{
-		 SyncService::GetInstance()->TriggerStopSync(pSyncAdapter, account, capability.c_str());
-	}
-
 }
 
 
@@ -779,7 +655,8 @@ SyncManager::SyncManager(void)
 	, __pNetworkChangeListener(NULL)
 	, __pStorageListener(NULL)
 	, __pBatteryStatusListener(NULL)
-	, __pDataChangeListener(NULL)
+	, __pDataChangeSyncScheduler(NULL)
+	, __pPeriodicSyncScheduler(NULL)
 	, __pSyncRepositoryEngine(NULL)
 	, __pSyncJobQueue(NULL)
 	, __pSyncJobDispatcher(NULL)
@@ -799,7 +676,7 @@ SyncManager::Construct(void)
 
 	int storageState;
 	int ret = vconf_get_int(VCONFKEY_SYSMAN_LOW_MEMORY, &storageState);
-	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed");
+	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed %d", ret);
 	__isStorageLow = (storageState == LOW_MEMORY_NORMAL) ? false : true;
 
 	int upsMode;
@@ -809,7 +686,7 @@ SyncManager::Construct(void)
 	}
 
 	ret = vconf_get_int(VCONFKEY_SETAPPL_PSMODE, &upsMode);
-	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed");
+	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed %d", ret);
 	__isUPSModeEnabled = (upsMode == SETTING_PSMODE_EMERGENCY) ? true : false;
 
 	__pNetworkChangeListener = new (std::nothrow) NetworkChangeListener();
@@ -821,11 +698,17 @@ SyncManager::Construct(void)
 	__pBatteryStatusListener = new (std::nothrow) BatteryStatusListener();
 	LOG_LOGE_BOOL(__pBatteryStatusListener, "Failed to construct BatteryStatusListener");
 
-	__pDataChangeListener = new (std::nothrow) DataChangeListener();
-	LOG_LOGE_BOOL(__pDataChangeListener, "Failed to Construct DataChangeListener");
+	__pDataChangeSyncScheduler = new (std::nothrow) DataChangeSyncScheduler();
+	LOG_LOGE_BOOL(__pDataChangeSyncScheduler, "Failed to Construct DataChangeSyncScheduler");
+
+	__pPeriodicSyncScheduler = new (std::nothrow) PeriodicSyncScheduler();
+	LOG_LOGE_BOOL(__pPeriodicSyncScheduler, "Failed to Construct PeriodicSyncScheduler");
 
 	__pSyncAdapterAggregator = new (std::nothrow) SyncAdapterAggregator();
-	LOG_LOGE_BOOL(__pSyncAdapterAggregator, "Failed to construct SyncJobDispatcher");
+	LOG_LOGE_BOOL(__pSyncAdapterAggregator, "Failed to construct SyncAdapterAggregator");
+
+	__pSyncJobsAggregator = new (std::nothrow) SyncJobsAggregator();
+	LOG_LOGE_BOOL(__pSyncJobsAggregator, "Failed to construct SyncJobsAggregator");
 
 	__pSyncRepositoryEngine = RepositoryEngine::GetInstance();
 	LOG_LOGE_BOOL(__pSyncRepositoryEngine, "Failed to construct RepositoryEngine");
@@ -844,14 +727,12 @@ SyncManager::Construct(void)
 
 	LOG_LOGD("wifi %d, sim %d storage %d", __isWifiConnectionPresent, __isSimDataConnectionPresent, __isStorageLow);
 
-	LOG_LOGD("Register device status listeners");
+	LOG_LOGD("Register event listeners");
 	RegisterForNetworkChange();
 	RegisterForStorageChange();
 	RegisterForBatteryStatus();
-	RegisterForDataChange();
 	RegisterForUPSModeChange();
-
-	__randomOffsetInMillis = __pSyncRepositoryEngine->GetRandomOffsetInsec() * 1000;
+	RegisterForDataChange();
 
 	LOG_LOGE_BOOL(pthread_mutex_init(&__syncJobQueueMutex, NULL) == 0, "__syncJobQueueMutex init failed");
 	LOG_LOGE_BOOL(pthread_mutex_init(&__currJobQueueMutex, NULL) == 0, "__currJobQueueMutex init failed");
@@ -861,6 +742,8 @@ SyncManager::Construct(void)
 
 	LOG_LOGE_BOOL(SetPkgMgrClientStatusChangedListener() == 0, "Failed to register for uninstall callback.");
 
+/*
+#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
 	UpdateRunningAccounts();
 
 	if (account_subscribe_create(&__accountSubscriptionHandle) < 0)
@@ -871,11 +754,12 @@ SyncManager::Construct(void)
 	{
 		LOG_LOGD("Failed to register callback for account updation");
 	}
-	else
-		LOG_LOGD("Account connect failed");
+#endif
+*/
 
 	Initialize();
 
+	__pSyncRepositoryEngine->OnBooting();
 	return true;
 }
 
@@ -896,7 +780,8 @@ SyncManager::~SyncManager(void)
 	delete __pNetworkChangeListener;
 	delete __pStorageListener;
 	delete __pBatteryStatusListener;
-	delete __pDataChangeListener;
+	delete __pDataChangeSyncScheduler;
+	delete __pPeriodicSyncScheduler;
 	delete __pSyncRepositoryEngine;
 	delete __pSyncJobQueue;
 	delete __pSyncJobDispatcher;
@@ -951,53 +836,6 @@ SyncManager::AreAccountsEqual(account_h account1, account_h account2)
 	return isEqual;
 }
 
-void
-SyncManager::IncreaseBackoffValue(SyncJob* pJob)
-{
-	LOG_LOGD("Increase backoff");
-
-	if (pJob == NULL)
-	{
-		LOG_LOGD("Invalid parameter");
-		return;
-	}
-
-	time_t  now;
-	time(&now);
-
-	backOff* prevBackOff = __pSyncRepositoryEngine->GetBackoffN(pJob->account, pJob->capability);
-	if (prevBackOff == NULL)
-	{
-		LOG_LOGD("No backoff exists");
-		delete prevBackOff;
-		prevBackOff = NULL;
-		return;
-	}
-	long newDelayInMs = -1;
-	if (now < prevBackOff->time)
-	{
-		delete prevBackOff;
-		prevBackOff = NULL;
-		return;
-	}
-	// Subsequent delays are the double of the previous delay
-	newDelayInMs = prevBackOff->delay * 2;
-
-	delete prevBackOff;
-	prevBackOff = NULL;
-
-	long backoff = now + newDelayInMs;
-
-	__pSyncRepositoryEngine->SetBackoffValue(pJob->appId, pJob->account, pJob->capability, backoff, newDelayInMs);
-
-	pJob->backoff = backoff;
-	pJob->UpdateEffectiveRunTime();
-
-	pthread_mutex_lock(&__syncJobQueueMutex);
-	__pSyncJobQueue->OnBackoffChanged(pJob->account, pJob->capability, backoff);
-	pthread_mutex_unlock(&__syncJobQueueMutex);
-}
-
 
 bool
 SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
@@ -1017,26 +855,17 @@ SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
 }
 
 
-long long
-SyncManager::GetElapsedTime(void)
-{
-	long long elapsedTime = 0;
-	float a = 0.0, b = 0.0;
-	FILE *fp = fopen("/proc/uptime", "r");
-
-	if (fscanf(fp, "%f %f", &a, &b))
-	{
-		elapsedTime = (long long)(a*1000.f);
-	}
-
-	fclose(fp);
-	return elapsedTime;
-}
-
 SyncAdapterAggregator*
 SyncManager::GetSyncAdapterAggregator()
 {
 	return __pSyncAdapterAggregator;
+}
+
+
+SyncJobsAggregator*
+SyncManager::GetSyncJobsAggregator()
+{
+	return __pSyncJobsAggregator;
 }
 
 void
@@ -1048,31 +877,29 @@ SyncManager::HandleShutdown(void)
 }
 
 
-void
-SyncManager::ClearBackoffValue(SyncJob* pJob)
+bool
+SyncManager::GetSyncSupport(int accountId)
 {
-	LOG_LOGD("Clear backoff");
-	if (pJob == NULL)
+	account_h accountHandle = NULL;
+	int ret = account_create(&accountHandle);
+	LOG_LOGE_BOOL(ret == ACCOUNT_ERROR_NONE, "account access failed [%d]", ret);
+
+	KNOX_CONTAINER_ZONE_ENTER(GetAccountPid(accountId));
+	ret =  account_query_account_by_account_id(accountId, &accountHandle);
+	KNOX_CONTAINER_ZONE_EXIT();
+	LOG_LOGE_BOOL(ret == ACCOUNT_ERROR_NONE, "account query failed [%d]", ret);
+
+	account_sync_state_e syncSupport;
+	ret = account_get_sync_support(accountHandle,  &syncSupport);
+	LOG_LOGE_BOOL(ret == ACCOUNT_ERROR_NONE, "account access failed [%d]", ret);
+
+	if (syncSupport == ACCOUNT_SYNC_INVALID || syncSupport == ACCOUNT_SYNC_NOT_SUPPORT)
 	{
-		LOG_LOGD("Invalid parameter");
-		return;
+		LOG_LOGD("The account does not support sync");
+		return false;
 	}
 
-	__pSyncRepositoryEngine->SetBackoffValue(pJob->appId, pJob->account, pJob->capability, BackOffMode::NOT_IN_BACKOFF_MODE, BackOffMode::NOT_IN_BACKOFF_MODE);
-
-	pthread_mutex_lock(&__syncJobQueueMutex);
-	__pSyncJobQueue->OnBackoffChanged(pJob->account, pJob->capability, 0);
-	pthread_mutex_unlock(&__syncJobQueueMutex);
-}
-
-int
-SyncManager::GetSyncable(account_h account, string capability)
-{
-	int syncable = GetSyncRepositoryEngine()->GetSyncable(account, capability);
-
-	return syncable;
-	//TODO check android logic getIsSyncable, that checks for restricted user and
-	// checks if the sync adapter has opted in or out
+	return true;
 }
 
 
@@ -1082,24 +909,16 @@ SyncManager::SendCancelSyncsMessage(SyncJob* pJob)
 	LOG_LOGD("SyncManager::SendCancelSyncsMessage :sending MESSAGE_CANCEL");
 	Message msg;
 	msg.type = SYNC_CANCEL;
-	msg.pSyncJob = pJob;
+	msg.pSyncJob = new SyncJob(*pJob);
 	FireEvent(__pSyncJobDispatcher, msg);
 }
 
 
 void
-SyncManager::OnResultReceived(SyncStatus res, string appId, account_h account, const char* capability)
+SyncManager::OnResultReceived(SyncStatus res, string appId, string packageId, const char* syncJobName)
 {
-	LOG_LOGD("Sync result received from %s", appId.c_str());
 	string key;
-	if (account != NULL && capability != NULL)
-	{
-		 key = CurrentSyncJobQueue::ToKey(account, capability);
-	}
-	else
-	{
-		key.append("id:").append(appId);
-	}
+	key.append("id:").append(appId).append(syncJobName);
 
 	LOG_LOGD("Close Sync context for key %s", key.c_str());
 
@@ -1113,11 +932,18 @@ SyncManager::OnResultReceived(SyncStatus res, string appId, account_h account, c
 	else
 	{
 		g_source_remove(pCurrSyncContext->GetTimerId());
-		SyncJob* pJob = new (std::nothrow) SyncJob(*(pCurrSyncContext->GetSyncJob()));
-		CloseCurrentSyncContext(pCurrSyncContext);
+		SyncJob* pJob = pCurrSyncContext->GetSyncJob();
 		SendSyncCompletedOrCancelledMessage(pJob, res);
+		CloseCurrentSyncContext(pCurrSyncContext);
+
+		if (res == SYNC_STATUS_SUCCESS && pJob->GetSyncType() == SYNC_TYPE_ON_DEMAND)
+		{
+			LOG_LOGD("On demand sync completed. Deleting the job %s", key.c_str());
+			__pSyncJobsAggregator->RemoveSyncJob(packageId.c_str(), syncJobName);
+		}
 	}
 }
+
 
 void
 SyncManager::CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext)
@@ -1128,7 +954,7 @@ SyncManager::CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext)
 		return;
 	}
 	pthread_mutex_lock(&(__currJobQueueMutex));
-	__pCurrentSyncJobQueue->RemoveSyncJobFromCurrentSyncQueue(activeSyncContext);
+	__pCurrentSyncJobQueue->RemoveSyncContextFromCurrentSyncQueue(activeSyncContext);
 	pthread_mutex_unlock(&(__currJobQueueMutex));
 }
 
@@ -1150,6 +976,7 @@ SyncManager::AlertForChange()
 {
 	SendSyncCheckAlarmMessage();
 }
+
 
 void
 SyncManager::SendSyncAlarmMessage()
@@ -1197,274 +1024,24 @@ bool get_capability_all_cb(const char* capability_type, account_capability_state
 
 
 void
-SyncManager::ScheduleAccountLessSync(string appId, int reason, bundle* pExtras,
-									 long long flexTimeInMillis, long long runTimeInMillis, bool onlyForUnknownSyncableState)
-{
-	if (!pExtras)
-	{
-		pExtras = bundle_create();
-	}
-
-	const char* pVal = bundle_get_val(pExtras, SYNC_OPTION_EXPEDITED);
-	bool isExpedited = GetBundleVal(pVal);
-	pVal = NULL;
-	if (isExpedited)
-	{
-		//Schedule at the front of the queue
-		runTimeInMillis = -1;
-	}
-
-	pVal = bundle_get_val(pExtras, "SYNC_OPTION_UPLOAD");
-	bool toUploadOnly = GetBundleVal(pVal);
-	pVal = NULL;
-
-	bundle_add(pExtras, "SYNC_OPTION_IGNORE_BACKOFF", "true");
-	bundle_add(pExtras, "SYNC_OPTION_IGNORE_SETTINGS", "true");
-	pVal = NULL;
-
-	int syncSource;
-	if (toUploadOnly)
-	{
-		syncSource = SOURCE_LOCAL;
-	}
-	else
-	{
-		syncSource = SOURCE_SERVER;
-	}
-
-	long long elapsedTime = GetElapsedTime();
-	LOG_LOGD("ScheduleManualSyncJobs running right now, at %lld", elapsedTime);
-
-	char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(appId.c_str());
-	if (pSyncAdapter == NULL)
-	{
-		LOG_LOGD("Sync adapter cant be found for %s", appId.c_str());
-		return;
-	}
-	SyncJob* pJob = new (std::nothrow) SyncJob(pSyncAdapter, NULL, "",
-										pExtras, (SyncReason)reason, (SyncSource)syncSource,
-										runTimeInMillis, flexTimeInMillis, 0,
-										0,
-										false);
-	if (pJob == NULL)
-	{
-		LOG_LOGD("Failed to construct SyncJob");
-		return;
-	}
-
-	long long elapsedTime1 = GetElapsedTime();
-	LOG_LOGD("ScheduleManualSyncJobs, going to run right now at %lld", elapsedTime1);
-	ScheduleSyncJob(pJob);
-	delete pJob;
-	pJob = NULL;
-}
-
-
-void
-SyncManager::ScheduleSync(string appId, int accountId, string capability, int reason, bundle* pExtras,
-		long long flexTimeInMillis, long long runTimeInMillis, bool onlyForUnknownSyncableState)
-{
-	if (!pExtras)
-	{
-		pExtras = bundle_create();
-	}
-
-	const char* pVal = bundle_get_val(pExtras, SYNC_OPTION_EXPEDITED);
-	bool isExpedited = GetBundleVal(pVal);
-	pVal = NULL;
-	if (isExpedited)
-	{
-		//Schedule at the front of the queue
-		runTimeInMillis = -1;
-	}
-
-	map<int, int> accounts;
-	if (accountId != -1)
-	{
-		int pid = GetAccountPid(accountId);
-		accounts.insert(make_pair(accountId, pid));
-	}
-	else
-	{
-		accounts = __runningAccounts;
-		LOG_LOGE_VOID(accounts.size() != 0, "Accounts are not available yet, returning");
-	}
-
-	LOG_LOGD("Running accounts size %d", accounts.size());
-
-	pVal = bundle_get_val(pExtras, "SYNC_OPTION_UPLOAD");
-	bool toUploadOnly = GetBundleVal(pVal);
-	pVal = NULL;
-
-	bundle_add(pExtras, "SYNC_OPTION_IGNORE_BACKOFF", "true");
-	bundle_add(pExtras, "SYNC_OPTION_IGNORE_SETTINGS", "true");
-
-	pVal = bundle_get_val(pExtras, "SYNC_OPTION_IGNORE_SETTINGS");
-	bool ignoreSettings = GetBundleVal(pVal);
-	pVal = NULL;
-
-	int syncSource;
-	if (toUploadOnly)
-	{
-		syncSource = SOURCE_LOCAL;
-	}
-	else if (capability.empty())
-	{
-		syncSource = SOURCE_POLL;
-	}
-	else
-	{
-		syncSource = SOURCE_SERVER;
-	}
-
-	map<int, int>::iterator it;
-	for (it = accounts.begin(); it != accounts.end(); it++)
-	{
-		int account_id = it->first;
-		int pid = it->second;
-
-		account_h currentAccount = NULL;
-		int ret = account_create(&currentAccount);
-		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
-
-		KNOX_CONTAINER_ZONE_ENTER(pid);
-		ret =  account_query_account_by_account_id(account_id, &currentAccount);
-		KNOX_CONTAINER_ZONE_EXIT();
-		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account query failed");
-
-		account_sync_state_e syncSupport;
-		ret = account_get_sync_support(currentAccount,  &syncSupport);
-		LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
-
-		if (syncSupport == ACCOUNT_SYNC_INVALID || syncSupport == ACCOUNT_SYNC_NOT_SUPPORT)
-		{
-			LOG_LOGD("The account does not support sync");
-			continue;
-		}
-
-		/*
-		 * If capability parameter is not null, check if it is syncable
-		 * If syncable, clear the set and add just this capability.
-		 * else, just clear the set
-		 */
-		 set<string> syncableCapabilities;
-		if (capability.empty())
-		{
-			ret = account_get_capability_all(currentAccount, get_capability_all_cb, (void *)&syncableCapabilities);
-			LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account get capability all failed");
-
-			LOG_LOGD("Sync jobs will be added for all sync enabled capabilities of the account");
-		}
-		else
-		{
-			syncableCapabilities.insert(capability);
-		}
-		set<string>::iterator it;
-
-		for (it = syncableCapabilities.begin(); it != syncableCapabilities.end(); it++)
-		{
-			int ret = account_get_sync_support(currentAccount,  &syncSupport);
-			LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
-
-			char* user_name;
-			ret = account_get_user_name(currentAccount, &user_name);
-			LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "account access failed");
-
-			string currentCapability = *it;
-			LOG_LOGD("Current Account Info: Id %d, user_name %s, total account size %d", account_id, user_name, accounts.size());
-			LOG_LOGD("Current capability %s", currentCapability.c_str());
-
-			int syncable = GetSyncable(currentAccount, currentCapability);
-			if (syncable == 0)
-			{
-				continue;
-			}
-			char* pSyncAdapter = __pSyncAdapterAggregator->GetSyncAdapter(currentAccount, currentCapability);
-			if (pSyncAdapter == NULL)
-			{
-				LOG_LOGD("Sync disabled for account capability pair");
-				continue;
-			}
-
-			bool allowParallelSyncs = false;//TODO replace true with syncAdapterInfo.type.allowParallelSyncs();
-			bool isAlwaysSyncable = true;//TODO replace true with syncAdapterInfo.type.isAlwaysSyncable();
-
-			if (syncable < 0 && isAlwaysSyncable)
-			{
-				GetSyncRepositoryEngine()->SetSyncable(pSyncAdapter, currentAccount, currentCapability, 1);
-				syncable = 1;
-			}
-			if (onlyForUnknownSyncableState && syncable >= 0)
-			{
-				continue;
-			}
-
-			//TODO if (!syncAdapterInfo.type.supportsUploading() && uploadOnly) {continue;}
-			bool bootCompleted = false; //TODO remove this line and populate bootcompleted using dbus signal handler
-
-			bool isSyncAllowed = (syncable < 0) //Unknown syncable state
-								|| ignoreSettings
-								|| (!bootCompleted
-									&& GetSyncRepositoryEngine()->GetSyncAutomatically(currentAccount, currentCapability)
-									/*TODO && GetSyncRepositoryEngine()->getMasterSyncAutomatically(currentAccount)*/);
-			if (!isSyncAllowed)
-			{
-				LOG_LOGD("sync not allowed, capability %s", currentCapability.c_str());
-				continue;
-			}
-
-			backOff* pBackOff = GetSyncRepositoryEngine()->GetBackoffN(currentAccount, currentCapability);
-			long delayUntil = GetSyncRepositoryEngine()->GetDelayUntilTime(currentAccount, currentCapability);
-			long backOffTime = pBackOff ? pBackOff->time : 0;
-			delete pBackOff;
-			pBackOff = NULL;
-
-			if (!onlyForUnknownSyncableState)
-			{
-				SyncJob* pJob = new (std::nothrow) SyncJob(pSyncAdapter, currentAccount,
-													currentCapability,
-													pExtras, (SyncReason)reason, (SyncSource)syncSource,
-													runTimeInMillis, flexTimeInMillis, backOffTime,
-													delayUntil,
-													allowParallelSyncs);
-				if (pJob == NULL)
-				{
-					LOG_LOGD("Failed to construct SyncJob");
-					continue;
-				}
-				ScheduleSyncJob(pJob);
-				delete pJob;
-				pJob = NULL;
-			}
-		}
-	}
-
-	if (!pExtras)
-	{
-		bundle_free(pExtras);
-	}
-}
-
-
-void
 SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 {
 	int err;
 	pthread_mutex_lock(&__syncJobQueueMutex);
-	err = __pSyncJobQueue->AddSyncJob(*pJob);
+	err = __pSyncJobQueue->AddSyncJob(pJob);
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 
 	if (err == SYNC_ERROR_NONE)
 	{
 		if(fireCheckAlarm)
 		{
-			LOG_LOGD("Added sync job [%s] to Main queue, Intiating dispatch sequence", pJob->key.c_str());
+			LOG_LOGD("Added sync job [%s] to Main queue, Intiating dispatch sequence", pJob->__key.c_str());
 			SendSyncCheckAlarmMessage();
 		}
 	}
 	else if (err == SYNC_ERROR_ALREADY_IN_PROGRESS)
 	{
-		LOG_LOGD("Duplicate sync job [%s], No need to enqueue", pJob->key.c_str());
+		LOG_LOGD("Duplicate sync job [%s], No need to enqueue", pJob->__key.c_str());
 	}
 	else
 	{
@@ -1472,68 +1049,26 @@ SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 	}
 }
 
+
 void
 SyncManager::TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob)
 {
-	LOG_LOGD("Reschedule for  %s", pJob->appId.c_str());
 	if (pJob == NULL)
 	{
 		LOG_LOGD("Invalid parameter");
 		return;
 	}
+	LOG_LOGD("Reschedule for  %s", pJob->__appId.c_str());
 
-	account_sync_state_e syncSupport;
-	int ret = account_get_sync_support(pJob->account,  &syncSupport);
-	if (ret < 0)
+	if (syncResult == SYNC_STATUS_FAILURE || syncResult == SYNC_STATUS_CANCELLED)
 	{
-		LOG_LOGD("account access failed, returning");
-		return;
+		if (!pJob->IsNoRetry())
+		{
+			ScheduleSyncJob(pJob, false);
+		}
 	}
-	if (syncSupport == (int)ACCOUNT_SYNC_INVALID || syncSupport == (int)ACCOUNT_SYNC_NOT_SUPPORT)
-	{
-		LOG_LOGD("this account does not support sync, returning");
-		return;
-	}
-
-	SyncJob* pNewJob = new SyncJob(pJob->appId, pJob->account, pJob->capability, pJob->pExtras,pJob->reason, pJob->syncSource, DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS * 1000,
-								   pJob->flexTime,pJob->backoff, pJob->delayUntil, pJob->isParallelSyncAllowed);
-	if (pJob == NULL)
-	{
-		LOG_LOGD("Failed to construct SyncJob");
-		return;
-	}
-	ScheduleSyncJob(pNewJob);
-	delete pNewJob;
-	pNewJob = NULL;
 }
 
-void
-SyncManager::SetDelayTimeValue(SyncJob* pJob, long delayUntilSeconds)
-{
-	if (pJob == NULL)
-	{
-		LOG_LOGD("Invalid parameter");
-		return;
-	}
-	long long delayUntil = delayUntilSeconds * 1000LL;
-
-	time_t  absoluteNow;
-	time(&absoluteNow);
-
-	long newDelayUntilTime;
-	if (delayUntil > absoluteNow)
-	{
-		long long elapsedTime = GetElapsedTime();
-		newDelayUntilTime = elapsedTime + (delayUntil - absoluteNow);
-	}
-	else
-	{
-		newDelayUntilTime = 0;
-	}
-	pthread_mutex_lock(&__syncJobQueueMutex);
-	__pSyncJobQueue->OnDelayUntilTimeChanged(pJob->account, pJob->capability, newDelayUntilTime);
-	pthread_mutex_unlock(&__syncJobQueueMutex);
-}
 
 bool
 SyncManager::IsJobActive(CurrentSyncContext *pCurrSync)

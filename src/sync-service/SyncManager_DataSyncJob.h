@@ -15,12 +15,12 @@
  */
 
 /**
- * @file	SyncManager_PeriodicSyncJob.h
- * @brief	This is the header file for the PeriodicSyncJob class.
+ * @file	SyncManager_DataSyncJob.h
+ * @brief	This is the header file for the DataSyncJob class.
  */
 
-#ifndef SYNC_SERVICE_PERIODIC_SYNC_H
-#define SYNC_SERVICE_PERIODIC_SYNC_H
+#ifndef SYNC_SERVICE_DATA_SYNC_JOB_H
+#define SYNC_SERVICE_DATA_SYNC_JOB_H
 
 #include <string>
 #include <vector>
@@ -34,31 +34,26 @@
 */
 using namespace std;
 
-class PeriodicSyncJob : public SyncJob
+class DataSyncJob : public SyncJob
 {
 public:
-	~PeriodicSyncJob(void);
+	~DataSyncJob(void);
 
-	PeriodicSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, long frequency);
+	DataSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, string capability);
 
-	PeriodicSyncJob(const PeriodicSyncJob&);
+	DataSyncJob(const DataSyncJob&);
 
-	PeriodicSyncJob& operator=(const PeriodicSyncJob&);
+	DataSyncJob& operator=(const DataSyncJob&);
 
-	void Reset(int accountId, bundle* pUserData, int syncOption, long frequency);
-
-	bool operator==(const PeriodicSyncJob&);
-
-	bool IsExtraEqual(PeriodicSyncJob* pJob);
+	void Reset(int accountId, bundle* pUserData, int syncOption, string capability);
 
 	virtual SyncType GetSyncType()
 	{
 		return __syncType;
 	}
-private:
 
 public:
-	long __period;
+	string __capability;
 };
 //}//_SyncManager
 #endif// SYNC_SERVICE_PERIODIC_SYNC_H
