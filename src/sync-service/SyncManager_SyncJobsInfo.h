@@ -59,6 +59,8 @@ public:
 
 	map<int, ISyncJob*>& GetAllSyncJobs();
 
+	void RemoveAllSyncJobs();
+
 private:
 
 	SyncJobsInfo(const SyncJobsInfo&);

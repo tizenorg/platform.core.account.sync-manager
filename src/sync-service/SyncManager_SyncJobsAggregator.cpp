@@ -185,7 +185,17 @@ SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
 void
 SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId)
 {
-	__syncJobsContainer.erase(pPackageId);
+	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
+	if (itr != __syncJobsContainer.end())
+	{
+		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
+		pPackageSyncJobsInfo->RemoveAllSyncJobs();
+		__syncJobsContainer.erase(pPackageId);
+	}
+	else
+	{
+		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);
+	}
 }
 
 

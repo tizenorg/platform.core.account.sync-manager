@@ -811,6 +811,57 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 }
 
 
+static bool
+is_service_app(pid_t pid)
+{
+	char *current_app_id = NULL;
+	int ret = app_manager_get_app_id(pid, &current_app_id);
+	if (ret != APP_MANAGER_ERROR_NONE)
+	{
+		LOG_LOGD("Getting current app id is failed : %d, %s", ret, get_error_message(ret));
+		return false;
+	}
+
+	pkgmgrinfo_appinfo_h current_app_info = NULL;
+
+	ret = pkgmgrinfo_appinfo_get_appinfo(current_app_id, &current_app_info);
+	if (ret != PMINFO_R_OK)
+	{
+		LOG_LOGD("Current app info handle creation error : %d, %s", ret, get_error_message(ret));
+		free(current_app_id);
+		return false;
+	}
+	char *current_app_type = NULL;
+	ret = pkgmgrinfo_appinfo_get_component_type(current_app_info, &current_app_type);
+	if (ret != PMINFO_R_OK)
+	{
+		LOG_LOGD("Current app info getting app type error : %d, %s", ret, get_error_message(ret));
+
+		pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
+		free(current_app_id);
+		return false;
+	}
+	else
+	{
+		if (!strcmp(current_app_type, "svcapp"))
+		{
+			LOG_LOGD("Current application type : %s", current_app_type);
+			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
+		}
+		else
+		{
+			LOG_LOGD("Current app is not a service application : %s", current_app_type);
+			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
+			free(current_app_id);
+			return false;
+		}
+	}
+
+	free(current_app_id);
+	return true;
+}
+
+
 static inline int __read_proc(const char *path, char *buf, int size)
 {
 	int fd;
@@ -843,9 +894,17 @@ gboolean
 sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine)
 {
 	LOG_LOGD("Received sync adapter registration request");
-
 	string pkgIdStr;
+
 	guint pid = get_caller_pid(pInvocation);
+	if (!is_service_app(pid))
+	{
+		GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
+		g_dbus_method_invocation_return_gerror(pInvocation, error);
+		g_clear_error(&error);
+		return true;
+	}
+
 	char* pAppId;
 	int ret = APP_MANAGER_ERROR_NONE;
 
@@ -927,9 +986,17 @@ gboolean
 sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine)
 {
 	LOG_LOGD("Request to remove sync adapter");
+	string pkgIdStr;
 
 	guint pid = get_caller_pid(pInvocation);
-	string pkgIdStr;
+	if (!is_service_app(pid))
+	{
+		GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
+		g_dbus_method_invocation_return_gerror(pInvocation, error);
+		g_clear_error(&error);
+		return true;
+	}
+
 	char* pAppId;
 	int ret = APP_MANAGER_ERROR_NONE;
 
