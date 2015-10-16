@@ -127,6 +127,7 @@ SyncAdapterAggregator::HasSyncAdapter(const char* pPackageId)
 void
 SyncAdapterAggregator::HandlePackageUninstalled(const char* pPackageId)
 {
+	LOG_LOGD("Removing sync adapter for package [%s]", pPackageId);
 	__syncAdapterList.erase(pPackageId);
 }
 

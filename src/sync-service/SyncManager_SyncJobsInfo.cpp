@@ -125,6 +125,20 @@ SyncJobsInfo::RemoveSyncJob(string syncJobname)
 }
 
 
+void
+SyncJobsInfo::RemoveAllSyncJobs()
+{
+	LOG_LOGD("Removing Sync jobs for package [%s]. Count [%d] ", __packageId.c_str(), __syncIdList.size());
+
+	map<int, ISyncJob*>::iterator itr = __syncIdList.begin();
+	while (itr != __syncIdList.end())
+	{
+		SyncManager::GetInstance()->RemoveSyncJob(__packageId.c_str(), itr->first);
+		itr++;
+	}
+}
+
+
 int
 SyncJobsInfo::GetNextSyncJobId()
 {

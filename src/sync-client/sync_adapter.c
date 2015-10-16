@@ -96,7 +96,7 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	if (!is_sync_success)
 		ret = SYNC_STATUS_FAILURE;
 
-	tizen_sync_adapter_call_send_result_sync(pObject, (int)SYNC_STATUS_SUCCESS, pSyncJobName, NULL, NULL);
+	tizen_sync_adapter_call_send_result_sync(pObject, ret, pSyncJobName, NULL, NULL);
 	g_sync_adapter->__syncRunning = false;
 	bundle_free(sync_job_user_data);
 	LOG_LOGD("Sync completed");
