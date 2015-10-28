@@ -13,10 +13,6 @@ Source3:   org.tizen.sync.conf
 ExcludeArch: %{arm} %ix86 x86_64
 %endif
 
-%if "%{?profile}" == "tv"
-ExcludeArch: %{arm} %ix86 x86_64
-%endif
-
 BuildRequires: cmake
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-runtime-info)
