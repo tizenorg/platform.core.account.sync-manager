@@ -411,7 +411,7 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 	return pkgId;
 }
 
-/*
+
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
@@ -444,7 +444,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 	return pkgId;
 }
-*/
+
 
 void
 SyncManager::RegisterForNetworkChange(void)
