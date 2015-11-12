@@ -136,10 +136,13 @@ __sync_adapter_on_stop_sync(
 	return true;
 }
 
+
 /* flag == true => register */
 /* flag == false => de-register */
 int __register_sync_adapter(bool flag)
 {
+	bool ret = true;
+
 	GError *error = NULL;
 	GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
 	SYNC_LOGE_RET_RES(connection != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
@@ -154,11 +157,13 @@ int __register_sync_adapter(bool flag)
 
 	char *command_line = proc_get_cmdline_self();
 	if (flag)
-		tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, command_line, NULL, &error);
+		ret = tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, command_line, NULL, &error);
 	else
 		tizen_sync_manager_call_remove_sync_adapter_sync(ipcObj, command_line, NULL, &error);
 
 	free(command_line);
+
+	SYNC_LOGE_RET_RES(ret, SYNC_ERROR_QUOTA_EXCEEDED, "Register sync adapter failed %s", error->message);
 	SYNC_LOGE_RET_RES(error == NULL, SYNC_ERROR_IO_ERROR, "Register sync adapter failed %s", error->message);
 
 	return SYNC_ERROR_NONE;
@@ -170,13 +175,8 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
 	SYNC_LOGE_RET_RES(on_start_cb != NULL && on_cancel_cb != NULL, SYNC_ERROR_INVALID_PARAMETER, "Callback parameters must be passed");
 
 	if (!g_sync_adapter) {
-		g_sync_adapter = (sync_adapter_s *) malloc(sizeof(struct sync_adapter_s));
-		SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Out of memory");
-
-		g_sync_adapter->sync_adapter_obj = NULL;
-		g_sync_adapter->__syncRunning = false;
-
-		if (__register_sync_adapter(true) == SYNC_ERROR_NONE) {
+		int ret = __register_sync_adapter(true);
+		if (ret == SYNC_ERROR_NONE) {
 			pid_t pid = getpid();
 			GError *error = NULL;
 			GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
@@ -195,8 +195,15 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
 
 			g_signal_connect(pSyncAdapter, "start-sync", G_CALLBACK(__sync_adapter_on_start_sync), NULL);
 			g_signal_connect(pSyncAdapter, "cancel-sync", G_CALLBACK(__sync_adapter_on_stop_sync), NULL);
+
+			g_sync_adapter = (sync_adapter_s *) malloc(sizeof(struct sync_adapter_s));
+			SYNC_LOGE_RET_RES(g_sync_adapter != NULL, SYNC_ERROR_OUT_OF_MEMORY, "Out of memory");
+
+			g_sync_adapter->sync_adapter_obj = NULL;
+			g_sync_adapter->__syncRunning = false;
 			g_sync_adapter->sync_adapter_obj = pSyncAdapter;
-		}
+		} else
+			return ret;
 	}
 
 	g_sync_adapter->start_sync_cb = on_start_cb;

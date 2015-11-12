@@ -896,25 +896,15 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	LOG_LOGD("Received sync adapter registration request");
 	string pkgIdStr;
 
-	guint pid = get_caller_pid(pInvocation);
-	if (!is_service_app(pid))
-	{
-		GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
-		g_dbus_method_invocation_return_gerror(pInvocation, error);
-		g_clear_error(&error);
-		return true;
-	}
-
 	char* pAppId;
-	int ret = APP_MANAGER_ERROR_NONE;
+	guint pid = get_caller_pid(pInvocation);
 
+	int ret = APP_MANAGER_ERROR_NONE;
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
-	}
-	else
-	{
+		LOG_LOGD("Acquired package name is [%s]", pkgIdStr.c_str());
+	} else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		/*
 		char commandLine[1024] = {0,};
@@ -922,6 +912,23 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		if (ret == AUL_R_OK)
 			pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(commandLine);
 		*/
+	}
+
+	SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
+
+	if (!is_service_app(pid)) {
+		GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
+		g_dbus_method_invocation_return_gerror(pInvocation, error);
+		g_clear_error(&error);
+		return true;
+	} else {
+		if (pAggregator->HasSyncAdapter(pkgIdStr.c_str())) {
+			const char *registered_app_id = pAggregator->GetSyncAdapter(pkgIdStr.c_str());
+			LOG_LOGD("registered appId is [%s]", registered_app_id);
+			LOG_LOGD("caller appId is [%s]", pAppId);
+			if (pAppId != registered_app_id)
+				return false;
+		}
 	}
 
 	if(!pkgIdStr.empty())
@@ -940,7 +947,6 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 				g_signal_connect(syncAdapterObj, "handle-send-result", G_CALLBACK(sync_adapter_handle_send_result), NULL);
 				//g_signal_connect(syncAdapterObj, "handle-init-complete", G_CALLBACK(sync_adapter_handle_init_complete), NULL);
 
-				SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 				if (pAggregator == NULL) {
 					LOG_LOGD("sync adapter aggregator is NULL");
 					tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
