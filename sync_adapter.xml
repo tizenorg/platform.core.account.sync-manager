@@ -2,6 +2,7 @@
 <node name="/org/tizen/sync/adapter">
 	<interface name="org.tizen.sync.adapter">
 	<method name="send_result">
+		<arg type="s" name="command_line" direction="in" />
 		<arg type="i" name="sync_result" direction="in" />
 		<arg type="s" name="sync_job_name" direction="in" />
 	</method>

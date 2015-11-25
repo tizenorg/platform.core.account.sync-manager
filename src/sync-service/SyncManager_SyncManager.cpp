@@ -411,7 +411,7 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 	return pkgId;
 }
 
-/*
+
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
@@ -420,7 +420,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 	{
 		char cmd[100];
 		memset(cmd, 0x00, sizeof(cmd));
-		snprintf(cmd, sizeof(cmd), "rpm -qf %s --queryformat '%{name}\\t'", pCommandLine);
+		snprintf(cmd, sizeof(cmd), "rpm -qf %s --queryformat '%%{name}'", pCommandLine);
 
 		FILE* pipe = popen(cmd, "r");
 		if (!pipe)
@@ -444,7 +444,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 	return pkgId;
 }
-*/
+
 
 void
 SyncManager::RegisterForNetworkChange(void)

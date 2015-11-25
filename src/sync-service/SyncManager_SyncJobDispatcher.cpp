@@ -251,17 +251,17 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 		jobQueue.pop_front();
 		LOG_LOGD("Non priority size.%d", jobQueue.size());
 	}
+	pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 
 	if (syncJobToRun != NULL)
 	{
 		int ret = DispatchSyncJob(syncJobToRun);
 		if (ret != SYNC_ERROR_NONE)
 		{
-			SyncManager::GetInstance()->ScheduleSyncJob(syncJobToRun, false);
 			LOG_LOGD("Failed to dispatch sync job. Adding it back to job queue");
+			SyncManager::GetInstance()->ScheduleSyncJob(syncJobToRun, false);
 		}
 	}
-	pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 }
 
 //}//_SyncManager

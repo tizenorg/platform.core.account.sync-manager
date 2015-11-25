@@ -2,6 +2,7 @@
 <node name="/org/tizen/sync/manager">
 	<interface name="org.tizen.sync.manager">
 		<method name="add_on_demand_sync_job">
+			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_job_name" direction="in" />
 			<arg type="i" name="sync_option" direction="in" />
@@ -9,6 +10,7 @@
 			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
 		<method name="add_periodic_sync_job">
+			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_job_name" direction="in" />
 			<arg type="i" name="poll_frequency" direction="in" />
@@ -17,6 +19,7 @@
 			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
 		<method name="add_data_change_sync_job">
+			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_capability" direction="in" />
 			<arg type="i" name="sync_option" direction="in" />
@@ -24,9 +27,11 @@
 			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
 		<method name="get_all_sync_jobs">
+			<arg type="s" name="command_line" direction="in" />
 			<arg type="aa{sv}" name="sync_jobs" direction="out" />
 		</method>
 		<method name="remove_sync_job">
+			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="sync_job_id" direction="in" />
 		</method>
 		<method name="add_sync_adapter">

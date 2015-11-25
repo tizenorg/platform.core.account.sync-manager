@@ -122,7 +122,7 @@ public:
 
 	string GetPkgIdByAppId(const char* pAppId);
 
-	//string GetPkgIdByCommandline(const char* pCommandLine);
+	string GetPkgIdByCommandline(const char* pCommandLine);
 
 	void HandleShutdown(void);
 

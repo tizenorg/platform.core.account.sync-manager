@@ -69,10 +69,11 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	SYNC_LOGE_RET_RES(pObject != NULL && pSyncJobName != NULL, true, "sync adapter object is null");
 	LOG_LOGD("Received start sync request in sync adapter: params account[%d] jobname [%s] Data sync [%s]", accountId, pSyncJobName, is_data_sync ? "YES" : "NO");
 
+	char *command_line = proc_get_cmdline_self();
 	if (g_sync_adapter->__syncRunning) {
 		LOG_LOGD("Sync already running");
 
-		tizen_sync_adapter_call_send_result_sync(pObject, (int)SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS, pSyncJobName, NULL, NULL);
+		tizen_sync_adapter_call_send_result_sync(pObject, command_line, (int)SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS, pSyncJobName, NULL, NULL);
 
 		return true;
 	}
@@ -96,9 +97,10 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	if (!is_sync_success)
 		ret = SYNC_STATUS_FAILURE;
 
-	tizen_sync_adapter_call_send_result_sync(pObject, ret, pSyncJobName, NULL, NULL);
+	tizen_sync_adapter_call_send_result_sync(pObject, command_line, ret, pSyncJobName, NULL, NULL);
 	g_sync_adapter->__syncRunning = false;
 	bundle_free(sync_job_user_data);
+	free(command_line);
 	LOG_LOGD("Sync completed");
 
 	if (ret == SYNC_STATUS_FAILURE)
