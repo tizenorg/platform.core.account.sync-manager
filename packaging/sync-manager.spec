@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.1
+Version:   0.1.2
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
