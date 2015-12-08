@@ -14,19 +14,13 @@ ExcludeArch: %{arm} %ix86 x86_64
 %endif
 
 BuildRequires: cmake
-BuildRequires: pkgconfig(capi-system-info)
-BuildRequires: pkgconfig(capi-system-runtime-info)
-BuildRequires: pkgconfig(capi-system-device)
 BuildRequires: pkgconfig(capi-appfw-app-manager)
 BuildRequires: pkgconfig(capi-appfw-application)
-BuildRequires: pkgconfig(capi-appfw-package-manager)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(appcore-efl)
 BuildRequires: pkgconfig(dlog)
-BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(pkgmgr)
 BuildRequires: pkgconfig(pkgmgr-info)
-BuildRequires: pkgconfig(appsvc)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys)
 BuildRequires: pkgconfig(libxml-2.0)
@@ -44,8 +38,7 @@ BuildRequires: pkgconfig(contacts-service2)
 %endif
 BuildRequires: pkgconfig(capi-content-media-content)
 BuildRequires: pkgconfig(libtzplatform-config)
-BuildRequires: python-xml
-#BuildRequires: pkgconfig(vasum)
+
 
 %description
 sync manager service and sync framework which manages sync of registered applications

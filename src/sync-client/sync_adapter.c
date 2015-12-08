@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <app.h>
 #include <app_manager.h>
-#include <pkgmgr-info.h>
 #include <account.h>
 #include <bundle.h>
 #include <pthread.h>

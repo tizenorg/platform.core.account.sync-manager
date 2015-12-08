@@ -28,14 +28,15 @@
 #include <assert.h>
 #include <glib.h>
 #include <app.h>
-#include <aul.h>
 #include <app_manager.h>
 #include <pkgmgr-info.h>
+#include <Elementary.h>
 #include <cynara-client.h>
 #include <cynara-session.h>
 #include <cynara-creds-gdbus.h>
 #include "sync-error.h"
 #include "SyncManager_SyncManager.h"
+#include "SyncManager_ServiceInterface.h"
 #include "sync-manager-stub.h"
 #include "sync-ipc-marshal.h"
 #include "sync-adapter-stub.h"
@@ -64,12 +65,16 @@ static cynara *pCynara;
 #endif
 
 
-GDBusObjectManagerServer* pServerManager = NULL;
+#define SYS_DBUS_INTERFACE				"org.tizen.system.deviced.PowerOff"
+#define SYS_DBUS_MATCH_RULE				"type='signal',interface='org.tizen.system.deviced.PowerOff'"
+#define SYS_DBUS_PATH					"/Org/Tizen/System/DeviceD/PowerOff"
+#define POWEROFF_MSG					"ChangeState"
 
-
+bool ShutdownInitiated = false;
 static TizenSyncManager* sync_ipc_obj = NULL;
 GHashTable* g_hash_table = NULL;
 string sa_app_id;
+static guint signal_id = -1;
 
 using namespace std;
 
@@ -361,8 +366,9 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 	}
 	else
 	{
-		int isRunning = aul_app_is_running(appId);
-		if (isRunning == 0)
+		bool isRunning = false;
+		app_manager_is_running(appId, &isRunning);
+		if (!isRunning)
 		{
 			LOG_LOGD("app is not running, launch the app and wait for signal");
 			ret = app_control_create(&app_control);
@@ -1275,6 +1281,32 @@ sync_manager_set_sync_status( TizenSyncManager* pObject, GDBusMethodInvocation* 
 }
 
 
+void
+DbusSignalHandler(GDBusConnection* pConnection,
+		const gchar* pSenderName,
+		const gchar* pObjectPath,
+		const gchar* pInterfaceName,
+		const gchar* pSignalName,
+		GVariant* pParameters,
+		gpointer data)
+{
+	if (!(g_strcmp0(pObjectPath, SYS_DBUS_PATH)) && !(g_strcmp0(pSignalName, POWEROFF_MSG)))
+	{
+		LOG_LOGD("Shutdown dbus received");
+		if (ShutdownInitiated == false)
+		{
+			ShutdownInitiated = true;
+			sync_service_finalise();
+			ecore_main_loop_quit();
+		}
+		if (pConnection && (signal_id != (unsigned int)-1))
+		{
+			g_dbus_connection_signal_unsubscribe(pConnection, signal_id);
+			g_object_unref(pConnection);
+		}
+	}
+}
+
 /*
  * DBus related initialization and setup
  */
@@ -1304,9 +1336,14 @@ OnBusAcquired (GDBusConnection* pConnection, const gchar* pName, gpointer userDa
 	g_signal_connect(sync_ipc_obj, "handle-set-sync-status", G_CALLBACK(sync_manager_set_sync_status), NULL);
 
 	gdbusConnection = pConnection;
-	LOG_LOGD("Sync Service started [%s]", pName);
 
-	//g_dbus_object_manager_server_set_connection(pServerManager, connection);
+	signal_id = g_dbus_connection_signal_subscribe(pConnection, NULL, SYS_DBUS_INTERFACE, POWEROFF_MSG, SYS_DBUS_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE, DbusSignalHandler, NULL, NULL);
+	if (signal_id == (unsigned int)-1)
+	{
+		LOG_LOGD("unable to register for PowerOff Signal");
+		return;
+	}
+	LOG_LOGD("Sync Service started [%s]", pName);
 }
 
 
