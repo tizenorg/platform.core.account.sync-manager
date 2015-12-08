@@ -20,8 +20,11 @@
  */
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 #include <calendar.h>
 #include <contacts.h>
+#endif
+
 #include <media_content.h>
 #include "sync-error.h"
 #include "SyncManager_PeriodicSyncScheduler.h"

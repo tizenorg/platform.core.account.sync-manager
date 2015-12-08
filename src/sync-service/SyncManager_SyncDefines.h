@@ -43,6 +43,7 @@
 
 #endif
 
+
 typedef int account_id;
 
 enum BluetoothStatus
@@ -125,6 +126,7 @@ enum BatteryStatus
 };
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 enum DataChangeStatus
 {
 	/** Calendar Book */
@@ -136,6 +138,7 @@ enum DataChangeStatus
 	/** Contacts Modify */
 	CONTACTS_DATA_CHANGED,
 };
+#endif
 
 
 enum SyncDispatchMessage
@@ -165,7 +168,7 @@ enum SyncReason
 	REASON_ACCOUNT_UPDATED = -5,
 	/** Auto Sync */
 	REASON_AUTO_SYNC = -6,
-	/** Change in calendar/contacts data */
+	/** Change in calendar/contacts/image/music/sound/video data */
 	REASON_DEVICE_DATA_CHANGED = -7
 };
 

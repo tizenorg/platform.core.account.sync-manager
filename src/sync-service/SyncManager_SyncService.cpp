@@ -57,8 +57,11 @@ static cynara *pCynara;
 #define SYNC_ERROR_DOMAIN "sync-manager"
 #define SYNC_ERROR_PREFIX "org.tizen.sync.Error"
 #define PRIV_ALARM_SET "http://tizen.org/privilege/alarm.set"
+
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 #define PRIV_CALENDAR_READ "http://tizen.org/privilege/calendar.read"
 #define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
+#endif
 
 
 GDBusObjectManagerServer* pServerManager = NULL;
@@ -285,6 +288,7 @@ int _check_privilege_alarm_set(GDBusMethodInvocation *invocation)
 }
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int _check_privilege_calendar_read(GDBusMethodInvocation *invocation)
 {
 	return _check_privilege(invocation, PRIV_CALENDAR_READ);
@@ -295,6 +299,7 @@ int _check_privilege_contact_read(GDBusMethodInvocation *invocation)
 {
 	return _check_privilege(invocation, PRIV_CONTACT_READ);
 }
+#endif
 
 
 int
@@ -845,6 +850,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 	int ret = SYNC_ERROR_NONE;
 
 	const char *capability = (char *)pCapabilityArg;
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	if (!strcmp(capability, "http://tizen.org/sync/capability/calendar") ||
 		!strcmp(capability, "http://tizen.org/sync/capability/contact")) {
 		if (!strcmp(capability, "http://tizen.org/sync/capability/calendar"))
@@ -864,6 +870,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 			return true;
 		}
 	}
+#endif
 
 	guint pid = get_caller_pid(pInvocation);
 	string pkgIdStr;
