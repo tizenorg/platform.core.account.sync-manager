@@ -229,6 +229,7 @@ struct Message
 		acc = NULL;
 		pSyncJob = NULL;
 		res = SYNC_STATUS_UNKNOWN;
+		type = SYNC_CHECK_ALARM;
 	}
 
 	SyncDispatchMessage type;

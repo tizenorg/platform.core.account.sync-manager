@@ -52,15 +52,8 @@ ADD_DEFINITIONS("-DPACKAGE=\"${PACKAGE_NAME}\"")
 
 INCLUDE(FindPkgConfig)
 pkg_check_modules(PKGS REQUIRED
-		capi-system-device
-		capi-system-info
-		capi-appfw-application
 		capi-appfw-app-manager
-		pkgmgr
-		pkgmgr-info
 		dlog
-		appsvc
-		appcore-efl
 		gio-unix-2.0
 		bundle)
 

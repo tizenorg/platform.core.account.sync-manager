@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <app.h>
 #include <app_manager.h>
-#include <pkgmgr-info.h>
 #include <account.h>
 #include <bundle.h>
 #include <pthread.h>
@@ -158,14 +157,15 @@ int __register_sync_adapter(bool flag)
 	SYNC_LOGE_RET_RES(error == NULL && ipcObj != NULL, SYNC_ERROR_IO_ERROR, "tizen_sync_manager_proxy_new_sync failed %s", error->message);
 
 	char *command_line = proc_get_cmdline_self();
-	if (flag)
+	if (flag) {
 		ret = tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, command_line, NULL, &error);
+		SYNC_LOGE_RET_RES(ret && !error, SYNC_ERROR_QUOTA_EXCEEDED, "Register sync adapter failed %s", error->message);
+	}
 	else
 		tizen_sync_manager_call_remove_sync_adapter_sync(ipcObj, command_line, NULL, &error);
 
 	free(command_line);
 
-	SYNC_LOGE_RET_RES(ret, SYNC_ERROR_QUOTA_EXCEEDED, "Register sync adapter failed %s", error->message);
 	SYNC_LOGE_RET_RES(error == NULL, SYNC_ERROR_IO_ERROR, "Register sync adapter failed %s", error->message);
 
 	return SYNC_ERROR_NONE;

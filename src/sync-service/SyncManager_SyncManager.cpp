@@ -28,7 +28,6 @@
 #include <vconf.h>
 #include <alarm.h>
 #include <glib.h>
-#include <aul.h>
 #include <pkgmgr-info.h>
 #include <app_manager.h>
 #include <tzplatform_config.h>
@@ -199,6 +198,8 @@ SyncManager::RemoveSyncJob(string packageId, int syncJobId)
 	}
 
 	SyncJob* pJob = dynamic_cast< SyncJob* > (pSyncJob);
+	SYNC_LOGE_RET_RES(pJob != NULL, SYNC_ERROR_SYSTEM, "Failed to cast %d", syncJobId);
+
 	CancelSync(pJob);
 
 	__pSyncJobsAggregator->RemoveSyncJob(packageId.c_str(), syncJobId);

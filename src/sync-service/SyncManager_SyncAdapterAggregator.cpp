@@ -27,7 +27,6 @@
 #include <vconf.h>
 #include <alarm.h>
 #include <glib.h>
-#include <aul.h>
 #include <pkgmgr-info.h>
 #include <app_manager.h>
 #include "SyncManager_SyncManager.h"

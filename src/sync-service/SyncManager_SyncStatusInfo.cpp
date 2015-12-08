@@ -62,6 +62,7 @@ SyncStatusInfo::operator =(SyncStatusInfo& other)
 }
 
 SyncStatusInfo::SyncStatusInfo(string statusInfo)
+				: capabilityId(-1)
 {
 	if (statusInfo.empty())
 	{

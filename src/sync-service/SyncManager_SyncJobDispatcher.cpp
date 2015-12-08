@@ -25,10 +25,8 @@
 #include <alarm.h>
 #include <glib.h>
 #include <unistd.h>
-#include <device/power.h>
 #include "sync-error.h"
 #include "sync-log.h"
-#include <aul.h>
 #include "SyncManager_SyncJobDispatcher.h"
 #include "SyncManager_SyncManager.h"
 #include "SyncManager_SyncJob.h"

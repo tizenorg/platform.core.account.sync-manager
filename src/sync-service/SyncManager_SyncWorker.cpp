@@ -29,6 +29,13 @@
 {*/
 
 SyncWorker::SyncWorker(void)
+			: __pendingRequestsMutex(PTHREAD_MUTEX_INITIALIZER)
+			, __message(SYNC_CHECK_ALARM)
+			, __pContext(NULL)
+			, __pLoop(NULL)
+			, __pChannel(NULL)
+			, __pSource(NULL)
+			, __pThread(NULL)
 {
 }
 
@@ -173,10 +180,10 @@ gboolean
 SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpointer data)
 {
 	LOG_LOGD("GIO event received");
-
 	SyncWorker* pSyncWorker = static_cast<SyncWorker*>(data);
+	SYNC_LOGE_RET_RES(pSyncWorker != NULL, FALSE, "Data is NULL");
 
-	if ((condition & G_IO_IN) && pSyncWorker != NULL)
+	if ((condition & G_IO_IN) != 0) 
 	{
 		uint64_t tmp = 0;
 		gsize readSize = 0;

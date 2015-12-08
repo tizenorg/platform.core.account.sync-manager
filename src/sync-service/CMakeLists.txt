@@ -82,18 +82,13 @@ INCLUDE(FindPkgConfig)
 SET(PACKAGES
 		ecore
 		capi-network-connection
-		capi-system-runtime-info
-		capi-system-device
 		capi-appfw-application
 		capi-appfw-app-manager
 		pkgmgr
 		pkgmgr-info
 		dlog
-		db-util
-		appsvc
 		appcore-efl
 		glib-2.0
-		capi-system-info
 		vconf
 		vconf-internal-keys
 		accounts-svc

@@ -42,6 +42,7 @@ PeriodicSyncJob::PeriodicSyncJob(const string appId, const string syncJobName, i
 
 PeriodicSyncJob::PeriodicSyncJob(const PeriodicSyncJob& other)
 			: SyncJob(other)
+			, __period(other.__period)
 {
 /*	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;

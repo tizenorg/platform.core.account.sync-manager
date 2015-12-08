@@ -32,6 +32,8 @@
 CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob)
 {
 	__pCurrentSyncJob = pSyncJob;
+	__startTime = 0;
+	__timerId = -1;
 }
 
 

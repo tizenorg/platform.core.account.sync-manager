@@ -42,6 +42,7 @@ extern "C"
 
 
 SyncJobQueue::SyncJobQueue(void)
+				: __pSyncRepositoryEngine(NULL)
 {
 	//Empty
 }

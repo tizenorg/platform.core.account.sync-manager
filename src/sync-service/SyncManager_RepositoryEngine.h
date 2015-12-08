@@ -99,8 +99,6 @@ private:
 	map<string, map<string, SyncJob*> > __Aggr;				// Data sync job list to be scheduled
 	map<int, SyncStatusInfo*> __syncStatus;
 
-	int PENDING_FINISH_TO_WRITE;
-
 	static RepositoryEngine* __pInstance;
 
 	static const long DEFAULT_PERIOD_SEC;
