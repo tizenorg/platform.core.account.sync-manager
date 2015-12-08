@@ -20,8 +20,11 @@
  */
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 #include <calendar.h>
 #include <contacts.h>
+#endif
+
 #include <media_content.h>
 #include "sync-error.h"
 #include "sync_manager.h"
@@ -30,6 +33,7 @@
 #include "SyncManager_SyncManager.h"
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 void OnCalendarBookChanged(const char* view_uri, void* user_data)
 {
 	LOG_LOGD("On Calendar Book Changed");
@@ -64,6 +68,7 @@ void OnContactsDataChanged(const char* view_uri, void* user_data)
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
 	pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_CONTACT);
 }
+#endif
 
 
 void OnMediaContentDataChanged(media_content_error_e error, int pid, media_content_db_update_item_type_e update_item, media_content_db_update_type_e update_type, media_content_type_e media_type, char *uuid, char *path, char *mime_type, void *user_data)
@@ -112,8 +117,10 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 
 DataChangeSyncScheduler::DataChangeSyncScheduler(void)
 {
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	calendar_subscription_started = false;
 	contacts_subscription_started = false;
+#endif
 	media_content_subscription_started = false;
 }
 
@@ -124,6 +131,7 @@ DataChangeSyncScheduler::~DataChangeSyncScheduler(void)
 }
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int
 DataChangeSyncScheduler::SubscribeCalendarCallback(void)
 {
@@ -195,6 +203,7 @@ DataChangeSyncScheduler::SubscribeContactsCallback(void)
 
 	return SYNC_ERROR_NONE;
 }
+#endif
 
 
 int
@@ -223,6 +232,7 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void)
 }
 
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int
 DataChangeSyncScheduler::UnSubscribeCalendarCallback(void)
 {
@@ -251,6 +261,7 @@ DataChangeSyncScheduler::UnSubscribeContactsCallback(void)
 
 	return SYNC_ERROR_NONE;
 }
+#endif
 
 
 int
@@ -272,6 +283,7 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void)
 {
 	int err = SYNC_ERROR_NONE;
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	err = SubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		LOG_LOGD("Registration of Calendar DataChangeListener Failed");
@@ -283,6 +295,7 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void)
 		LOG_LOGD("Registration of Contacts DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
 	}
+#endif
 
 	err = SubscribeMediaContentCallback();
 	if (err != SYNC_ERROR_NONE) {
@@ -301,6 +314,7 @@ DataChangeSyncScheduler::DeRegisterDataChangeListeners(void)
 {
 	int err = VALUE_UNDEFINED;
 
+#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	err = UnSubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		LOG_LOGD("DeRegistration of Calendar DataChangeListener Failed");
@@ -312,6 +326,7 @@ DataChangeSyncScheduler::DeRegisterDataChangeListeners(void)
 		LOG_LOGD("DeRegistration of Contacts DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
 	}
+#endif
 
 	err = UnSubscribeMediaContentCallback();
 	if (err != SYNC_ERROR_NONE) {

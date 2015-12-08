@@ -38,8 +38,10 @@ BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(cynara-client)
 BuildRequires: pkgconfig(cynara-session)
 BuildRequires: pkgconfig(cynara-creds-gdbus)
+%if "%{?profile}" != "tv"
 BuildRequires: pkgconfig(calendar-service2)
 BuildRequires: pkgconfig(contacts-service2)
+%endif
 BuildRequires: pkgconfig(capi-content-media-content)
 BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: python-xml
@@ -74,6 +76,12 @@ sync client provides sync adapter functionality to register sync adapters and to
 %build
 _CONTAINER_ENABLE=OFF
 
+%if "%{?profile}" != "tv"
+_CALENDAR_CONTACTS_ENABLE=ON
+%else
+_CALENDAR_CONTACTS_ENABLE=OFF
+%endif
+
 cmake \
 	-DCMAKE_INSTALL_PREFIX=%{_pkgdir} \
 	-DPACKAGE_NAME=%{name} \
@@ -82,6 +90,7 @@ cmake \
 	-DINCLUDEDIR=%{_includedir} \
 	-DSYSTEMD_DIR=%{_unitdir} \
 	-D_SEC_FEATURE_CONTAINER_ENABLE:BOOL=${_CONTAINER_ENABLE} \
+	-D_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE:BOOL=${_CALENDAR_CONTACTS_ENABLE} \
 	-DMANIFESTDIR=%{_manifestdir} \
 	-DVERSION=%{version}
 

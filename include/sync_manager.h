@@ -44,7 +44,7 @@ extern "C"
 /**
  *  @brief		This is calendar capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about calendar DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	This capability is not supported on TV profile. If you want to receive notification about calendar DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
 #define SYNC_SUPPORTS_CAPABILITY_CALENDAR	"http://tizen.org/sync/capability/calendar"
@@ -53,7 +53,7 @@ extern "C"
 /**
  *  @brief		This is contact capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about contact DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	This capability is not supported on TV profile. If you want to receive notification about contact DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
   */
 #define SYNC_SUPPORTS_CAPABILITY_CONTACT	"http://tizen.org/sync/capability/contact"
@@ -62,7 +62,7 @@ extern "C"
 /**
  *  @brief		This is image capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about media image DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	If you want to receive notification about media image DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
 #define SYNC_SUPPORTS_CAPABILITY_IMAGE	"http://tizen.org/sync/capability/image"
@@ -71,7 +71,7 @@ extern "C"
 /**
  *  @brief		This is video capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about media video DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	If you want to receive notification about media video DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
 #define SYNC_SUPPORTS_CAPABILITY_VIDEO	"http://tizen.org/sync/capability/video"
@@ -80,7 +80,7 @@ extern "C"
 /**
  *  @brief		This is sound capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about media sound DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	If you want to receive notification about media sound DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
 #define SYNC_SUPPORTS_CAPABILITY_SOUND	"http://tizen.org/sync/capability/sound"
@@ -89,7 +89,7 @@ extern "C"
 /**
  *  @brief		This is music capability string.
  *  @since_tizen 2.4
- *  @remarks	If you want to receive notification about media music DB change, register this capability through sync_manager_add_data_change_sync_job().
+ *  @remarks	If you want to receive notification about media music DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
 #define SYNC_SUPPORTS_CAPABILITY_MUSIC	"http://tizen.org/sync/capability/music"
@@ -218,8 +218,8 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
  * @privilege	%http://tizen.org/privilege/contact.read
  *
  * @remarks Data change sync job can be added by using its capability. In the case of adding a sync job with same capability, it will replace previous setting with new one. \n\n
- * %http://tizen.org/privilege/calendar.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CALENDAR. \n\n
- * %http://tizen.org/privilege/contact.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CONTACT.
+ * %http://tizen.org/privilege/calendar.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CALENDAR. This capability is not supported on TV profile. \n\n
+ * %http://tizen.org/privilege/contact.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CONTACT. This capability is not supported on TV profile.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_capability		A string representing a sync job which will be operated whenever data change of this capability
