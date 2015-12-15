@@ -28,6 +28,7 @@
 #include <fstream>
 #include <sstream>
 #include <tzplatform_config.h>
+#include <bundle_internal.h>
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_SyncJobQueue.h"
