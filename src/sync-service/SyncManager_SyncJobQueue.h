@@ -38,7 +38,7 @@
 */
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 using namespace std;
@@ -48,7 +48,6 @@ class SyncJob;
 class SyncJobQueue
 {
 public:
-
 	SyncJobQueue(void);
 
 	~SyncJobQueue(void);

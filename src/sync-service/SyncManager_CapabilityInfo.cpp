@@ -37,9 +37,9 @@ CapabilityInfo::CapabilityInfo(void)
 
 
 CapabilityInfo::~CapabilityInfo(void)
-{/*
-	for (unsigned int i=0; i<periodicSyncList.size(); i++)
-	{
+{
+/*
+	for (unsigned int i=0; i<periodicSyncList.size(); i++) {
 		delete periodicSyncList[i];
 	}
 */
@@ -49,7 +49,6 @@ CapabilityInfo::~CapabilityInfo(void)
 CapabilityInfo::CapabilityInfo(string capability)
 			: __capability(capability)
 {
-
 }
 
 
@@ -77,13 +76,11 @@ bool
 CapabilityInfo::RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob)
 {
 	map<int, PeriodicSyncJob*>::iterator it = __periodicSyncList.find(account_id);
-	if (it == __periodicSyncList.end())
-	{
+	if (it == __periodicSyncList.end()) {
 		return false;
 	}
 	PeriodicSyncJob* pSyncJob = it->second;
-	if ( *pSyncJob == *pJob)
-	{
+	if (*pSyncJob == *pJob) {
 		return true;
 	}
 	else
@@ -97,11 +94,9 @@ CapabilityInfo::CapabilityInfo(const CapabilityInfo& capabilityInfo)
 
 	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
 
-	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr)
-	{
+	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr) {
 		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(itr->second));
-		if (pJob)
-		{
+		if (pJob) {
 			__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (itr->first, pJob));
 		}
 	}
@@ -113,11 +108,9 @@ CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
 	this->__capability = capabilityInfo.__capability;
 
 	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
-	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr)
-	{
+	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr) {
 		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(itr->second));
-		if (pJob)
-		{
+		if (pJob) {
 			__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (itr->first, pJob));
 		}
 	}

@@ -35,7 +35,6 @@ using namespace std;
 class CapabilityInfo
 {
 public:
-
 	CapabilityInfo(void);
 
 	~CapabilityInfo(void);

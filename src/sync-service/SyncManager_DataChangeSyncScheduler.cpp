@@ -78,40 +78,33 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
 
 	switch (media_type) {
-	case MEDIA_CONTENT_TYPE_IMAGE:
-	{
+	case MEDIA_CONTENT_TYPE_IMAGE: {
 		LOG_LOGD("Media Content Image Type Data Changed");
 		pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_IMAGE);
 		break;
 	}
-	case MEDIA_CONTENT_TYPE_VIDEO:
-	{
+	case MEDIA_CONTENT_TYPE_VIDEO: {
 		LOG_LOGD("Media Content Video Type Data Changed");
 		pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_VIDEO);
 		break;
 	}
-	case MEDIA_CONTENT_TYPE_MUSIC:
-	{
+	case MEDIA_CONTENT_TYPE_MUSIC: {
 		LOG_LOGD("Media Content Music Type Data Changed");
 		pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_MUSIC);
 		break;
 	}
-	case MEDIA_CONTENT_TYPE_SOUND:
-	{
+	case MEDIA_CONTENT_TYPE_SOUND: {
 		LOG_LOGD("Media Content Sound Type Data Changed");
 		pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_SOUND);
 		break;
 	}
-	case MEDIA_CONTENT_TYPE_OTHERS:
-	{
+	case MEDIA_CONTENT_TYPE_OTHERS: {
 		break;
 	}
-	default:
-	{
+	default: {
 		LOG_LOGD("Invalid capability is inserted");
 	}
 	}
-
 }
 
 
@@ -127,7 +120,6 @@ DataChangeSyncScheduler::DataChangeSyncScheduler(void)
 
 DataChangeSyncScheduler::~DataChangeSyncScheduler(void)
 {
-
 }
 
 
@@ -348,8 +340,7 @@ DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability)
 	pair<std::multimap<string, DataSyncJob*>::iterator, std::multimap<string, DataSyncJob*>::iterator> ret;
 	ret = __dataChangeSyncJobs.equal_range(pSyncCapability);
 
-	for (std::multimap<string, DataSyncJob*>::iterator it = ret.first; it != ret.second; ++it)
-	{
+	for (std::multimap<string, DataSyncJob*>::iterator it = ret.first; it != ret.second; ++it) {
 		DataSyncJob* pDataSyncJob = it->second;
 		SyncManager::GetInstance()->ScheduleSyncJob(pDataSyncJob, false);
 	}
@@ -377,10 +368,8 @@ DataChangeSyncScheduler::RemoveDataSyncJob(DataSyncJob* dataSyncJob)
 	std::pair<iterator, iterator> iterpair = __dataChangeSyncJobs.equal_range(dataSyncJob->__capability);
 
 	iterator it = iterpair.first;
-	for (; it != iterpair.second; ++it)
-	{
-		if (it->second == dataSyncJob)
-		{
+	for (; it != iterpair.second; ++it) {
+		if (it->second == dataSyncJob) {
 			__dataChangeSyncJobs.erase(it);
 			break;
 		}

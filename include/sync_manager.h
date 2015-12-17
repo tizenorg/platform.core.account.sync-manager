@@ -99,8 +99,7 @@ extern "C"
  *  @brief   Enumerations for sync options of sync job request APIs.
  *  @since_tizen 2.4
  */
-typedef enum
-{
+typedef enum {
 	SYNC_OPTION_NONE = 0,														/**< Sync job will be operated normally */
 	SYNC_OPTION_EXPEDITED = 0x01,												/**< Sync job will be operated as soon as possible */
 	SYNC_OPTION_NO_RETRY = 0x02,												/**< Sync job will not be performed again when it fails */
@@ -111,8 +110,7 @@ typedef enum
  *  @brief   Enumerations for time intervals of a periodic sync.
  *  @since_tizen 2.4
  */
-typedef enum
-{
+typedef enum {
 	SYNC_PERIOD_INTERVAL_30MIN = 0,		/**< Sync within 30 minutes */
 	SYNC_PERIOD_INTERVAL_1H,			/**< Sync within 1 hour */
 	SYNC_PERIOD_INTERVAL_2H,			/**< Sync within 2 hours */
@@ -241,7 +239,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
  * @see sync_manager_remove_sync_job()
  * @see sync_option_e
  */
-int sync_manager_add_data_change_sync_job(account_h account, const char* sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
+int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
 
 
 /**

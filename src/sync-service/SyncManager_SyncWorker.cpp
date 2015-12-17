@@ -62,13 +62,11 @@ SyncWorker::Initialize(void)
 	int ret;
 
 	ret = pthread_mutex_init(&__pendingRequestsMutex, NULL);
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		LOG_ERRORD("__pendingRequestsMutex Initialise Failed %d", ret);
 		return;
 	}
-	else
-	{
+	else {
 		__pContext = g_main_context_new();
 		ASSERT(__pContext);
 
@@ -101,8 +99,7 @@ SyncWorker::Finalize(void)
 {
 	LOG_LOGD("Finalizing sync worker");
 
-	for (std::list<RequestData*>::iterator it = __pendingRequests.begin(); it != __pendingRequests.end();)
-	{
+	for (std::list<RequestData*>::iterator it = __pendingRequests.begin(); it != __pendingRequests.end();) {
 		RequestData* pRequestData = *it;
 		delete pRequestData;
 		pRequestData = NULL;
@@ -110,27 +107,22 @@ SyncWorker::Finalize(void)
 	}
 	pthread_mutex_destroy(&__pendingRequestsMutex);
 
-	if (__pSource)
-	{
+	if (__pSource) {
 		g_source_unref(__pSource);
 		g_source_destroy(__pSource);
 	}
-	if (__pChannel)
-	{
+	if (__pChannel) {
 		g_io_channel_unref(__pChannel);
 		g_io_channel_shutdown(__pChannel, TRUE, NULL);
 	}
-	if (__pLoop)
-	{
+	if (__pLoop) {
 		g_main_loop_unref(__pLoop);
 		g_main_loop_quit(__pLoop);
 	}
-	if (__pContext)
-	{
+	if (__pContext) {
 		g_main_context_unref(__pContext);
 	}
-	if (__pThread)
-	{
+	if (__pThread) {
 		g_thread_exit(NULL);
 	}
 }
@@ -144,8 +136,7 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 	LOG_LOGD("Adding a request to sync worker");
 
 	RequestData* pRequestData = new (std::nothrow) RequestData();
-	if (pRequestData != NULL)
-	{
+	if (pRequestData != NULL) {
 		pRequestData->message = msg;
 		pRequestData->pResultListener = pSyncWorkerResultListener;
 
@@ -161,12 +152,11 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 
 		GError* pError = NULL;
 		int status = g_io_channel_write_chars(__pChannel, (const gchar*) &count, sizeof(count), &writtenSize, &pError);
-		if (status != G_IO_STATUS_NORMAL)
-		{
+		if (status != G_IO_STATUS_NORMAL) {
 			LOG_LOGD("SyncWorker::Add Request Failed with IO Write Error %d %d", status, count);
 			return SYNC_ERROR_SYSTEM;
 		}
-		g_io_channel_flush (__pChannel, &pError);
+		g_io_channel_flush(__pChannel, &pError);
 
 		LOG_LOGD("Request Successfully added");
 		return SYNC_ERROR_NONE;
@@ -183,8 +173,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 	SyncWorker* pSyncWorker = static_cast<SyncWorker*>(data);
 	SYNC_LOGE_RET_RES(pSyncWorker != NULL, FALSE, "Data is NULL");
 
-	if ((condition & G_IO_IN) != 0) 
-	{
+	if ((condition & G_IO_IN) != 0) {
 		uint64_t tmp = 0;
 		gsize readSize = 0;
 		GError* pError = NULL;
@@ -192,8 +181,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 
 		status = g_io_channel_read_chars (pChannel, (gchar*)&tmp, sizeof(tmp), &readSize, &pError);
 
-		if (readSize == 0 || status != G_IO_STATUS_NORMAL)
-		{
+		if (readSize == 0 || status != G_IO_STATUS_NORMAL) {
 			LOG_LOGD("Failed with IO Read Error");
 			return TRUE;
 		}
@@ -201,8 +189,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 		pthread_mutex_lock(&pSyncWorker->__pendingRequestsMutex);
 		std::list<RequestData*>::iterator it;
 		it = pSyncWorker->__pendingRequests.begin();
-		if (*it != NULL)
-		{
+		if (*it != NULL) {
 			RequestData* pData = *it;
 			pSyncWorker->__pendingRequests.pop_front();
 			LOG_LOGD("Popping from __pendingRequests, size = %d", pSyncWorker->__pendingRequests.size());
@@ -213,8 +200,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 			delete pData;
 			pData = NULL;
 		}
-		else
-		{
+		else {
 			pthread_mutex_unlock(&pSyncWorker->__pendingRequestsMutex);
 		}
 
@@ -233,8 +219,7 @@ SyncWorker::ThreadLoop(gpointer data)
 	LOG_LOGD("Sync worker thread  entered");
 
 	GMainLoop* pLoop = static_cast<GMainLoop*>(data);
-	if (pLoop != NULL)
-	{
+	if (pLoop != NULL) {
 		LOG_LOGD("Thread loop Running");
 		g_main_loop_run(pLoop);
 	}

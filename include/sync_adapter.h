@@ -143,4 +143,4 @@ int sync_adapter_unset_callbacks(void);
 #endif
 
 
-#endif // __SYNC_ADAPTER_H__
+#endif /* __SYNC_ADAPTER_H__ */

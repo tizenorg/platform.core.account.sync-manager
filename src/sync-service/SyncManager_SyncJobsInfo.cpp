@@ -39,11 +39,9 @@ SyncJobsInfo::~SyncJobsInfo(void)
 SyncJobsInfo::SyncJobsInfo(string packageId)
 			: __packageId(packageId)
 {
-	for (int i = 0; i < SYNC_JOB_LIMIT; i++)
-	{
+	for (int i = 0; i < SYNC_JOB_LIMIT; i++) {
 		__syncJobId[i] = false;
 	}
-
 }
 
 
@@ -62,8 +60,7 @@ ISyncJob*
 SyncJobsInfo::GetSyncJob(string syncJobName)
 {
 	map<string, ISyncJob*>::iterator itr = __syncJobsList.find(syncJobName);
-	if (itr != __syncJobsList.end())
-	{
+	if (itr != __syncJobsList.end()) {
 		return itr->second;
 	}
 	return NULL;
@@ -74,8 +71,7 @@ ISyncJob*
 SyncJobsInfo::GetSyncJob(int syncJobId)
 {
 	map<int, ISyncJob*>::iterator itr = __syncIdList.find(syncJobId);
-	if (itr != __syncIdList.end())
-	{
+	if (itr != __syncIdList.end()) {
 		LOG_LOGD("Found sync job for id [%d]", syncJobId);
 		return itr->second;
 	}
@@ -88,11 +84,9 @@ int
 SyncJobsInfo::RemoveSyncJob(int syncJobId)
 {
 	map<int, ISyncJob*>::iterator itr = __syncIdList.find(syncJobId);
-	if (itr != __syncIdList.end())
-	{
+	if (itr != __syncIdList.end()) {
 		SyncJob* syncJob = dynamic_cast< SyncJob* > (itr->second);
-		if (syncJob != NULL)
-		{
+		if (syncJob != NULL) {
 			RemoveSyncJob(syncJob->__syncJobName);
 		}
 	}
@@ -105,8 +99,7 @@ int
 SyncJobsInfo::RemoveSyncJob(string syncJobname)
 {
 	map<string, ISyncJob*>::iterator itr = __syncJobsList.find(syncJobname);
-	if (itr != __syncJobsList.end())
-	{
+	if (itr != __syncJobsList.end()) {
 		ISyncJob* pSyncJob = itr->second;
 		int syncJobId = pSyncJob->GetSyncJobId();
 		__syncJobId[syncJobId] = false;
@@ -116,8 +109,7 @@ SyncJobsInfo::RemoveSyncJob(string syncJobname)
 		__syncJobsList.erase(itr);
 		__syncIdList.erase(syncJobId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Sync job name doesnt exists in package [%s] for job name [%s]", __packageId.c_str(), syncJobname.c_str());
 	}
 
@@ -131,8 +123,7 @@ SyncJobsInfo::RemoveAllSyncJobs()
 	LOG_LOGD("Removing Sync jobs for package [%s]. Count [%d] ", __packageId.c_str(), __syncIdList.size());
 
 	map<int, ISyncJob*>::iterator itr = __syncIdList.begin();
-	while (itr != __syncIdList.end())
-	{
+	while (itr != __syncIdList.end()) {
 		SyncManager::GetInstance()->RemoveSyncJob(__packageId.c_str(), itr->first);
 		itr++;
 	}
@@ -145,17 +136,14 @@ SyncJobsInfo::GetNextSyncJobId()
 	int value = -1;
 	int idx;
 
-	for (idx = 1; idx <= SYNC_JOB_LIMIT; idx++)
-	{
-		if (!__syncJobId[idx])
-		{
+	for (idx = 1; idx <= SYNC_JOB_LIMIT; idx++) {
+		if (!__syncJobId[idx]) {
 			value = idx;
 			break;
 		}
 	}
 
-	if (idx == SYNC_JOB_LIMIT)
-	{
+	if (idx == SYNC_JOB_LIMIT) {
 		value = SYNC_JOB_LIMIT + 1;
 	}
 
@@ -169,10 +157,8 @@ SyncJobsInfo::GetSyncJobIdList()
 	vector<int> idList;
 	int idx;
 
-	for (idx = 0; idx < SYNC_JOB_LIMIT; idx++)
-	{
-		if (__syncJobId[idx])
-		{
+	for (idx = 0; idx < SYNC_JOB_LIMIT; idx++) {
+		if (__syncJobId[idx]) {
 			idList.push_back(idx);
 		}
 	}

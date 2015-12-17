@@ -74,13 +74,13 @@ protected:
 	~SyncJobsAggregator(void);
 
 	friend class Singleton<SyncManager>;
-
-/*class SyncJobsInfo
+/*
+class SyncJobsInfo
 {
 public:
 	SyncJobsInfo(string __packageId);
-private:
 
+private:
 	SyncJobsInfo(const SyncJobsInfo&);
 
 	const SyncJobsInfo& operator=(const SyncJobsInfo&);
@@ -88,10 +88,10 @@ private:
 public:
 	map<string, SyncJob*> __syncJobs;
 	int __nextJobId;
-};*/
+};
+*/
 
 private:
-
 	SyncJobsAggregator(const SyncJobsAggregator&);
 
 	const SyncJobsAggregator& operator=(const SyncJobsAggregator&);

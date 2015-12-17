@@ -36,7 +36,6 @@ using namespace std;
 class SyncJobsInfo
 {
 public:
-
 	~SyncJobsInfo(void);
 
 	SyncJobsInfo(string packageId);
@@ -62,7 +61,6 @@ public:
 	void RemoveAllSyncJobs();
 
 private:
-
 	SyncJobsInfo(const SyncJobsInfo&);
 
 	const SyncJobsInfo& operator=(const SyncJobsInfo&);

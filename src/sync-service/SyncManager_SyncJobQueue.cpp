@@ -37,10 +37,7 @@
 #define MIN(a, b) a < b ? a : b
 #endif
 
-extern "C"
-{
-
-
+extern "C" {
 SyncJobQueue::SyncJobQueue(void)
 				: __pSyncRepositoryEngine(NULL)
 {
@@ -80,14 +77,12 @@ SyncJobQueue::AddSyncJob(SyncJob* pSyncJob)
 	SyncJob* pSyncJobEntry = dynamic_cast< SyncJob* > (pSyncJob);
 	SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
-	if (pSyncJobEntry ->IsExpedited())
-	{
+	if (pSyncJobEntry ->IsExpedited()) {
 		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
 		__prioritySyncJobsQueue.push_back(pSyncJob);
 		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
 	}
-	else
-	{
+	else {
 		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
 		__syncJobsQueue.push_back(pSyncJob);
 		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
@@ -100,14 +95,12 @@ SyncJobQueue::AddSyncJob(SyncJob* pSyncJob)
 int
 SyncJobQueue::RemoveSyncJob(SyncJob* pSyncJob)
 {
-	if (pSyncJob ->IsExpedited())
-	{
+	if (pSyncJob ->IsExpedited()) {
 		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
 		__prioritySyncJobsQueue.remove(pSyncJob);
 		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
 	}
-	else
-	{
+	else {
 		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
 		__syncJobsQueue.remove(pSyncJob);
 		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
@@ -121,8 +114,7 @@ void
 SyncJobQueue::UpdateAgeCount()
 {
 	list< SyncJob* >::iterator itr = __syncJobsQueue.begin();
-	while (itr != __syncJobsQueue.end())
-	{
+	while (itr != __syncJobsQueue.end()) {
 		(*itr)->IncrementWaitCounter();
 	}
 }

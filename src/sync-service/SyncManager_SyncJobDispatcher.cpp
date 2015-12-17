@@ -32,10 +32,10 @@
 #include "SyncManager_SyncJob.h"
 
 #ifndef MAX
-#define MAX(a, b) a>b?a:b
+#define MAX(a, b) a > b? a : b
 #endif
 #ifndef MIN
-#define MIN(a, b) a < b ? a : b
+#define MIN(a, b) a < b? a : b
 #endif
 
 #define NON_PRIORITY_SYNC_WAIT_LIMIT 5
@@ -73,8 +73,7 @@ SyncJobDispatcher::DispatchSyncJob(SyncJob* syncJob)
 	ret = SyncService::GetInstance()->TriggerStartSync(syncJob->__appId.c_str(), syncJob->__accountId, syncJob->__syncJobName.c_str(), isDataSync, syncJob->__pExtras);
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Failed to start sync job")
 
-	if (SyncManager::GetInstance()->__pCurrentSyncJobQueue)
-	{
+	if (SyncManager::GetInstance()->__pCurrentSyncJobQueue) {
 		pthread_mutex_lock(&(SyncManager::GetInstance()->__currJobQueueMutex));
 		LOG_LOGD("Add to Active Sync queue");
 
@@ -91,8 +90,7 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 {
 	LOG_LOGD("Starts");
 
-	switch (res)
-	{
+	switch (res) {
 	case SYNC_STATUS_SUCCESS:
 		LOG_LOGD("Handle Sync event : SYNC_STATUS_SUCCESS");
 		break;
@@ -116,7 +114,6 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 	default:
 		break;
 	}
-
 }
 
 
@@ -125,16 +122,13 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 {
 	LOG_LOGD("0. Sync Job dispatcher starts");
 
-	if (!SyncManager::GetInstance()->__isSyncPermitted)
-	{
+	if (!SyncManager::GetInstance()->__isSyncPermitted) {
 		LOG_LOGD("Sync not permitted now");
 		return;
 	}
 
-	switch (msg.type)
-	{
-		case SYNC_CANCEL:
-			{
+	switch (msg.type) {
+		case SYNC_CANCEL: {
 				LOG_LOGD("1. Handle Event : SYNC_CANCEL");
 				HandleJobCompletedOrCancelledLocked(SYNC_STATUS_CANCELLED, msg.pSyncJob);
 				LOG_LOGD("2. Start next Syncjob from main queue");
@@ -142,8 +136,7 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 			}
 			break;
 
-		case SYNC_FINISHED:
-			{
+		case SYNC_FINISHED: {
 				LOG_LOGD("1. Handle Event : SYNC_FINISHED");
 				HandleJobCompletedOrCancelledLocked(msg.res, msg.pSyncJob);
 				LOG_LOGD("2. Start next Sync job from main queue");
@@ -151,16 +144,14 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 			}
 			break;
 
-		case SYNC_CHECK_ALARM:
-			{
+		case SYNC_CHECK_ALARM: {
 				LOG_LOGD("1. Handle Event : SYNC_CHECK_ALARM");
 				LOG_LOGD("2. Start next Sync job from main queue");
 				TryStartingNextJobLocked();
 			}
 			break;
 
-		case SYNC_ALARM:
-			{
+		case SYNC_ALARM: {
 				LOG_LOGD("1. Handle Event : SYNC_ALARM");
 				LOG_LOGD("2. Start next Sync job from main queue");
 				TryStartingNextJobLocked();
@@ -184,26 +175,22 @@ sortFunc(const SyncJob* pJob1, const SyncJob* pJob2)
 void
 SyncJobDispatcher::TryStartingNextJobLocked()
 {
-	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false)
-	{
+	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false) {
 		LOG_LOGD("No network available: Skipping sync");
 		return;
 	}
 
-	if (!SyncManager::GetInstance()->__isSyncPermitted)
-	{
+	if (!SyncManager::GetInstance()->__isSyncPermitted) {
 		LOG_LOGD("Sync not permitted now: Skipping sync");
 		return;
 	}
 
-	if (SyncManager::GetInstance()->__isUPSModeEnabled)
-	{
+	if (SyncManager::GetInstance()->__isUPSModeEnabled) {
 		LOG_LOGD("UPS mode enabled: Skipping sync");
 		return;
 	}
 
-	if (SyncManager::GetInstance()->__isStorageLow)
-	{
+	if (SyncManager::GetInstance()->__isStorageLow) {
 		LOG_LOGD("Storage Low: Skipping sync");
 		return;
 	}
@@ -215,8 +202,7 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 	list< SyncJob* >& jobQueue = pSyncJobQueue->GetSyncJobQueue();
 	list< SyncJob* >& priorityJobQueue = pSyncJobQueue->GetPrioritySyncJobQueue();
 
-	if (jobQueue.empty() && priorityJobQueue.empty())
-	{
+	if (jobQueue.empty() && priorityJobQueue.empty()) {
 		LOG_LOGD("SyncJob Queues are empty");
 		pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 		return;
@@ -224,26 +210,22 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 
 	SyncJob* syncJobToRun = NULL;
 
-	if (!jobQueue.empty())
-	{
+	if (!jobQueue.empty()) {
 		SyncJob* nonPrioritySyncJob = jobQueue.front();
-		if (nonPrioritySyncJob->__waitCounter > NON_PRIORITY_SYNC_WAIT_LIMIT)
-		{
+		if (nonPrioritySyncJob->__waitCounter > NON_PRIORITY_SYNC_WAIT_LIMIT) {
 			LOG_LOGD("Long waiting Non priority job found. Handle this job first");
 			syncJobToRun = nonPrioritySyncJob;
 			jobQueue.pop_front();
 		}
 	}
 
-	if (syncJobToRun == NULL && !priorityJobQueue.empty())
-	{
+	if (syncJobToRun == NULL && !priorityJobQueue.empty()) {
 		LOG_LOGD("Priority job found.");
 		syncJobToRun = priorityJobQueue.front();
 		priorityJobQueue.pop_front();
 	}
 
-	if (syncJobToRun == NULL && !jobQueue.empty())
-	{
+	if (syncJobToRun == NULL && !jobQueue.empty()) {
 		LOG_LOGD("Non priority job found.");
 		syncJobToRun = jobQueue.front();
 		jobQueue.pop_front();
@@ -251,11 +233,9 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 	}
 	pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 
-	if (syncJobToRun != NULL)
-	{
+	if (syncJobToRun != NULL) {
 		int ret = DispatchSyncJob(syncJobToRun);
-		if (ret != SYNC_ERROR_NONE)
-		{
+		if (ret != SYNC_ERROR_NONE) {
 			LOG_LOGD("Failed to dispatch sync job. Adding it back to job queue");
 			SyncManager::GetInstance()->ScheduleSyncJob(syncJobToRun, false);
 		}

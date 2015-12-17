@@ -51,11 +51,9 @@ public:
 
 	bool IsExtraEqual(PeriodicSyncJob* pJob);
 
-	virtual SyncType GetSyncType()
-	{
+	virtual SyncType GetSyncType() {
 		return __syncType;
 	}
-private:
 
 public:
 	long __period;

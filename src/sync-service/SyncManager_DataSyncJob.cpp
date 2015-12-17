@@ -28,7 +28,6 @@
 
 DataSyncJob::~DataSyncJob(void)
 {
-
 }
 
 
@@ -36,7 +35,6 @@ DataSyncJob::DataSyncJob(const string appId, const string syncJobName, int accou
 	: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
 	, __capability(capability)
 {
-
 }
 
 

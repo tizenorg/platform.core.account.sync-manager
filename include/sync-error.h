@@ -44,8 +44,7 @@ extern "C"
  *  @brief    Enumerations of error codes for Sync Manager APIs.
  *  @since_tizen 2.4
  */
-typedef enum
-{
+typedef enum {
 	SYNC_ERROR_NONE						= TIZEN_ERROR_NONE,					/**< Successful */
 	SYNC_ERROR_OUT_OF_MEMORY			= TIZEN_ERROR_OUT_OF_MEMORY,		/**< Out of memory */
 	SYNC_ERROR_IO_ERROR					= TIZEN_ERROR_IO_ERROR,				/**< I/O error */

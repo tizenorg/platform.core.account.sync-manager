@@ -39,7 +39,6 @@ class SyncJobDispatcher
 		:public ISyncWorkerResultListener
 {
 public:
-
 	SyncJobDispatcher(void);
 
 	~SyncJobDispatcher(void);
@@ -57,7 +56,6 @@ private:
 	void HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *pJob);
 
 	void TryStartingNextJobLocked();
-
- };
+};
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_JOB_DISPATCHER_H

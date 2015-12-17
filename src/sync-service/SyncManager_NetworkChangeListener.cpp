@@ -34,25 +34,20 @@ void OnConnectionChanged(connection_type_e type, void *user_data)
 {
 	LOG_LOGD("Network connection changed %d", type);
 
-	switch (type)
-	{
-		case CONNECTION_TYPE_WIFI:
-		{
+	switch (type) {
+		case CONNECTION_TYPE_WIFI: {
 			SyncManager::GetInstance()->OnWifiStatusChanged(true);
 			break;
 		}
-		case CONNECTION_TYPE_CELLULAR:
-		{
+		case CONNECTION_TYPE_CELLULAR: {
 			SyncManager::GetInstance()->OnDNetStatusChanged(true);
 			break;
 		}
-		case CONNECTION_TYPE_BT:
-		{
+		case CONNECTION_TYPE_BT: {
 			SyncManager::GetInstance()->OnBluetoothStatusChanged(true);
 			break;
 		}
-		case CONNECTION_TYPE_DISCONNECTED:
-		{
+		case CONNECTION_TYPE_DISCONNECTED: {
 			SyncManager::GetInstance()->OnWifiStatusChanged(false);
 			SyncManager::GetInstance()->OnDNetStatusChanged(false);
 			SyncManager::GetInstance()->OnBluetoothStatusChanged(false);
@@ -68,8 +63,7 @@ NetworkChangeListener::NetworkChangeListener(void)
 	: connection(NULL)
 {
 	int ret = connection_create(&connection);
-	if (ret != CONNECTION_ERROR_NONE)
-	{
+	if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));
 	}
 }
@@ -77,8 +71,7 @@ NetworkChangeListener::NetworkChangeListener(void)
 
 NetworkChangeListener::~NetworkChangeListener(void)
 {
-	if (connection)
-	{
+	if (connection) {
 		connection_destroy(connection);
 	}
 }
@@ -90,8 +83,7 @@ NetworkChangeListener::IsWifiConnected()
 	int ret;
 	connection_wifi_state_e state = CONNECTION_WIFI_STATE_DEACTIVATED;
 	ret = connection_get_wifi_state(connection, &state);
-	if (ret != CONNECTION_ERROR_NONE)
-	{
+	if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Connection wifi failure %d, %s", ret, get_error_message(ret));
 	}
 	return (state == CONNECTION_WIFI_STATE_CONNECTED);
@@ -119,8 +111,7 @@ NetworkChangeListener::RegisterNetworkChangeListener(void)
 {
 	int ret = CONNECTION_ERROR_NONE;
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
-	if (ret != CONNECTION_ERROR_NONE)
-	{
+	if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Registration of network change listener failed %d, %s", ret, get_error_message(ret));
 	}
 	return ret;
@@ -134,8 +125,7 @@ NetworkChangeListener::DeRegisterNetworkChangeListener(void)
 
 	int ret;
 	ret = connection_unset_type_changed_cb(connection);
-	if (ret != CONNECTION_ERROR_NONE)
-	{
+	if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Removal of network change listener failed");
 	}
 

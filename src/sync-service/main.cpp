@@ -41,8 +41,7 @@ OnTerminate(void *data, int ev_type, void *ev)
 {
 	LOG_LOGD("MainLoop OnTerminate");
 
-	if (ShutdownInitiated == false)
-	{
+	if (ShutdownInitiated == false) {
 		ShutdownInitiated = true;
 		sync_service_finalise();
 	}
@@ -56,8 +55,7 @@ OnTerminate(void *data, int ev_type, void *ev)
 int
 main(int argc, char **argv)
 {
-	if (!ecore_init())
-	{
+	if (!ecore_init()) {
 		return -1;
 	}
 	LOG_LOGD("Sync Service");
@@ -67,8 +65,7 @@ main(int argc, char **argv)
 	ecore_event_handler_add(ECORE_EVENT_SIGNAL_EXIT, OnTerminate, NULL);
 
 	int ret = sync_service_initialise();
-	if (ret != 0)
-	{
+	if (ret != 0) {
 		LOG_LOGD("Could not initialise sync service");
 		return 0;
 	}

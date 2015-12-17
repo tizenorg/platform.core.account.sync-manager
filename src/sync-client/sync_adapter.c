@@ -160,8 +160,7 @@ int __register_sync_adapter(bool flag)
 	if (flag) {
 		ret = tizen_sync_manager_call_add_sync_adapter_sync(ipcObj, command_line, NULL, &error);
 		SYNC_LOGE_RET_RES(ret && !error, SYNC_ERROR_QUOTA_EXCEEDED, "Register sync adapter failed %s", error->message);
-	}
-	else
+	} else
 		tizen_sync_manager_call_remove_sync_adapter_sync(ipcObj, command_line, NULL, &error);
 
 	free(command_line);

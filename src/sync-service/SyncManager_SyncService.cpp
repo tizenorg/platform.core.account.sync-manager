@@ -81,10 +81,8 @@ using namespace std;
 void convert_to_path(char app_id[])
 {
 	int i = 0;
-	while (app_id[i] != '\0')
-	{
-		if (app_id[i] == '.' || app_id[i] == '-')
-		{
+	while (app_id[i] != '\0') {
+		if (app_id[i] == '.' || app_id[i] == '-') {
 			app_id[i] = '_';
 		}
 		i++;
@@ -137,14 +135,14 @@ GDBusErrorEntry _sync_errors[] =
 
 
 static GQuark
-_sync_error_quark (void)
+_sync_error_quark(void)
 {
 	static volatile gsize quark_volatile = 0;
 
-	g_dbus_error_register_error_domain (SYNC_ERROR_DOMAIN,
+	g_dbus_error_register_error_domain(SYNC_ERROR_DOMAIN,
 										&quark_volatile,
 										_sync_errors,
-										G_N_ELEMENTS (_sync_errors));
+										G_N_ELEMENTS(_sync_errors));
 
 	return (GQuark) quark_volatile;
 }
@@ -156,8 +154,7 @@ get_caller_pid(GDBusMethodInvocation* pMethodInvocation)
 	guint pid = -1;
 	const char *name = NULL;
 	name = g_dbus_method_invocation_get_sender(pMethodInvocation);
-	if (name == NULL)
-	{
+	if (name == NULL) {
 		LOG_LOGD("GDbus error: Failed to get sender name");
 		return -1;
 	}
@@ -175,8 +172,7 @@ get_caller_pid(GDBusMethodInvocation* pMethodInvocation)
 														NULL,
 														&error);
 
-	if (ret != NULL)
-	{
+	if (ret != NULL) {
 		g_variant_get(ret, "(u)", &pid);
 		g_variant_unref(ret);
 	}
@@ -233,7 +229,7 @@ static int
 __check_privilege_by_cynara(const char *client, const char *session, const char *user, const char *privilege)
 {
 	int ret = CYNARA_API_ACCESS_ALLOWED;
-	char err_buf[128] = {0,};
+	char err_buf[128] = {0, };
 
 	ret = cynara_check(pCynara, client, session, user, privilege);
 	switch (ret) {
@@ -318,8 +314,7 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 
 	app_context_h app_context = NULL;
 	ret = app_manager_get_app_context(appId, &app_context);
-	if (ret == APP_MANAGER_ERROR_NO_SUCH_APP)
-	{
+	if (ret == APP_MANAGER_ERROR_NO_SUCH_APP) {
 		gboolean alreadyRunning = FALSE;
 		GVariant *result = g_dbus_connection_call_sync(gdbusConnection,	"org.freedesktop.DBus",
 														"/org/freedesktop/DBus",
@@ -331,20 +326,17 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 														-1,
 														NULL,
 														&error);
-		if (result == NULL)
-		{
+		if (result == NULL) {
 			LOG_LOGD("g_dbus_connection_call_sync() is failed");
-			if (error)
-			{
+			if (error) {
 				LOG_LOGD("dbus error message: %s", error->message);
 				g_error_free(error);
 			}
 		} else {
-			g_variant_get (result, "(b)", &alreadyRunning);
+			g_variant_get(result, "(b)", &alreadyRunning);
 		}
 
-		if (!alreadyRunning)
-		{
+		if (!alreadyRunning) {
 			LOG_LOGD("Service not running. Start the service ");
 			GVariant *ret = g_dbus_connection_call_sync(gdbusConnection,	"org.freedesktop.DBus",
 														"/org/freedesktop/DBus",
@@ -356,27 +348,23 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 														-1,
 														NULL,
 														&error);
-			if (error)
-			{
+			if (error) {
 				LOG_LOGD("g_dbus_connection_call_sync gdbus error [%s]", error->message);
 				g_clear_error(&error);
 			}
 			return SYNC_ERROR_SYSTEM;
 		}
 	}
-	else
-	{
+	else {
 		bool isRunning = false;
 		app_manager_is_running(appId, &isRunning);
-		if (!isRunning)
-		{
+		if (!isRunning) {
 			LOG_LOGD("app is not running, launch the app and wait for signal");
 			ret = app_control_create(&app_control);
-			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM,"app control create failed %d", ret);
+			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control create failed %d", ret);
 
 			ret = app_control_set_app_id(app_control, appId);
-			if (ret != APP_CONTROL_ERROR_NONE)
-			{
+			if (ret != APP_CONTROL_ERROR_NONE) {
 				LOG_LOGD("app control error %d", ret);
 				app_control_destroy(app_control);
 				return SYNC_ERROR_SYSTEM;
@@ -386,8 +374,7 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 			ret = app_control_send_launch_request(app_control, NULL, NULL);
 			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control launch request failed %d", ret);
 		}
-		else
-		{
+		else {
 			LOG_LOGD("app is already running");
 		}
 
@@ -395,13 +382,11 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 	}
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
-	if (pSyncAdapter)
-	{
+	if (pSyncAdapter) {
 		GVariant* pBundle = marshal_bundle(pExtras);
 		tizen_sync_adapter_emit_start_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Sync adapter entry not found");
 		return SYNC_ERROR_SYSTEM;
 	}
@@ -418,8 +403,7 @@ SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJ
 	//int id = -1;
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
-	if (pSyncAdapter == NULL)
-	{
+	if (pSyncAdapter == NULL) {
 		LOG_LOGD("Failed to lookup syncadapter");
 		return;
 	}
@@ -437,8 +421,7 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
-	if (pSyncJob)
-	{
+	if (pSyncJob) {
 		SyncJob* pSyncJobEntry = dynamic_cast< SyncJob* > (pSyncJob);
 		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
@@ -448,8 +431,7 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 		pSyncJobEntry->Reset(accountId, pExtras, syncOption);
 		LOG_LOGD("sync parameters are updated with new parameters", pSyncJobName);
 	}
-	else
-	{
+	else {
 		syncJobId = pSyncJobsAggregator->GenerateSyncJobId(pPackageId);
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
@@ -457,8 +439,7 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 		ret = __pSyncManagerInstance->AddOnDemandSync(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId);
 	}
 
-	if (ret == SYNC_ERROR_NONE)
-	{
+	if (ret == SYNC_ERROR_NONE) {
 		*pSyncJobId = syncJobId;
 	}
 
@@ -474,8 +455,7 @@ SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobNam
 	int syncJobId = -1;
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
-	if (pSyncJob)
-	{
+	if (pSyncJob) {
 		PeriodicSyncJob* pSyncJobEntry = dynamic_cast< PeriodicSyncJob* > (pSyncJob);
 		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get syn job");
 
@@ -485,8 +465,7 @@ SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobNam
 		pSyncJobEntry->Reset(accountId, pExtras, syncOption, pollFrequency);
 		LOG_LOGD("sync parameters are updated with new parameters", pSyncJobName);
 	}
-	else
-	{
+	else {
 		syncJobId = pSyncJobsAggregator->GenerateSyncJobId(pPackageId);
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
@@ -494,8 +473,7 @@ SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobNam
 		ret = __pSyncManagerInstance->AddPeriodicSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pollFrequency);
 	}
 
-	if (ret == SYNC_ERROR_NONE)
-	{
+	if (ret == SYNC_ERROR_NONE) {
 		*pSyncJobId = syncJobId;
 	}
 	return ret;
@@ -510,8 +488,7 @@ SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, i
 	int syncJobId = -1;
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
-	if (pSyncJob)
-	{
+	if (pSyncJob) {
 		DataSyncJob* pSyncJobEntry = dynamic_cast< DataSyncJob* > (pSyncJob);
 		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get syn job");
 
@@ -521,8 +498,7 @@ SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, i
 		pSyncJobEntry->Reset(accountId, pExtras, syncOption, pCapability);
 		LOG_LOGD("sync parameters are updated with new parameters", pSyncJobName);
 	}
-	else
-	{
+	else {
 		syncJobId = pSyncJobsAggregator->GenerateSyncJobId(pPackageId);
 		SYNC_LOGE_RET_RES(syncJobId <= SYNC_JOB_LIMIT, SYNC_ERROR_QUOTA_EXCEEDED, "Sync job quota exceeded");
 
@@ -530,8 +506,7 @@ SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, i
 		ret = __pSyncManagerInstance->AddDataSyncJob(pPackageId, pSyncJobName, accountId, pExtras, syncOption, syncJobId, pCapability);
 	}
 
-	if (ret == SYNC_ERROR_NONE)
-	{
+	if (ret == SYNC_ERROR_NONE) {
 		*pSyncJobId = syncJobId;
 	}
 	return ret;
@@ -559,14 +534,13 @@ int get_service_name_by_pid(guint pid, char** pAppId)
 															"/org/freedesktop/systemd1",
 															"org.freedesktop.systemd1.Manager",
 															"GetUnitByPID",
-															g_variant_new("(u)",pid),
+															g_variant_new("(u)", pid),
 															G_VARIANT_TYPE("(o)"),
 															G_DBUS_CALL_FLAGS_NONE,
 															-1,
 															NULL,
 															&error);
-		if (error)
-		{
+		if (error) {
 			LOG_LOGC("get_service_name_by_pid gdbus error [%s]", error->message);
 			*pAppId = NULL;
 			g_clear_error(&error);
@@ -587,8 +561,7 @@ int get_service_name_by_pid(guint pid, char** pAppId)
 																		-1,
 																		NULL,
 																		&error);
-		if (error)
-		{
+		if (error) {
 			LOG_LOGC("get_service_name_by_pid gdbus error [%s]", error->message);
 			*pAppId = NULL;
 			g_clear_error(&error);
@@ -596,11 +569,9 @@ int get_service_name_by_pid(guint pid, char** pAppId)
 		}
 
 		GVariant *tmp = g_variant_get_child_value(service, 0);
-		if (tmp)
-		{
+		if (tmp) {
 			GVariant* va = g_variant_get_variant(tmp);
-			if (va)
-			{
+			if (va) {
 				char* name = NULL;
 				g_variant_get(va, "s", &name);
 				*pAppId = strdup(name);
@@ -616,7 +587,7 @@ int get_service_name_by_pid(guint pid, char** pAppId)
 * org.tizen.sync.adapter interface methods
 */
 gboolean
-sync_adapter_handle_send_result( TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation,
+sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation,
 																const gchar* pCommandLine,
 																gint sync_result,
 																const gchar* sync_job_name)
@@ -627,19 +598,16 @@ sync_adapter_handle_send_result( TizenSyncAdapter* pObject, GDBusMethodInvocatio
 	string pkgIdStr;
 	char* pAppId = NULL;
 	int ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
-	else
-	{
+	else {
 		ret = get_service_name_by_pid(pid, &pAppId);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
 
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Sync result received from [%s]: sync_job_name [%s] result [%d]", pAppId, sync_job_name, sync_result);
 
 		SyncManager::GetInstance()->OnResultReceived((SyncStatus)sync_result, pAppId, pkgIdStr, sync_job_name);
@@ -695,35 +663,30 @@ sync_manager_add_on_demand_sync_job(TizenSyncManager* pObject, GDBusMethodInvoca
 	string pkgIdStr;
 	char* pAppId = NULL;
 	int ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request %s", pCommandLine);
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
 
 	int sync_job_id = 0;
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Params acc[%d] name[%s] option[%d] package[%s]", accountId, pSyncJobName, sync_option, pkgIdStr.c_str());
 		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
 		ret = SyncService::GetInstance()->RequestOnDemandSync(pkgIdStr.c_str(), pSyncJobName, accountId, pBundle, sync_option, &sync_job_id);
 		bundle_free(pBundle);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Failed to get package id");
 		ret = SYNC_ERROR_SYSTEM;
 	}
 
-	if (ret != SYNC_ERROR_NONE)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (ret != SYNC_ERROR_NONE) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -747,27 +710,23 @@ sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* p
 	int ret = APP_MANAGER_ERROR_NONE;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		LOG_LOGD("package id [%s]", pkgIdStr.c_str());
 		ret = SyncManager::GetInstance()->RemoveSyncJob(pkgIdStr, sync_job_id);
 	}
 	else
 		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
-	if (ret != SYNC_ERROR_NONE)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (ret != SYNC_ERROR_NONE) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -807,18 +766,15 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 	char* pAppId;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Params acc[%d] name[%s] option[%d] period[%d] package[%s]", accountId, pSyncJobName, sync_option, sync_interval, pkgIdStr.c_str());
 		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
@@ -828,9 +784,8 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 	else
 		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
-	if (ret != SYNC_ERROR_NONE)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (ret != SYNC_ERROR_NONE) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -884,18 +839,15 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 	char* pAppId;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Params account [%d] job_name [%s] sync_option[%d] sync_job_id[%d] package [%s] ", accountId, pCapabilityArg, sync_option, sync_job_id, pkgIdStr.c_str());
 
 		bundle* pBundle = umarshal_bundle(pSyncJobUserData);
@@ -907,9 +859,8 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 	else
 		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
-	if (ret != SYNC_ERROR_NONE)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (ret != SYNC_ERROR_NONE) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -927,8 +878,7 @@ is_service_app(pid_t pid)
 {
 	char *current_app_id = NULL;
 	int ret = app_manager_get_app_id(pid, &current_app_id);
-	if (ret != APP_MANAGER_ERROR_NONE)
-	{
+	if (ret != APP_MANAGER_ERROR_NONE) {
 		LOG_LOGD("Getting current app id is failed : %d, %s", ret, get_error_message(ret));
 		return false;
 	}
@@ -936,31 +886,26 @@ is_service_app(pid_t pid)
 	pkgmgrinfo_appinfo_h current_app_info = NULL;
 
 	ret = pkgmgrinfo_appinfo_get_appinfo(current_app_id, &current_app_info);
-	if (ret != PMINFO_R_OK)
-	{
+	if (ret != PMINFO_R_OK) {
 		LOG_LOGD("Current app info handle creation error : %d, %s", ret, get_error_message(ret));
 		free(current_app_id);
 		return false;
 	}
 	char *current_app_type = NULL;
 	ret = pkgmgrinfo_appinfo_get_component_type(current_app_info, &current_app_type);
-	if (ret != PMINFO_R_OK)
-	{
+	if (ret != PMINFO_R_OK) {
 		LOG_LOGD("Current app info getting app type error : %d, %s", ret, get_error_message(ret));
 
 		pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 		free(current_app_id);
 		return false;
 	}
-	else
-	{
-		if (!strcmp(current_app_type, "svcapp"))
-		{
+	else {
+		if (!strcmp(current_app_type, "svcapp")) {
 			LOG_LOGD("Current application type : %s", current_app_type);
 			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 		}
-		else
-		{
+		else {
 			LOG_LOGD("Current app is not a service application : %s", current_app_type);
 			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 			free(current_app_id);
@@ -982,8 +927,7 @@ static inline int __read_proc(const char *path, char *buf, int size)
 		return -1;
 
 	fd = open(path, O_RDONLY);
-	if (fd < 0)
-	{
+	if (fd < 0) {
 		LOG_LOGD("fd = %d", fd);
 		return -1;
 	}
@@ -1012,11 +956,9 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 
 	char* pAppId = NULL;
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
-		if (!is_service_app(pid))
-		{
-			GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
+	if (ret == APP_MANAGER_ERROR_NONE) {
+		if (!is_service_app(pid)) {
+			GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 			g_dbus_method_invocation_return_gerror(pInvocation, error);
 			g_clear_error(&error);
 			return true;
@@ -1024,37 +966,31 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
-	else
-	{
+	else {
 		ret = get_service_name_by_pid(pid, &pAppId);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
 
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		bool check_jobs = false;
 		SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
-		if (pAggregator == NULL)
-		{
+		if (pAggregator == NULL) {
 			LOG_LOGD("sync adapter aggregator is NULL");
 			tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
 			return true;
 		}
-		if (pAggregator->HasSyncAdapter(pkgIdStr.c_str()))
-		{
+		if (pAggregator->HasSyncAdapter(pkgIdStr.c_str())) {
 			const char *registered_app_id = pAggregator->GetSyncAdapter(pkgIdStr.c_str());
 			LOG_LOGD("registered appId is [%s]", registered_app_id);
 			LOG_LOGD("caller appId is [%s]", pAppId);
-			if (strcmp(pAppId, registered_app_id))
-			{
-				GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_QUOTA_EXCEEDED, "Sync adapter already registered");
+			if (strcmp(pAppId, registered_app_id)) {
+				GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_QUOTA_EXCEEDED, "Sync adapter already registered");
 				g_dbus_method_invocation_return_gerror(pInvocation, error);
 				g_clear_error(&error);
 				return false;
 			}
-			else
-			{
+			else {
 				check_jobs = true; // Probably sync service may have started this service. Alert sync manager for scheduling pending jobs.
 			}
 		}
@@ -1064,41 +1000,34 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 
 		GError *error = NULL;
 		GDBusInterfaceSkeleton* interface = NULL;
-		TizenSyncAdapter* syncAdapterObj= tizen_sync_adapter_skeleton_new();
-		if (syncAdapterObj != NULL)
-		{
+		TizenSyncAdapter* syncAdapterObj = tizen_sync_adapter_skeleton_new();
+		if (syncAdapterObj != NULL) {
 			interface = G_DBUS_INTERFACE_SKELETON(syncAdapterObj);
-			if (g_dbus_interface_skeleton_export(interface, gdbusConnection, object_path, &error))
-			{
+			if (g_dbus_interface_skeleton_export(interface, gdbusConnection, object_path, &error)) {
 				g_signal_connect(syncAdapterObj, "handle-send-result", G_CALLBACK(sync_adapter_handle_send_result), NULL);
 				pAggregator->AddSyncAdapter(pkgIdStr.c_str(), pAppId);
 
 				LOG_LOGD("inserting sync adapter ipc %s", pAppId);
 				g_hash_table_insert(g_hash_table, strdup(pAppId), syncAdapterObj);
-				if (check_jobs)
-				{
+				if (check_jobs) {
 					SyncManager::GetInstance()->AlertForChange();
 				}
 				ret = SYNC_ERROR_NONE;
 			}
-			else
-			{
+			else {
 				LOG_LOGD("export failed %s", error->message);
 			}
 		}
-		else
-		{
+		else {
 			LOG_LOGD("sync adapter object creation failed");
 		}
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Failed to get package ID");
 	}
 
-	if (ret != SYNC_ERROR_NONE)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (ret != SYNC_ERROR_NONE) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -1118,9 +1047,8 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	string pkgIdStr;
 
 	guint pid = get_caller_pid(pInvocation);
-	if (!is_service_app(pid))
-	{
-		GError* error = g_error_new (_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
+	if (!is_service_app(pid)) {
+		GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 		return true;
@@ -1130,18 +1058,15 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	int ret = APP_MANAGER_ERROR_NONE;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
 
-	if (!pkgIdStr.empty())
-	{
+	if (!pkgIdStr.empty()) {
 		SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 		pAggregator->RemoveSyncAdapter(pkgIdStr.c_str());
 		LOG_LOGD("Sync adapter removed for package [%s]", pkgIdStr.c_str());
@@ -1150,13 +1075,11 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 		LOG_LOGD("sync service: Get package Id fail %d", ret);
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, pAppId);
-	if (pSyncAdapter == NULL)
-	{
+	if (pSyncAdapter == NULL) {
 		LOG_LOGD("Failed to lookup syncadapter gdbus object for [%s]", pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		GDBusInterfaceSkeleton* interface = NULL;
 		interface = G_DBUS_INTERFACE_SKELETON(pSyncAdapter);
 		g_dbus_interface_skeleton_unexport(interface);
@@ -1176,16 +1099,15 @@ marshal_sync_job(ISyncJob* syncJob)
 	SyncJob* pSyncJob = dynamic_cast< SyncJob* > (syncJob);
 	GVariantBuilder builder;
 
-	if (pSyncJob)
-	{
+	if (pSyncJob) {
 		g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-		g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_ID, g_variant_new_int32 (pSyncJob->GetSyncJobId()));
-		g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_ACC_ID, g_variant_new_int32 (pSyncJob->__accountId));
+		g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_ID, g_variant_new_int32(pSyncJob->GetSyncJobId()));
+		g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_ACC_ID, g_variant_new_int32(pSyncJob->__accountId));
 
 		if (pSyncJob->GetSyncType() == SYNC_TYPE_DATA_CHANGE)
-			g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_CAPABILITY, g_variant_new_string (pSyncJob->__syncJobName.c_str()));
+			g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_CAPABILITY, g_variant_new_string(pSyncJob->__syncJobName.c_str()));
 		else
-			g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_NAME, g_variant_new_string (pSyncJob->__syncJobName.c_str()));
+			g_variant_builder_add(&builder, "{sv}", KEY_SYNC_JOB_NAME, g_variant_new_string(pSyncJob->__syncJobName.c_str()));
 
 		//LOG_LOGD("job name and id [%s] [%d]", pSyncJob->__syncJobName.c_str(), pSyncJob->GetSyncJobId());
 
@@ -1208,13 +1130,11 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 	int ret = APP_MANAGER_ERROR_NONE;
 
 	ret = app_manager_get_app_id(pid, &pAppId);
-	if (ret == APP_MANAGER_ERROR_NONE)
-	{
+	if (ret == APP_MANAGER_ERROR_NONE) {
 		pkgId = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 		free(pAppId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
 	}
@@ -1222,23 +1142,19 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 	GVariant* outSyncJobList = NULL;
 	GVariantBuilder builder;
 
-	if (!pkgId.empty())
-	{
+	if (!pkgId.empty()) {
 		SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
 		SyncJobsInfo* pPackageSyncJobs = pSyncJobsAggregator->GetSyncJobsInfo(pkgId.c_str());
 
-		if (pPackageSyncJobs != NULL)
-		{
+		if (pPackageSyncJobs != NULL) {
 			LOG_LOGD("Package ID [%s]", pkgId.c_str());
 
 			map<int, ISyncJob*>& allSyncJobs = pPackageSyncJobs->GetAllSyncJobs();
-			if (!allSyncJobs.empty())
-			{
-				g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+			if (!allSyncJobs.empty()) {
+				g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 				LOG_LOGD("Package has [%d] sync jobs", allSyncJobs.size());
 				map< int, ISyncJob* >::iterator itr = allSyncJobs.begin();
-				while (itr != allSyncJobs.end())
-				{
+				while (itr != allSyncJobs.end()) {
 					ISyncJob* syncJob = itr->second;
 					g_variant_builder_add_value(&builder, marshal_sync_job(syncJob));
 					itr++;
@@ -1246,19 +1162,16 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 				outSyncJobList = g_variant_builder_end(&builder);
 			}
 		}
-		else
-		{
+		else {
 			LOG_LOGD("sync service: registered sync jobs are not found");
 		}
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Sync jobs information not found for package [%s], pkgId.str()");
 	}
 
-	if (outSyncJobList == NULL)
-	{
-		GError* error = g_error_new (_sync_error_quark(), ret, "system error");
+	if (outSyncJobList == NULL) {
+		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 	}
@@ -1272,7 +1185,7 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 
 
 gboolean
-sync_manager_set_sync_status( TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, gboolean sync_enable)
+sync_manager_set_sync_status(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, gboolean sync_enable)
 {
 	SyncManager::GetInstance()->SetSyncSetting(sync_enable);
 
@@ -1290,17 +1203,14 @@ DbusSignalHandler(GDBusConnection* pConnection,
 		GVariant* pParameters,
 		gpointer data)
 {
-	if (!(g_strcmp0(pObjectPath, SYS_DBUS_PATH)) && !(g_strcmp0(pSignalName, POWEROFF_MSG)))
-	{
+	if (!(g_strcmp0(pObjectPath, SYS_DBUS_PATH)) && !(g_strcmp0(pSignalName, POWEROFF_MSG))) {
 		LOG_LOGD("Shutdown dbus received");
-		if (ShutdownInitiated == false)
-		{
+		if (ShutdownInitiated == false) {
 			ShutdownInitiated = true;
 			sync_service_finalise();
 			ecore_main_loop_quit();
 		}
-		if (pConnection && (signal_id != (unsigned int)-1))
-		{
+		if (pConnection && (signal_id != (unsigned int)-1)) {
 			g_dbus_connection_signal_unsubscribe(pConnection, signal_id);
 			g_object_unref(pConnection);
 		}
@@ -1311,18 +1221,16 @@ DbusSignalHandler(GDBusConnection* pConnection,
  * DBus related initialization and setup
  */
 static void
-OnBusAcquired (GDBusConnection* pConnection, const gchar* pName, gpointer userData)
+OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 {
 	GDBusInterfaceSkeleton* interface = NULL;
 	sync_ipc_obj = tizen_sync_manager_skeleton_new();
-	if (sync_ipc_obj == NULL)
-	{
+	if (sync_ipc_obj == NULL) {
 		LOG_LOGD("sync_ipc_obj NULL!!");
 		return;
 	}
 	interface = G_DBUS_INTERFACE_SKELETON(sync_ipc_obj);
-	if (!g_dbus_interface_skeleton_export(interface, pConnection, SYNC_MANAGER_DBUS_PATH, NULL))
-	{
+	if (!g_dbus_interface_skeleton_export(interface, pConnection, SYNC_MANAGER_DBUS_PATH, NULL)) {
 		LOG_LOGD("export failed!!");
 		return;
 	}
@@ -1338,8 +1246,7 @@ OnBusAcquired (GDBusConnection* pConnection, const gchar* pName, gpointer userDa
 	gdbusConnection = pConnection;
 
 	signal_id = g_dbus_connection_signal_subscribe(pConnection, NULL, SYS_DBUS_INTERFACE, POWEROFF_MSG, SYS_DBUS_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE, DbusSignalHandler, NULL, NULL);
-	if (signal_id == (unsigned int)-1)
-	{
+	if (signal_id == (unsigned int)-1) {
 		LOG_LOGD("unable to register for PowerOff Signal");
 		return;
 	}
@@ -1348,13 +1255,13 @@ OnBusAcquired (GDBusConnection* pConnection, const gchar* pName, gpointer userDa
 
 
 static void
-OnNameAcquired (GDBusConnection* pConnection, const gchar* pName, gpointer userData)
+OnNameAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 {
 }
 
 
 static void
-OnNameLost (GDBusConnection* pConnection, const gchar* pName, gpointer userData)
+OnNameLost(GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 {
 	LOG_LOGD("OnNameLost");
 	//exit (1);
@@ -1364,7 +1271,7 @@ OnNameLost (GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 static bool
 __initialize_dbus()
 {
-	static guint ownerId = g_bus_own_name (G_BUS_TYPE_SESSION,
+	static guint ownerId = g_bus_own_name(G_BUS_TYPE_SESSION,
 			"org.tizen.sync",
 			G_BUS_NAME_OWNER_FLAGS_NONE,
 			OnBusAcquired,
@@ -1373,8 +1280,7 @@ __initialize_dbus()
 			NULL,
 			NULL);
 
-	if (ownerId == 0)
-	{
+	if (ownerId == 0) {
 		LOG_LOGD("gdbus own failed!!");
 		return false;
 	}
@@ -1388,8 +1294,7 @@ SyncService::InitializeDbus(void)
 {
 	LOG_LOGD("Dbus initialization starts");
 
-	if (__initialize_dbus() == false)
-	{
+	if (__initialize_dbus() == false) {
 		LOG_LOGD("__initialize_dbus failed");
 		exit(1);
 	}

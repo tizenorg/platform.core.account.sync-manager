@@ -40,25 +40,21 @@ using namespace std;
 
 SyncAdapterAggregator::SyncAdapterAggregator(void)
 {
-
 }
 
 
 SyncAdapterAggregator::~SyncAdapterAggregator(void)
 {
-
 }
 
 
 void
 SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServiceAppId)
 {
-	if (HasSyncAdapter(pPackageId))
-	{
+	if (HasSyncAdapter(pPackageId)) {
 		LOG_LOGD("Sync adapter already registered for package [%s]", pPackageId);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Registering sync-adapter [%s] for package [%s]", pServiceAppId, pPackageId);
 		__syncAdapterList.insert(std::pair<string, string> (pPackageId, pServiceAppId));
 	}
@@ -69,10 +65,10 @@ void
 SyncAdapterAggregator::dumpSyncAdapters()
 {
 	//for (multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != __syncAdapterList.end(); ++it)
-	{
+	//{
 		//SyncAdapter* pSyncAdapter = it->second;
 		//LOG_LOGD("account provider ID %s => service app Id %s & syncJobName %s", (*it).first.c_str(), pSyncAdapter->__pAppId, pSyncAdapter->__pCapability);
-	}
+	//}
 }
 
 
@@ -80,16 +76,14 @@ const char*
 SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
 {
 	string PkgId(pAppId);
-	if (PkgId.empty())
-	{
+	if (PkgId.empty()) {
 		//PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
 		if (PkgId.empty())
 			return NULL;
 	}
 
 	map<string, string>::iterator it = __syncAdapterList.find(PkgId.c_str());
-	if (it != __syncAdapterList.end())
-	{
+	if (it != __syncAdapterList.end()) {
 		return it->second.c_str();
 	}
 

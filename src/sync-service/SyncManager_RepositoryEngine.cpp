@@ -45,13 +45,13 @@
 
 #define SYNC_DIRECTORY "sync-manager"
 #define SYNC_DATA_DIR tzplatform_mkpath(TZ_USER_DATA, "/sync-manager")
-#define PATH_ACCOUNT tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/accounts.xml")
-#define PATH_SYNCJOBS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/syncjobs.xml")
-#define PATH_SYNCADAPTERS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/syncadapters.xml")
-#define PATH_STATUS tzplatform_mkpath(TZ_USER_DATA,"/sync-manager/statusinfo.bin")
+#define PATH_ACCOUNT tzplatform_mkpath(TZ_USER_DATA, "/sync-manager/accounts.xml")
+#define PATH_SYNCJOBS tzplatform_mkpath(TZ_USER_DATA, "/sync-manager/syncjobs.xml")
+#define PATH_SYNCADAPTERS tzplatform_mkpath(TZ_USER_DATA, "/sync-manager/syncadapters.xml")
+#define PATH_STATUS tzplatform_mkpath(TZ_USER_DATA, "/sync-manager/statusinfo.bin")
 
 #ifndef MAX
-#define MAX(a, b) a>b?a:b
+#define MAX(a, b) a > b ? a : b
 #endif
 
 
@@ -122,11 +122,9 @@ RepositoryEngine* RepositoryEngine::__pInstance = NULL;
 RepositoryEngine*
 RepositoryEngine::GetInstance(void)
 {
-	if (!__pInstance)
-	{
+	if (!__pInstance) {
 		__pInstance = new (std::nothrow) RepositoryEngine();
-		if (__pInstance == NULL)
-		{
+		if (__pInstance == NULL) {
 			LOG_LOGD("Failed to construct RepositoryEngine");
 			return NULL;
 		}
@@ -144,8 +142,7 @@ RepositoryEngine::~RepositoryEngine(void)
 
 RepositoryEngine::RepositoryEngine(void)
 {
-	if (pthread_mutex_init(&__capabilityInfoMutex, NULL) != 0)
-	{
+	if (pthread_mutex_init(&__capabilityInfoMutex, NULL) != 0) {
 		LOG_LOGD("\n __syncJobQueueMutex init failed\n");
 		return;
 	}
@@ -181,38 +178,32 @@ RepositoryEngine::ReadSyncJobsData(void)
 	pDocName = PATH_SYNCJOBS;
 	doc = xmlParseFile(pDocName);
 
-	if (doc == NULL)
-	{
+	if (doc == NULL) {
 		LOG_LOGD("Failed to parse syncjobs.xml.");
 		return;
 	}
 
 	cur = xmlDocGetRootElement(doc);
-	if (cur == NULL)
-	{
+	if (cur == NULL) {
 		LOG_LOGD("Found empty document while parsing syncjobs.xml.");
 		xmlFreeDoc(doc);
 		return;
 	}
 
 	//Parse sync jobs
-	if (xmlStrcmp(cur->name, XML_NODE_JOBS))
-	{
+	if (xmlStrcmp(cur->name, XML_NODE_JOBS)) {
 		LOG_LOGD("Found empty document while parsing syncjobs.xml.");
 		xmlFreeDoc(doc);
 		return;
 	}
-	else
-	{
+	else {
 		xmlChar* pTotalJobsCount = xmlGetProp(cur, XML_ATTR_JOBS_COUNT);
 		int totalcount = (pTotalJobsCount == NULL) ? 0 : atoi((char*)pTotalJobsCount);
 		LOG_LOGD("Total Sync jobs [%d]", totalcount);
 
 		cur = cur->xmlChildrenNode;
-		while (cur != NULL)
-		{
-			if (!xmlStrcmp(cur->name, XML_NODE_PACKAGE))
-			{
+		while (cur != NULL) {
+			if (!xmlStrcmp(cur->name, XML_NODE_PACKAGE)) {
 				xmlChar* pPackageId;
 				xmlChar* pJobsCount;
 
@@ -223,10 +214,8 @@ RepositoryEngine::ReadSyncJobsData(void)
 				LOG_LOGD("Sync jobs for package [%s] [%d]", pPackageId, count);
 
 				xmlNodePtr curJob = cur->xmlChildrenNode;
-				while (curJob != NULL)
-				{
-					if (!xmlStrcmp(curJob->name, XML_NODE_SYNC_JOB))
-					{
+				while (curJob != NULL) {
+					if (!xmlStrcmp(curJob->name, XML_NODE_SYNC_JOB)) {
 						ParseSyncJobsN(curJob, pPackageId);
 					}
 					curJob = curJob->next;
@@ -274,29 +263,25 @@ RepositoryEngine::ReadSyncAdapters(void)
 	pDocName = PATH_SYNCADAPTERS;
 	doc = xmlParseFile(pDocName);
 
-	if (doc == NULL)
-	{
+	if (doc == NULL) {
 		LOG_LOGD("Failed to parse syncadapters.xml.");
 		return;
 	}
 
 	cur = xmlDocGetRootElement(doc);
-	if (cur == NULL)
-	{
+	if (cur == NULL) {
 		LOG_LOGD("Found empty document while parsing syncadapters.xml.");
 		xmlFreeDoc(doc);
 		return;
 	}
 
 	//Parse sync jobs
-	if (xmlStrcmp(cur->name, XML_NODE_SYNCADAPTERS))
-	{
+	if (xmlStrcmp(cur->name, XML_NODE_SYNCADAPTERS)) {
 		LOG_LOGD("Found empty document while parsing syncadapters.xml.");
 		xmlFreeDoc(doc);
 		return;
 	}
-	else
-	{
+	else {
 		xmlChar* pSACount;
 
 		pSACount = xmlGetProp(cur, XML_ATTR_COUNT);
@@ -307,10 +292,8 @@ RepositoryEngine::ReadSyncAdapters(void)
 		SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 
 		cur = cur->xmlChildrenNode;
-		while (cur != NULL)
-		{
-			if (!xmlStrcmp(cur->name, XML_NODE_SYNCADAPTER))
-			{
+		while (cur != NULL) {
+			if (!xmlStrcmp(cur->name, XML_NODE_SYNCADAPTER)) {
 				xmlChar* pServiceAppId = xmlGetProp(cur, XML_ATTR_SYNCADAPTER_SERVICE_APP_ID);
 				xmlChar* pPackageId = xmlGetProp(cur, XML_ATTR_PACKAGE_ID);
 
@@ -362,8 +345,7 @@ RepositoryEngine::WriteSyncJobsData(void)
 	LOG_LOGD("size %d", syncJobs.size());
 
 	map<string, SyncJobsInfo*>::iterator itr = syncJobs.begin();
-	while (itr != syncJobs.end())
-	{
+	while (itr != syncJobs.end()) {
 		string package = itr->first;
 		SyncJobsInfo* pJobsInfo = itr->second;
 
@@ -373,16 +355,14 @@ RepositoryEngine::WriteSyncJobsData(void)
 		xmlNewProp(packageNode, XML_ATTR_PACKAGE_ID, (const xmlChar*)(package.c_str()));
 		ss.str(string());
 
-		ss<<packageJobs.size();
+		ss << packageJobs.size();
 		xmlNewProp(packageNode, XML_ATTR_JOBS_COUNT, (const xmlChar*)ss.str().c_str());
 		ss.str(string());
 
 		map<int, ISyncJob*>::iterator it;
-		for (it = packageJobs.begin(); it != packageJobs.end(); it++)
-		{
+		for (it = packageJobs.begin(); it != packageJobs.end(); it++) {
 			SyncJob* pJob = dynamic_cast<SyncJob*> (it->second);
-			if (pJob == NULL)
-			{
+			if (pJob == NULL) {
 				LOG_LOGD("Invalid sync job entry");
 				continue;
 			}
@@ -390,42 +370,39 @@ RepositoryEngine::WriteSyncJobsData(void)
 			jobNode = xmlNewChild(packageNode, NULL, XML_NODE_SYNC_JOB, NULL);
 			xmlNewProp(jobNode, XML_ATTR_JOB_APP_ID, (const xmlChar*)(pJob->__appId.c_str()));
 
-			ss<<pJob->__accountId;
+			ss << pJob->__accountId;
 			xmlNewProp(jobNode, XML_ATTR_JOB_ACCOUNT_ID, (const xmlChar*)ss.str().c_str());
 			ss.str(string());
 
-			ss<<(int)pJob->GetSyncJobId();
+			ss << (int)pJob->GetSyncJobId();
 			xmlNewProp(jobNode, XML_ATTR_JOB_ID, (const xmlChar*)ss.str().c_str());
 			ss.str(string());
 
-			ss<<(int)pJob->GetSyncType();
+			ss << (int)pJob->GetSyncType();
 			xmlNewProp(jobNode, XML_ATTR_JOB_TYPE, (const xmlChar*)ss.str().c_str());
 			ss.str(string());
 
-			ss<<(int)pJob->__isExpedited;
+			ss << (int)pJob->__isExpedited;
 			xmlNewProp(jobNode, XML_ATTR_JOB_OPTION_EXPEDIT, (const xmlChar*)ss.str().c_str());
 			ss.str(string());
 
-			ss<<(int)pJob->__noRetry;
+			ss << (int)pJob->__noRetry;
 			xmlNewProp(jobNode, XML_ATTR_JOB_OPTION_NORETRY, (const xmlChar*)ss.str().c_str());
 			ss.str(string());
 
 			xmlNewProp(jobNode, XML_ATTR_JOB_NAME, (const xmlChar*)pJob->__syncJobName.c_str());
 			ss.str(string());
 
-			if (pJob->__pExtras)
-			{
+			if (pJob->__pExtras) {
 				bundle_iterate(pJob->__pExtras, bndl_iterator, &jobNode);
 			}
-			if (pJob->GetSyncType() == SYNC_TYPE_PERIODIC)
-			{
+			if (pJob->GetSyncType() == SYNC_TYPE_PERIODIC) {
 				PeriodicSyncJob* pPeriodJob = dynamic_cast<PeriodicSyncJob*> (pJob);
-				if (pPeriodJob == NULL)
-				{
+				if (pPeriodJob == NULL) {
 					LOG_LOGD("Invalid periodic sync job entry");
 					continue;
 				}
-				ss<<(int)pPeriodJob->__period;
+				ss << (int)pPeriodJob->__period;
 				xmlNewProp(jobNode, XML_ATTR_PERIODIC_SYNC_PEIOD, (const xmlChar*)ss.str().c_str());
 				ss.str(string());
 			}
@@ -434,9 +411,8 @@ RepositoryEngine::WriteSyncJobsData(void)
 		itr++;
 	}
 
-	int ret = xmlSaveFormatFileEnc(PATH_SYNCJOBS, doc, "UTF-8" , 1 );
-	if (ret < 0)
-	{
+	int ret = xmlSaveFormatFileEnc(PATH_SYNCJOBS, doc, "UTF-8" , 1);
+	if (ret < 0) {
 		LOG_LOGD("Failed to write account data, error %d, errno %d", ret, errno);
 	}
 	xmlFreeDoc(doc);
@@ -461,8 +437,7 @@ RepositoryEngine::WriteSyncAdapters(void)
 	xmlDocSetRootElement(doc, rootNode);
 
 	SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
-	if (!pAggregator)
-	{
+	if (!pAggregator) {
 		LOG_LOGD("Failed to get sync adapter aggregator, skip writing to file");
 		xmlFreeDoc(doc);
 		return;
@@ -470,11 +445,9 @@ RepositoryEngine::WriteSyncAdapters(void)
 
 	ss << pAggregator->__syncAdapterList.size();
 	xmlNewProp(rootNode, XML_ATTR_COUNT, (const xmlChar*)ss.str().c_str());
-	if (pAggregator->__syncAdapterList.size() != 0)
-	{
+	if (pAggregator->__syncAdapterList.size() != 0) {
 		ss.str(string());
-		for (map<string, string>::iterator it = pAggregator->__syncAdapterList.begin(); it != pAggregator->__syncAdapterList.end(); ++it)
-		{
+		for (map<string, string>::iterator it = pAggregator->__syncAdapterList.begin(); it != pAggregator->__syncAdapterList.end(); ++it) {
 			string syncAdapter = it->second;
 			string packageId = it->first;
 			saNode = xmlNewChild(rootNode, NULL, XML_NODE_SYNCADAPTER, NULL);
@@ -483,9 +456,8 @@ RepositoryEngine::WriteSyncAdapters(void)
 		}
 	}
 
-	int ret = xmlSaveFormatFileEnc(PATH_SYNCADAPTERS, doc, "UTF-8" , 1 );
-	if (ret < 0)
-	{
+	int ret = xmlSaveFormatFileEnc(PATH_SYNCADAPTERS, doc, "UTF-8" , 1);
+	if (ret < 0) {
 		LOG_LOGD("Failed to write sync adapter data, error %d", ret);
 	}
 	xmlFreeDoc(doc);
@@ -503,8 +475,7 @@ RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra)
 	xmlChar* pKey = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_KEY);
 	xmlChar* pVal = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_VALUE);
 
-	if (!pKey || !pVal)
-	{
+	if (!pKey || !pVal) {
 		return;
 	}
 
@@ -533,27 +504,22 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 
 	bundle* pExtra = NULL;
 	cur = cur->xmlChildrenNode;
-	while (cur != NULL)
-	{
+	while (cur != NULL) {
 		pExtra = bundle_create();
 		ParseExtras(cur, pExtra);
 		cur = cur->next;
 	}
 
-	switch (type)
-	{
-		case SYNC_TYPE_DATA_CHANGE:
-		{
+	switch (type) {
+		case SYNC_TYPE_DATA_CHANGE: {
 			SyncManager::GetInstance()->AddDataSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, (char*)pJobName);
 			break;
 		}
-		case SYNC_TYPE_ON_DEMAND:
-		{
-			SyncManager::GetInstance()->AddOnDemandSync((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption,jobId);
+		case SYNC_TYPE_ON_DEMAND: {
+			SyncManager::GetInstance()->AddOnDemandSync((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId);
 			break;
 		}
-		case SYNC_TYPE_PERIODIC:
-		{
+		case SYNC_TYPE_PERIODIC: {
 			xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PEIOD);
 			int period = (pPeriod == NULL)? 1800 : atoi((char*) pPeriod);
 
@@ -561,8 +527,7 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 			break;
 		}
 		case SYNC_TYPE_UNKNOWN:
-		default:
-		{
+		default: {
 			LOG_LOGD("failed add sync job: sync type is SYNC_TYPE_UNKNOWN");
 			break;
 		}

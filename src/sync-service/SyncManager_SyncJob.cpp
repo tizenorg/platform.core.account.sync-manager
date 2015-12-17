@@ -32,17 +32,14 @@
 {*/
 
 #ifndef MAX
-#define MAX(a, b) a>b?a:b
+#define MAX(a, b) a > b ? a : b
 #endif
 
-extern "C"
-{
-
+extern "C" {
 
 SyncJob::~SyncJob(void)
 {
-	if (__pExtras)
-	{
+	if (__pExtras) {
 		bundle_free(__pExtras);
 	}
 	//TODO uncomment below line while implementing pending sync job list
@@ -94,8 +91,7 @@ SyncJob::SyncJob(const string appId, const string syncJobName, int account, bund
 		, __isExpedited(syncOption & SYNC_OPTION_EXPEDITED)
 		, __noRetry(syncOption & SYNC_OPTION_NO_RETRY)
 {
-		if (pExtras)
-		{
+		if (pExtras) {
 			__pExtras = bundle_dup(pExtras);
 		}
 		__key = ToKey();
@@ -149,8 +145,7 @@ string
 SyncJob::GetExtrasInfo(bundle* pData)
 {
 	string str;
-	if (pData == NULL)
-	{
+	if (pData == NULL) {
 		LOG_LOGD("Invalid Parameter");
 		return str;
 	}

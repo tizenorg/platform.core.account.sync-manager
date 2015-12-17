@@ -224,8 +224,7 @@ class SyncJob;
 
 struct Message
 {
-	Message()
-	{
+	Message() {
 		acc = NULL;
 		pSyncJob = NULL;
 		res = SYNC_STATUS_UNKNOWN;

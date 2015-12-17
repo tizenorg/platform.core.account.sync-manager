@@ -28,7 +28,6 @@
 
 PeriodicSyncJob::~PeriodicSyncJob(void)
 {
-
 }
 
 
@@ -36,7 +35,6 @@ PeriodicSyncJob::PeriodicSyncJob(const string appId, const string syncJobName, i
 	: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
 	, __period(frequency)
 {
-
 }
 
 
@@ -72,8 +70,7 @@ PeriodicSyncJob::operator==(const PeriodicSyncJob& other)
 			&& (this->__capability).compare(other.__capability) == 0
 			&& this->__period == other.__period
 			&& this->__syncAdapter == other.__syncAdapter
-			&& IsExtraEqual((PeriodicSyncJob*)&other))
-	{
+			&& IsExtraEqual((PeriodicSyncJob*)&other)) {
 		return true;
 	}*/
 	return false;

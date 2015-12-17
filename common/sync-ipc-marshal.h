@@ -35,8 +35,8 @@ extern "C"
 #define KEY_SYNC_JOB_USER_DATA		"job_data"
 
 
-GVariant* marshal_bundle(bundle* extras);
-bundle* umarshal_bundle(GVariant* in_data);
+GVariant *marshal_bundle(bundle* extras);
+bundle *umarshal_bundle(GVariant* in_data);
 
 
 #ifdef __cplusplus

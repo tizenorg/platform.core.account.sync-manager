@@ -28,32 +28,28 @@ template<typename TYPE>
 class Singleton
 {
 public:
-	static TYPE* GetInstance(void)
-	{
-		if (__pInstance == NULL)
-		{
+	static TYPE* GetInstance(void) {
+		if (__pInstance == NULL) {
 			LOG_LOGD("singleton creation called");
 			__pInstance = new (std::nothrow) TYPE;
-			if (__pInstance == NULL)
-			{
+			if (__pInstance == NULL) {
 				LOG_LOGD("heap error");
 			}
 		}
 		return __pInstance;
 	}
-	static void Destroy(void)
-	{
-	}
+
+	static void Destroy(void) {}
 
 protected:
 	Singleton(void) {}
 
-	virtual ~Singleton(void){}
+	virtual ~Singleton(void) {}
 
 private:
 	Singleton(const Singleton& obj);
 
-	Singleton& operator=( const Singleton& obj);
+	Singleton& operator=(const Singleton& obj);
 
 private:
 	static TYPE* __pInstance;

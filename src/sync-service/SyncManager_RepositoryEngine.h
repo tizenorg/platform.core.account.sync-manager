@@ -66,7 +66,6 @@ public:
 	static const long NOT_IN_BACKOFF_MODE;
 
 private:
-
 	RepositoryEngine(void);
 
 	RepositoryEngine(const RepositoryEngine&);

@@ -28,7 +28,6 @@
 
 class PeriodicSyncScheduler
 {
-
 public:
 	PeriodicSyncScheduler(void);
 
@@ -39,8 +38,6 @@ public:
 	int RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob);
 
 	int SchedulePeriodicSyncJob(PeriodicSyncJob* dataSyncJob);
-
-private:
 
 private:
 	std::map<int, PeriodicSyncJob*> __activePeriodicSyncJobs;

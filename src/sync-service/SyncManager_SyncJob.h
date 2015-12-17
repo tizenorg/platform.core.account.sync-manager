@@ -37,7 +37,7 @@
 */
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 using namespace std;
@@ -67,8 +67,7 @@ public:
 
 	void IncrementWaitCounter();
 
-	virtual SyncType GetSyncType()
-	{
+	virtual SyncType GetSyncType() {
 		return __syncType;
 	}
 
@@ -87,7 +86,6 @@ public:
 	int __waitCounter;
 
 private:
-
 	void CleanBundle(bundle* Bundle);
 
 	string ToKey(void);
@@ -95,7 +93,6 @@ private:
 	bool GetBundleVal(const char* pKey);
 
 	void RemoveFalseExtra(bundle* pBundle, const char* pExtraName);
-
 };
 #ifdef __cplusplus
 }

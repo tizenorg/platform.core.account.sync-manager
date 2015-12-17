@@ -61,7 +61,6 @@ using namespace std;
 class SyncManager
 		: public SyncWorker, public Singleton<SyncManager>
 {
-
 public:
 	void SetSyncSetting(bool enable);
 
@@ -179,7 +178,6 @@ private:
 	bool GetBundleVal(const char* pKey);
 
 private:
-
 	SyncManager(const SyncManager&);
 
 	const SyncManager& operator=(const SyncManager&);

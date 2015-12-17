@@ -34,13 +34,11 @@
 
 PeriodicSyncScheduler::~PeriodicSyncScheduler(void)
 {
-
 }
 
 
 PeriodicSyncScheduler::PeriodicSyncScheduler(void)
 {
-
 }
 
 
@@ -77,8 +75,7 @@ PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
 	string jobKey = pSyncJob->__key;
 	map<string, int>::iterator iter = __activeAlarmList.find(jobKey);
 
-	if (iter != __activeAlarmList.end())
-	{
+	if (iter != __activeAlarmList.end()) {
 		alarm_id_t alarm = iter->second;
 		int ret = alarmmgr_remove_alarm(alarm);
 		SYNC_LOGE_RET_RES(ret == ALARMMGR_RESULT_SUCCESS, SYNC_ERROR_SYSTEM, "alarm remove failed for [%s], [%d]", jobKey.c_str(), ret);
@@ -87,8 +84,7 @@ PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
 		__activePeriodicSyncJobs.erase(alarm);
 		LOG_LOGD("Removed alarm for [%s], [%d]", jobKey.c_str(), alarm);
 	}
-	else
-	{
+	else {
 		LOG_LOGD("No active alarm found for [%s]", jobKey.c_str());
 	}
 
@@ -108,15 +104,13 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 
 	alarm_id_t alarm_id;
 	ret = alarmmgr_add_periodic_alarm_withcb(periodicSyncJob->__period, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
-	if (ret == ALARMMGR_RESULT_SUCCESS)
-	{
+	if (ret == ALARMMGR_RESULT_SUCCESS) {
 		LOG_LOGD("Alarm added for %ld min, id %ld", periodicSyncJob->__period, alarm_id);
 
 		__activePeriodicSyncJobs.insert(make_pair<int, PeriodicSyncJob*> (alarm_id, periodicSyncJob));
 		__activeAlarmList.insert(make_pair(jobKey, alarm_id));
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);
 		return SYNC_ERROR_SYSTEM;
 	}

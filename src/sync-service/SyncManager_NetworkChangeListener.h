@@ -32,7 +32,6 @@
 
 class NetworkChangeListener
 {
-
 public:
 	NetworkChangeListener(void);
 
@@ -45,6 +44,7 @@ public:
 	bool IsDataConnectionPresent();
 
 	int DeRegisterNetworkChangeListener(void);
+
 private:
 	connection_h connection;
 };

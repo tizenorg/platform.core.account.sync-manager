@@ -31,7 +31,6 @@
 class BatteryStatusListener
 {
 public:
-
 	BatteryStatusListener(void);
 
 	~BatteryStatusListener(void);

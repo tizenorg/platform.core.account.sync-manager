@@ -40,9 +40,7 @@ class SyncManager;
 class SyncService
 		: public Singleton<SyncService>
 {
-
 public:
-
 	int StartService(void);
 
 	int TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras);

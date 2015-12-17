@@ -47,55 +47,47 @@ typedef bool  result;
 		if (!(condition)) { \
 			LOG_ERROR(LOG_TAG, ##x); \
 			return E_FAILURE; \
-		} \
-		else { ;}
+		} else { ; } \
 
-#define SYNC_LOGE_RET_RES(condition, retX,x...) \
+#define SYNC_LOGE_RET_RES(condition, retX, x...) \
 		if (!(condition)) { \
 			LOG_VERBOSE(LOG_TAG, ##x); \
 			return retX; \
-		} \
-		else { ;}
+		} else { ; } \
 
 #define LOG_LOGE_NULL(condition, x...) \
 		if (!(condition)) { \
 			LOG_ERROR(LOG_TAG, ##x); \
 			return NULL; \
-		} \
-		else { ;}
+		} else { ; } \
 
 #define LOG_LOGE_VOID(condition, x...) \
 		if (!(condition)) { \
 			LOG_ERROR(LOG_TAG, ##x); \
-			return ; \
-		} \
-		else { ;}
+			return; \
+		} else { ; } \
 
 #define LOG_LOGE_BOOL(condition, x...) \
 		if (!(condition)) { \
 			LOG_ERROR(LOG_TAG, ##x); \
 			return false; \
-		} \
-		else { ;}
+		} else { ; } \
 
 #define SYNC_LOG_IF(condition, x...) \
-	if ((condition)) { \
+	if ((condition)) \
 		LOG_ERROR(LOG_TAG, ##x); \
-	} \
 
 #define ASSERT(expr) \
-		if (!(expr)) \
-		{   \
+		if (!(expr)) {   \
 			LOG_ERRORD("Assertion %s", #expr); \
 			return;\
 		} \
-
 
 #else
 
 #define LOG_LOGD(x...)
 #define LOG_LOGE(x...)
-#endif // ENABLE_DEBUG_MSG
+#endif /* ENABLE_DEBUG_MSG */
 
 
 

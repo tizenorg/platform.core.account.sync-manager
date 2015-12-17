@@ -47,8 +47,7 @@ public:
 
 	void Reset(int accountId, bundle* pUserData, int syncOption, string capability);
 
-	virtual SyncType GetSyncType()
-	{
+	virtual SyncType GetSyncType() {
 		return __syncType;
 	}
 

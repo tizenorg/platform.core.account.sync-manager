@@ -74,7 +74,6 @@ protected:
 	friend class Singleton<SyncManager>;
 
 private:
-
 	SyncAdapterAggregator(const SyncAdapterAggregator&);
 
 	const SyncAdapterAggregator& operator=(const SyncAdapterAggregator&);

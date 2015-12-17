@@ -29,7 +29,7 @@
 */
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 using namespace std;
@@ -47,27 +47,17 @@ class ISyncJob
 public:
 	ISyncJob()
 		: __syncJobId(-1)
-		, __syncType(SYNC_TYPE_UNKNOWN)
-	{
-
-	}
+		, __syncType(SYNC_TYPE_UNKNOWN) {}
 
 	ISyncJob(int syncJobId, SyncType type)
 			: __syncJobId(syncJobId)
-			, __syncType(type)
-	{
+			, __syncType(type) {}
 
-	}
-
-	virtual ~ISyncJob()
-	{
-
-	}
+	virtual ~ISyncJob() {}
 
 	virtual SyncType GetSyncType() = 0;
 
-	virtual int GetSyncJobId()
-	{
+	virtual int GetSyncJobId() {
 		return __syncJobId;
 	}
 

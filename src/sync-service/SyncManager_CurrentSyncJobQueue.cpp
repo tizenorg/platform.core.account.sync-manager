@@ -53,27 +53,23 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(syncJob->__key);
 
-	if (it != __currentSyncJobQueue.end())
-	{
+	if (it != __currentSyncJobQueue.end()) {
 		LOG_LOGD("Sync already in progress");
 		return SYNC_ERROR_ALREADY_IN_PROGRESS;
 	}
-	else
-	{
+	else {
 		LOG_LOGD("Create a Sync context");
 
 		CurrentSyncContext* pCurrentSyncContext = new (std::nothrow) CurrentSyncContext(syncJob);
-		if (!pCurrentSyncContext)
-		{
+		if (!pCurrentSyncContext) {
 			LOG_LOGD("Failed to construct CurrentSyncContext instance");
 			return SYNC_ERROR_OUT_OF_MEMORY;
 		}
 		//adding timeout of 30 seconds
-		pCurrentSyncContext->SetTimerId(g_timeout_add (300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
-		pair<map<const string, CurrentSyncContext*>::iterator,bool> ret;
+		pCurrentSyncContext->SetTimerId(g_timeout_add(300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+		pair<map<const string, CurrentSyncContext*>::iterator, bool> ret;
 		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(syncJob->__key, pCurrentSyncContext));
-		if (ret.second == false)
-		{
+		if (ret.second == false) {
 			 return SYNC_ERROR_ALREADY_IN_PROGRESS;
 		}
 	}
@@ -89,23 +85,19 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 	LOG_LOGD("CurrentSyncJobQueue::onTimerExpired Starts");
 
 	CurrentSyncContext* pSyncContext = static_cast<CurrentSyncContext*>(data);
-	if (pSyncContext)
-	{
+	if (pSyncContext) {
 		LOG_LOGD("CurrentSyncJobQueue::onTimerExpired sending sync-cancelled message");
 		SyncJob* pJob = pSyncContext->GetSyncJob();
-		if (pJob)
-		{
+		if (pJob) {
 			SyncManager::GetInstance()->CloseCurrentSyncContext(pSyncContext);
 			SyncManager::GetInstance()->SendSyncCompletedOrCancelledMessage(pJob, SYNC_STATUS_CANCELLED);
 			LOG_LOGD("CurrentSyncJobQueue::onTimerExpired sending sync-cancelled message end");
 		}
-		else
-		{
+		else {
 			LOG_LOGD("Failed to get SyncJob");
 		}
 	}
-	else
-	{
+	else {
 		LOG_LOGD(" context null");
 	}
 
@@ -120,8 +112,7 @@ CurrentSyncJobQueue::GetOperations(void)
 {
 	list<CurrentSyncContext*> opsList;
 	map<const string, CurrentSyncContext*>::iterator it;
-	for (it = __currentSyncJobQueue.begin(); it != __currentSyncJobQueue.end(); it++)
-	{
+	for (it = __currentSyncJobQueue.begin(); it != __currentSyncJobQueue.end(); it++) {
 		CurrentSyncContext *pContext = new CurrentSyncContext(*(it->second));
 		opsList.push_back(pContext);
 	}
@@ -136,8 +127,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 
 	LOG_LOGD("job q size %d", __currentSyncJobQueue.size());
 
-	if (pCurrSync == NULL)
-	{
+	if (pCurrSync == NULL) {
 		return false;
 	}
 
@@ -147,22 +137,22 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(jobKey);
 
-	if (it != __currentSyncJobQueue.end())
-	{
+	if (it != __currentSyncJobQueue.end()) {
 		LOG_LOGD("job active");
 		return true;
 	}
 	LOG_LOGD("job in-active");
-	return false;
 	LOG_LOGD("CurrentSyncJobQueue::IsJobActive() Ends");
+
+	return false;
 }
 
 int
 CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext)
 {
-	 LOG_LOGD("Remove sync job from Active Sync Jobs queue");
-	if (pSyncContext == NULL)
-	{
+	LOG_LOGD("Remove sync job from Active Sync Jobs queue");
+
+	if (pSyncContext == NULL) {
 		LOG_LOGD("sync cotext is null");
 		return SYNC_ERROR_INVALID_PARAMETER;
 	}
@@ -175,6 +165,7 @@ CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* p
 	LOG_LOGD("Active Sync Jobs queue size, After = %d", __currentSyncJobQueue.size());
 	delete pCurrContext;
 	pCurrContext = NULL;
+
 	return SYNC_ERROR_NONE;
 }
 
@@ -195,7 +186,7 @@ CurrentSyncJobQueue::ToKey(account_h account, string capability)
 	if (ret != ACCOUNT_ERROR_NONE)
 		LOG_LOGD("Account get account id failed because of [%s]", get_error_message(ret));
 
-	ss<<id;
+	ss << id;
 	key.append("id:").append(ss.str()).append("name:").append(pName).append("capability:").append(capability.c_str());
 
 	return key;
@@ -204,8 +195,7 @@ CurrentSyncJobQueue::ToKey(account_h account, string capability)
 CurrentSyncContext*
 CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 {
-	if (account == NULL)
-	{
+	if (account == NULL) {
 		LOG_LOGD("CurrentSyncJobQueue::DoesAccAuthExist account is null");
 		return NULL;
 	}
@@ -215,12 +205,12 @@ CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(key);
-	if (it == __currentSyncJobQueue.end())
-	{
+	if (it == __currentSyncJobQueue.end()) {
 		return NULL;
 	}
 
 	LOG_LOGD("CurrentSyncJobQueue::DoesAccAuthExist() Ends");
+
 	return (CurrentSyncContext*)it->second;
 }
 
@@ -229,10 +219,10 @@ CurrentSyncJobQueue::GetCurrJobfromKey(string key)
 {
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(key);
-	if (it == __currentSyncJobQueue.end())
-	{
+	if (it == __currentSyncJobQueue.end()) {
 		return NULL;
 	}
+
 	return (CurrentSyncContext*)it->second;
 }
 

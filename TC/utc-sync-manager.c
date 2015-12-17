@@ -77,9 +77,8 @@ void sync_manager_setup_account(void)
 
 	using_acc = true;
 	ret = account_create(&account);
-	if (ret == ACCOUNT_ERROR_NONE) {
+	if (ret == ACCOUNT_ERROR_NONE)
 		created_acc = true;
-	}
 
 	account_set_user_name(account, name);
 	account_set_email_address(account, email_address);
@@ -87,9 +86,8 @@ void sync_manager_setup_account(void)
 	account_set_sync_support(account, ACCOUNT_SUPPORTS_SYNC);
 	account_insert_to_db(account, &account_id);
 
-	if (account_type_query_app_id_exist(app_id) == ACCOUNT_ERROR_NONE) {
+	if (account_type_query_app_id_exist(app_id) == ACCOUNT_ERROR_NONE)
 		existed_acc = true;
-	}
 }
 
 
@@ -99,15 +97,11 @@ void sync_manager_cleanup_account(void)
 
 	ret = account_delete_from_db_by_package_name(app_id);
 	if (ret == ACCOUNT_ERROR_NONE)
-	{
 		existed_acc = false;
-	}
 
 	ret = account_destroy(account);
 	if (ret == ACCOUNT_ERROR_NONE)
-	{
 		created_acc = false;
-	}
 
 	using_acc = false;
 }
@@ -120,9 +114,7 @@ void sync_manager_setup_adapter(void)
 	if (!set_cb) {
 		ret = sync_adapter_set_callbacks(on_start_cb, on_cancel_cb);
 		if (ret == SYNC_ERROR_NONE)
-		{
 			set_cb = true;
-		}
 	}
 }
 
@@ -206,9 +198,7 @@ void utc_sync_manager_cleanup(void)
 	if (set_cb) {
 		ret = sync_adapter_unset_callbacks();
 		if (ret == SYNC_ERROR_NONE)
-		{
 			set_cb = false;
-		}
 	}
 
 	return;

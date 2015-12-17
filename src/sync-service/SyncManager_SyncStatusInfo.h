@@ -62,7 +62,6 @@ private:
 	// no race conditions when accessing this list
 private:
 	vector<long long> __periodicSyncTimes;
-
 };
 //}//_SyncManager
 #endif

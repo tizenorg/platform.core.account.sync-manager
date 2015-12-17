@@ -40,12 +40,12 @@ SyncStatusInfo::SyncStatusInfo(SyncStatusInfo &other)
 	this->capabilityId = other.capabilityId;
 
 	vector<long long> ::iterator it;
-	for (it = other.__periodicSyncTimes.begin(); it != other.__periodicSyncTimes.end(); it++)
-	{
+	for (it = other.__periodicSyncTimes.begin(); it != other.__periodicSyncTimes.end(); it++) {
 		long long val = (*it);
 		this->__periodicSyncTimes.push_back(val);
 	}
 }
+
 
 SyncStatusInfo&
 SyncStatusInfo::operator =(SyncStatusInfo& other)
@@ -53,19 +53,18 @@ SyncStatusInfo::operator =(SyncStatusInfo& other)
 	this->capabilityId = other.capabilityId;
 
 	vector<long long> ::iterator it;
-	for (it = other.__periodicSyncTimes.begin(); it != other.__periodicSyncTimes.end(); it++)
-	{
+	for (it = other.__periodicSyncTimes.begin(); it != other.__periodicSyncTimes.end(); it++) {
 		long long val = (*it);
 		this->__periodicSyncTimes.push_back(val);
 	}
 	return *this;
 }
 
+
 SyncStatusInfo::SyncStatusInfo(string statusInfo)
 				: capabilityId(-1)
 {
-	if (statusInfo.empty())
-	{
+	if (statusInfo.empty()) {
 		LOG_LOGD("statusInfo string empty");
 		return;
 	}
@@ -74,12 +73,10 @@ SyncStatusInfo::SyncStatusInfo(string statusInfo)
 	int capabilityId = 0;
 	int periodicSyncSize = 0;
 
-	ss>>capabilityId;
-	if (ss)
-	{
-		ss>>periodicSyncSize;
-        if (periodicSyncSize <= 0)
-        {
+	ss >> capabilityId;
+	if (ss) {
+		ss >> periodicSyncSize;
+        if (periodicSyncSize <= 0) {
             LOG_LOGD("statusInfo corrupted");
             return;
         }
@@ -87,10 +84,9 @@ SyncStatusInfo::SyncStatusInfo(string statusInfo)
 
 	this->capabilityId = capabilityId;
 
-	for (int i = 0; i < periodicSyncSize; i++)
-	{
+	for (int i = 0; i < periodicSyncSize; i++) {
 		int periodicSyncTime;
-		ss>>periodicSyncTime;
+		ss >> periodicSyncTime;
 		this->__periodicSyncTimes.push_back(periodicSyncTime);
 	}
 }
@@ -109,12 +105,10 @@ SyncStatusInfo::SetPeriodicSyncTime(unsigned int index, long long when)
 long long
 SyncStatusInfo::GetPeriodicSyncTime(unsigned int index)
 {
-	if (index < __periodicSyncTimes.size())
-	{
+	if (index < __periodicSyncTimes.size()) {
 		return __periodicSyncTimes[index];
 	}
-	else
-	{
+	else {
 		return 0;
 	}
 }
@@ -123,8 +117,7 @@ SyncStatusInfo::GetPeriodicSyncTime(unsigned int index)
 void
 SyncStatusInfo::RemovePeriodicSyncTime(unsigned int index)
 {
-	if (index < __periodicSyncTimes.size())
-	{
+	if (index < __periodicSyncTimes.size()) {
 		__periodicSyncTimes.erase(__periodicSyncTimes.begin()+index);
 	}
 }
@@ -134,10 +127,8 @@ void
 SyncStatusInfo::EnsurePeriodicSyncTimeSize(unsigned int index)
 {
 	unsigned int requiredSize = index + 1;
-	if (__periodicSyncTimes.size() < requiredSize)
-	{
-		for (unsigned int i = __periodicSyncTimes.size(); i < requiredSize; i++)
-		{
+	if (__periodicSyncTimes.size() < requiredSize) {
+		for (unsigned int i = __periodicSyncTimes.size(); i < requiredSize; i++) {
 			__periodicSyncTimes.push_back((long) 0);
 		}
 	}
@@ -150,23 +141,21 @@ SyncStatusInfo::GetStatusInfoString(void)
 	stringstream ss;
 	string buff;
 
-	if (__periodicSyncTimes.size() > 0)
-	{
-		ss<<capabilityId;
+	if (__periodicSyncTimes.size() > 0) {
+		ss << capabilityId;
 		buff.append(ss.str().c_str());
 		ss.str(string());
 
 		LOG_LOGD("writing sync time now, size = %d", __periodicSyncTimes.size());
 		buff.append(" ");
-		ss<<__periodicSyncTimes.size();
+		ss << __periodicSyncTimes.size();
 		buff.append(ss.str().c_str());
 		ss.str(string());
 
-		for (unsigned int i = 0; i < __periodicSyncTimes.size(); i++)
-		{
+		for (unsigned int i = 0; i < __periodicSyncTimes.size(); i++) {
 			LOG_LOGD("writing sync time %lld", __periodicSyncTimes[i]);
 			buff.append(" ");
-			ss<<__periodicSyncTimes[i];
+			ss << __periodicSyncTimes[i];
 			buff.append(ss.str().c_str());
 			ss.str(string());
 		}
