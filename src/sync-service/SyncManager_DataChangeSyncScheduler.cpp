@@ -110,10 +110,8 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 
 DataChangeSyncScheduler::DataChangeSyncScheduler(void)
 {
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	calendar_subscription_started = false;
 	contacts_subscription_started = false;
-#endif
 	media_content_subscription_started = false;
 }
 
