@@ -91,6 +91,9 @@ SyncJob::SyncJob(const string appId, const string syncJobName, int account, bund
 		, __isExpedited(syncOption & SYNC_OPTION_EXPEDITED)
 		, __noRetry(syncOption & SYNC_OPTION_NO_RETRY)
 {
+		LOG_LOGD("syncOption: %d", syncOption);
+		LOG_LOGD("__isExpedited: %d", __isExpedited);
+
 		if (pExtras) {
 			__pExtras = bundle_dup(pExtras);
 		}

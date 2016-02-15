@@ -36,10 +36,10 @@ OnIdle(void* pUserData)
 }
 
 
-Eina_Bool
-OnTerminate(void *data, int ev_type, void *ev)
+void
+terminate_service(void)
 {
-	LOG_LOGD("MainLoop OnTerminate");
+	LOG_LOGD("Sync service will be terminated");
 
 	if (ShutdownInitiated == false) {
 		ShutdownInitiated = true;
@@ -47,6 +47,14 @@ OnTerminate(void *data, int ev_type, void *ev)
 	}
 
 	ecore_main_loop_quit();
+}
+
+
+Eina_Bool
+OnTerminate(void *data, int ev_type, void *ev)
+{
+	LOG_LOGD("MainLoop OnTerminate");
+	terminate_service();
 
 	return EINA_TRUE;
 }

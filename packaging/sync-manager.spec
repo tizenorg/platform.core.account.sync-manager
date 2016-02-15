@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.2
+Version:   0.1.3
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
@@ -61,6 +61,7 @@ sync client provides sync adapter functionality to register sync adapters and to
 
 %prep
 %setup -q
+cp %{SOURCE2} .
 
 %build
 _CONTAINER_ENABLE=OFF
@@ -123,11 +124,13 @@ rm -rf %{buildroot}
 %{_unitdir_user}/sync-manager.service
 %{_unitdir_user}/default.target.wants/sync-manager.service
 /usr/share/dbus-1/services/org.tizen.sync.service
+%attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
 
 %files -n libcore-sync-client
 %manifest libcore-sync-client.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libcore-sync-client.so*
+%attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
 
 %files -n libcore-sync-client-devel
 %manifest libcore-sync-client.manifest
@@ -135,3 +138,5 @@ rm -rf %{buildroot}
 %{_includedir}/*sync*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/libcore-sync-client.so*
+%attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
+
