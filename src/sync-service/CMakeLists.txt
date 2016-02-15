@@ -65,7 +65,8 @@ SET(SRCS
 	SyncManager_SyncAdapterAggregator.cpp
 	SyncManager_SyncJobsAggregator.cpp
 	SyncManager_SyncJobsInfo.cpp
-	SyncManager_DataSyncJob.cpp)
+	SyncManager_DataSyncJob.cpp
+	SyncManager_ManageIdleState.cpp)
 
 
 #IF(_SEC_FEATURE_CONTAINER_ENABLE)

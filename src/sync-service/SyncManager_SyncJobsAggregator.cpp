@@ -153,7 +153,6 @@ SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobNam
 }
 
 
-
 ISyncJob*
 SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
 {
@@ -222,6 +221,7 @@ SyncJobsAggregator::GetSyncJobsInfo(const char* pPackageId)
 
 	return NULL;
 }
+
 
 map<string, SyncJobsInfo*>&
 SyncJobsAggregator::GetAllSyncJobs()

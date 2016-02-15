@@ -97,7 +97,7 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 {
 	string jobKey = periodicSyncJob->__key;
 
-	// Remove previous alarms, if set already
+	//Remove previous alarms, if set already
 	int ret = SYNC_ERROR_NONE;
 	ret = RemoveAlarmForPeriodicSyncJob(periodicSyncJob);
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, SYNC_ERROR_SYSTEM, "Failed to remove previous alarm for [%s], [%d]", jobKey.c_str(), ret);

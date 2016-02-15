@@ -216,7 +216,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 gpointer
 SyncWorker::ThreadLoop(gpointer data)
 {
-	LOG_LOGD("Sync worker thread  entered");
+	LOG_LOGD("Sync worker thread entered");
 
 	GMainLoop* pLoop = static_cast<GMainLoop*>(data);
 	if (pLoop != NULL) {

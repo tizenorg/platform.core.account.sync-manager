@@ -48,7 +48,7 @@ CurrentSyncJobQueue::~CurrentSyncJobQueue(void)
 int
 CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 {
-	LOG_LOGD("Active Sync Jobs Queue size : Before = %d", __currentSyncJobQueue.size());
+	LOG_LOGD("Active Sync Jobs Queue size : Before = [%d]", __currentSyncJobQueue.size());
 
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(syncJob->__key);
@@ -65,15 +65,19 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 			LOG_LOGD("Failed to construct CurrentSyncContext instance");
 			return SYNC_ERROR_OUT_OF_MEMORY;
 		}
-		//adding timeout of 30 seconds
-		pCurrentSyncContext->SetTimerId(g_timeout_add(300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+		//adding timeout of 5 minutes
+		guint interval = (guint)(5 * 60 * 1000);
+		pCurrentSyncContext->SetTimerId(g_timeout_add(interval, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+		LOG_LOGD("Sync operation time limit is set as [%d]", (int)interval);
+
 		pair<map<const string, CurrentSyncContext*>::iterator, bool> ret;
 		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(syncJob->__key, pCurrentSyncContext));
+
 		if (ret.second == false) {
 			 return SYNC_ERROR_ALREADY_IN_PROGRESS;
 		}
 	}
-	LOG_LOGD("Active Sync Jobs Queue size : After = %d", __currentSyncJobQueue.size());
+	LOG_LOGD("Active Sync Jobs Queue size : After = [%d]", __currentSyncJobQueue.size());
 
 	return SYNC_ERROR_NONE;
 }
@@ -98,7 +102,7 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 		}
 	}
 	else {
-		LOG_LOGD(" context null");
+		LOG_LOGD("context null");
 	}
 
 	LOG_LOGD("CurrentSyncJobQueue::onTimerExpired Ends");
@@ -125,7 +129,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 {
 	LOG_LOGD("CurrentSyncJobQueue::IsJobActive() Starts");
 
-	LOG_LOGD("job q size %d", __currentSyncJobQueue.size());
+	LOG_LOGD("job q size [%d]", __currentSyncJobQueue.size());
 
 	if (pCurrSync == NULL) {
 		return false;
@@ -147,6 +151,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 	return false;
 }
 
+
 int
 CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext)
 {
@@ -162,12 +167,13 @@ CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* p
 	map<const string, CurrentSyncContext*>::iterator it = __currentSyncJobQueue.find(pSyncJob->__key);
 	CurrentSyncContext* pCurrContext = it->second;
 	__currentSyncJobQueue.erase(it);
-	LOG_LOGD("Active Sync Jobs queue size, After = %d", __currentSyncJobQueue.size());
+	LOG_LOGD("Active Sync Jobs queue size, After = [%d]", __currentSyncJobQueue.size());
 	delete pCurrContext;
 	pCurrContext = NULL;
 
 	return SYNC_ERROR_NONE;
 }
+
 
 string
 CurrentSyncJobQueue::ToKey(account_h account, string capability)
@@ -192,6 +198,7 @@ CurrentSyncJobQueue::ToKey(account_h account, string capability)
 	return key;
 }
 
+
 CurrentSyncContext*
 CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 {
@@ -213,6 +220,7 @@ CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 
 	return (CurrentSyncContext*)it->second;
 }
+
 
 CurrentSyncContext*
 CurrentSyncJobQueue::GetCurrJobfromKey(string key)

@@ -78,7 +78,7 @@ static const xmlChar XML_ATTR_CAPABILITY[]						= "capability";
 static const xmlChar XML_ATTR_SYNCABLE[]						= "syncable";
 
 static const xmlChar XML_NODE_PERIODIC_SYNC[]					= "periodicSync";
-static const xmlChar XML_ATTR_PERIODIC_SYNC_PEIOD[]				= "period";
+static const xmlChar XML_ATTR_PERIODIC_SYNC_PERIOD[]			= "period";
 static const xmlChar XML_ATTR_PERIODIC_SYNC_FLEX[]				= "flex";
 
 static const xmlChar XML_NODE_SYNC_EXTRA[]						= "extra";
@@ -156,6 +156,7 @@ RepositoryEngine::OnBooting()
 	ReadSyncJobsData();
 }
 
+
 //Test method
 /*
 static void
@@ -165,10 +166,60 @@ bndl_iterator_test(const char* pKey, const char* pVal, void* pData)
 }
 */
 
+
+bool
+RepositoryEngine::CheckSyncJobsData(void)
+{
+	const char* pDocName;
+	xmlDocPtr doc = NULL;
+	xmlNodePtr cur = NULL;
+
+	pDocName = PATH_SYNCJOBS;
+	doc = xmlParseFile(pDocName);
+
+	if (doc == NULL)
+	{
+		LOG_LOGD("Failed to parse syncjobs.xml");
+		return false;
+	}
+
+	cur = xmlDocGetRootElement(doc);
+	if(cur == NULL)
+	{
+		LOG_LOGD("Found empty document while parsing syncjobs.xml");
+		xmlFreeDoc(doc);
+		return false;
+	}
+
+	if (xmlStrcmp(cur->name, XML_NODE_JOBS)) {
+		LOG_LOGD("Found empty document while parsing syncjobs.xml");
+		xmlFreeDoc(doc);
+		return false;
+	} else {
+/*
+		SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
+		map<string, SyncJobsInfo*>& syncJobs = pSyncJobsAggregator->GetAllSyncJobs();
+		LOG_LOGD("Total Sync jobs [%d]", syncJobs.size());
+
+		if (syncJobs.size() == 0) {
+*/
+		xmlChar* pTotalJobsCount = xmlGetProp(cur, XML_ATTR_JOBS_COUNT);
+		int totalcount = (pTotalJobsCount == NULL) ? 0 : atoi((char*)pTotalJobsCount);
+
+		if (totalcount == 0) {
+			LOG_LOGD("There is no written sync job in XML");
+			return false;
+		}
+
+		return true;
+	}
+}
+
+
 void
 RepositoryEngine::ReadSyncJobsData(void)
 {
-	LOG_LOGD("Read Sync jobs");
+	LOG_LOGD("Reading Sync jobs");
 
 	//Parse the Xml file
 	const char* pDocName;
@@ -179,20 +230,20 @@ RepositoryEngine::ReadSyncJobsData(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
-		LOG_LOGD("Failed to parse syncjobs.xml.");
+		LOG_LOGD("Failed to parse syncjobs.xml");
 		return;
 	}
 
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		LOG_LOGD("Found empty document while parsing syncjobs.xml.");
+		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
 	}
 
 	//Parse sync jobs
 	if (xmlStrcmp(cur->name, XML_NODE_JOBS)) {
-		LOG_LOGD("Found empty document while parsing syncjobs.xml.");
+		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
 	}
@@ -200,6 +251,11 @@ RepositoryEngine::ReadSyncJobsData(void)
 		xmlChar* pTotalJobsCount = xmlGetProp(cur, XML_ATTR_JOBS_COUNT);
 		int totalcount = (pTotalJobsCount == NULL) ? 0 : atoi((char*)pTotalJobsCount);
 		LOG_LOGD("Total Sync jobs [%d]", totalcount);
+
+		if (totalcount == 0) {
+			ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
+			pManageIdleState->SetTermTimer();
+		}
 
 		cur = cur->xmlChildrenNode;
 		while (cur != NULL) {
@@ -248,7 +304,10 @@ RepositoryEngine::ReadSyncJobsData(void)
 	}
 	*/
 	//Till here
+
+	LOG_LOGD("sync jobs are figured out");
 }
+
 
 void
 RepositoryEngine::ReadSyncAdapters(void)
@@ -264,20 +323,20 @@ RepositoryEngine::ReadSyncAdapters(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
-		LOG_LOGD("Failed to parse syncadapters.xml.");
+		LOG_LOGD("Failed to parse syncadapters.xml");
 		return;
 	}
 
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		LOG_LOGD("Found empty document while parsing syncadapters.xml.");
+		LOG_LOGD("Found empty document while parsing syncadapters.xml");
 		xmlFreeDoc(doc);
 		return;
 	}
 
 	//Parse sync jobs
 	if (xmlStrcmp(cur->name, XML_NODE_SYNCADAPTERS)) {
-		LOG_LOGD("Found empty document while parsing syncadapters.xml.");
+		LOG_LOGD("Found empty document while parsing syncadapters.xml");
 		xmlFreeDoc(doc);
 		return;
 	}
@@ -321,11 +380,10 @@ bndl_iterator(const char* pKey, const char* pVal, void* pData)
 }
 
 
-
 void
 RepositoryEngine::WriteSyncJobsData(void)
 {
-	LOG_LOGD("Starts");
+	LOG_LOGD("Writing sync jobs");
 
 	xmlDocPtr doc;
 	xmlNodePtr rootNode, jobNode;
@@ -403,7 +461,7 @@ RepositoryEngine::WriteSyncJobsData(void)
 					continue;
 				}
 				ss << (int)pPeriodJob->__period;
-				xmlNewProp(jobNode, XML_ATTR_PERIODIC_SYNC_PEIOD, (const xmlChar*)ss.str().c_str());
+				xmlNewProp(jobNode, XML_ATTR_PERIODIC_SYNC_PERIOD, (const xmlChar*)ss.str().c_str());
 				ss.str(string());
 			}
 		}
@@ -425,7 +483,7 @@ RepositoryEngine::WriteSyncJobsData(void)
 void
 RepositoryEngine::WriteSyncAdapters(void)
 {
-	LOG_LOGD(" Starts");
+	LOG_LOGD("Writing sync adapters");
 
 	xmlDocPtr doc;
 	xmlNodePtr rootNode, saNode;
@@ -499,8 +557,8 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 	bool expedit = (pJobExpedit == NULL) ? false : atoi((char*)pJobExpedit);
 	int acountId = (pAccId == NULL) ? -1 : atoi((char*)pAccId);
 	int jobId = (pJobId == NULL) ? -1 : atoi((char*)pJobId);
-	int syncOption = (noretry) ? 0x00 : 0x02;
-	syncOption |= (expedit) ? 0x00 : 0x01;
+	int syncOption = (noretry) ? 0x02 : 0x00;
+	syncOption |= (expedit) ? 0x01 : 0x00;
 
 	bundle* pExtra = NULL;
 	cur = cur->xmlChildrenNode;
@@ -520,8 +578,8 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 			break;
 		}
 		case SYNC_TYPE_PERIODIC: {
-			xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PEIOD);
-			int period = (pPeriod == NULL)? 1800 : atoi((char*) pPeriod);
+			xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PERIOD);
+			int period = (pPeriod == NULL)? 1800 : atoi((char*)pPeriod);
 
 			SyncManager::GetInstance()->AddPeriodicSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, period);
 			break;
@@ -546,5 +604,23 @@ RepositoryEngine::SaveCurrentState(void)
 }
 
 
-//}//_SyncManager
+void
+RepositoryEngine::SaveCurrentSyncAdapter(void)
+{
+	LOG_LOGD("saving states after adding sync adapter");
+	pthread_mutex_lock(&__capabilityInfoMutex);
+	WriteSyncAdapters();
+	pthread_mutex_unlock(&__capabilityInfoMutex);
+}
 
+
+void
+RepositoryEngine::SaveCurrentSyncJob(void)
+{
+	LOG_LOGD("saving states after adding sync job");
+	pthread_mutex_lock(&__capabilityInfoMutex);
+	WriteSyncJobsData();
+	pthread_mutex_unlock(&__capabilityInfoMutex);
+}
+
+//}//_SyncManager
