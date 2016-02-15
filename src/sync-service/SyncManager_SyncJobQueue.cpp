@@ -78,14 +78,14 @@ SyncJobQueue::AddSyncJob(SyncJob* pSyncJob)
 	SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
 	if (pSyncJobEntry ->IsExpedited()) {
-		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
+		LOG_LOGD("Priority SyncJob Queue size, before = [%d]", __prioritySyncJobsQueue.size());
 		__prioritySyncJobsQueue.push_back(pSyncJob);
-		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
+		LOG_LOGD("Priority SyncJob Queue size, after = [%d]", __prioritySyncJobsQueue.size());
 	}
 	else {
-		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
+		LOG_LOGD("SyncJob Queue size, before = [%d]", __syncJobsQueue.size());
 		__syncJobsQueue.push_back(pSyncJob);
-		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
+		LOG_LOGD("SyncJob Queue size, after = [%d]", __syncJobsQueue.size());
 	}
 
 	return SYNC_ERROR_NONE;
@@ -96,14 +96,14 @@ int
 SyncJobQueue::RemoveSyncJob(SyncJob* pSyncJob)
 {
 	if (pSyncJob ->IsExpedited()) {
-		LOG_LOGD("Priority SyncJob Queue size, before = %d", __prioritySyncJobsQueue.size());
+		LOG_LOGD("Priority SyncJob Queue size, before = [%d]", __prioritySyncJobsQueue.size());
 		__prioritySyncJobsQueue.remove(pSyncJob);
-		LOG_LOGD("Priority SyncJob Queue size, after = %d", __prioritySyncJobsQueue.size());
+		LOG_LOGD("Priority SyncJob Queue size, after = [%d]", __prioritySyncJobsQueue.size());
 	}
 	else {
-		LOG_LOGD("SyncJob Queue size, before = %d", __syncJobsQueue.size());
+		LOG_LOGD("SyncJob Queue size, before = [%d]", __syncJobsQueue.size());
 		__syncJobsQueue.remove(pSyncJob);
-		LOG_LOGD("SyncJob Queue size, after = %d", __syncJobsQueue.size());
+		LOG_LOGD("SyncJob Queue size, after = [%d]", __syncJobsQueue.size());
 	}
 
 	return SYNC_ERROR_NONE;

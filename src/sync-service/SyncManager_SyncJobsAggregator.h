@@ -74,6 +74,7 @@ protected:
 	~SyncJobsAggregator(void);
 
 	friend class Singleton<SyncManager>;
+
 /*
 class SyncJobsInfo
 {
@@ -102,5 +103,6 @@ private:
 	friend class SyncManager;
 	friend class RepositoryEngine;
 };
+
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_JOBS_AGGREGATOR_H
