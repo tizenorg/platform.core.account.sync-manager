@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.2
+Version:   0.1.3
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
@@ -61,6 +61,7 @@ sync client provides sync adapter functionality to register sync adapters and to
 
 %prep
 %setup -q
+cp %{SOURCE2} .
 
 %build
 _CONTAINER_ENABLE=OFF

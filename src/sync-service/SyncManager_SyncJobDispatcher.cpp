@@ -67,7 +67,7 @@ int
 SyncJobDispatcher::DispatchSyncJob(SyncJob* syncJob)
 {
 	int ret = SYNC_ERROR_NONE;
-	LOG_LOGD("Dispatching sync job %s, %s", syncJob->__appId.c_str(), syncJob->__syncJobName.c_str());
+	LOG_LOGD("Dispatching sync job [%s], [%s]", syncJob->__appId.c_str(), syncJob->__syncJobName.c_str());
 
 	bool isDataSync = (syncJob->GetSyncType() == SYNC_TYPE_DATA_CHANGE);
 	ret = SyncService::GetInstance()->TriggerStartSync(syncJob->__appId.c_str(), syncJob->__accountId, syncJob->__syncJobName.c_str(), isDataSync, syncJob->__pExtras);
@@ -198,9 +198,19 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 	pthread_mutex_lock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 
 	SyncJobQueue* pSyncJobQueue = SyncManager::GetInstance()->GetSyncJobQueue();
+	if (pSyncJobQueue == NULL) {
+		LOG_LOGD("pSyncJobQueue is null");
+	}
 
 	list< SyncJob* >& jobQueue = pSyncJobQueue->GetSyncJobQueue();
+	if (jobQueue.empty()) {
+		LOG_LOGD("jobQueue is empty");
+	}
+
 	list< SyncJob* >& priorityJobQueue = pSyncJobQueue->GetPrioritySyncJobQueue();
+	if (priorityJobQueue.empty()) {
+		LOG_LOGD("priorityJobQueue is empty");
+	}
 
 	if (jobQueue.empty() && priorityJobQueue.empty()) {
 		LOG_LOGD("SyncJob Queues are empty");
@@ -211,6 +221,7 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 	SyncJob* syncJobToRun = NULL;
 
 	if (!jobQueue.empty()) {
+		LOG_LOGD("jobQueue is filled");
 		SyncJob* nonPrioritySyncJob = jobQueue.front();
 		if (nonPrioritySyncJob->__waitCounter > NON_PRIORITY_SYNC_WAIT_LIMIT) {
 			LOG_LOGD("Long waiting Non priority job found. Handle this job first");
@@ -220,16 +231,19 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 	}
 
 	if (syncJobToRun == NULL && !priorityJobQueue.empty()) {
-		LOG_LOGD("Priority job found.");
+		LOG_LOGD("Priority job found");
 		syncJobToRun = priorityJobQueue.front();
 		priorityJobQueue.pop_front();
 	}
 
 	if (syncJobToRun == NULL && !jobQueue.empty()) {
-		LOG_LOGD("Non priority job found.");
+		LOG_LOGD("Non priority job found");
+		LOG_LOGD("Non priority size: [%d]", jobQueue.size());
 		syncJobToRun = jobQueue.front();
 		jobQueue.pop_front();
-		LOG_LOGD("Non priority size.%d", jobQueue.size());
+		LOG_LOGD("Non priority size: [%d]", jobQueue.size());
+		if (syncJobToRun == NULL)
+			LOG_LOGD("syncJobToRun is null");
 	}
 	pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 

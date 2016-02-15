@@ -33,6 +33,7 @@
 #include <list>
 #include <map>
 #include "SyncManager_CapabilityInfo.h"
+#include "SyncManager_ManageIdleState.h"
 #include "SyncManager_SyncStatusInfo.h"
 #include "SyncManager_SyncJob.h"
 #include "SyncManager_PeriodicSyncJob.h"
@@ -61,6 +62,12 @@ public:
 	void OnBooting();
 
 	void SaveCurrentState(void);
+
+	void SaveCurrentSyncAdapter(void);
+
+	void SaveCurrentSyncJob(void);
+
+	bool CheckSyncJobsData(void);
 
 public:
 	static const long NOT_IN_BACKOFF_MODE;
