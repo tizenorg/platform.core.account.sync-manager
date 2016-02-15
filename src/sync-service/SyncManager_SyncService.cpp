@@ -48,6 +48,7 @@
 
 
 static GDBusConnection *gdbusConnection = NULL;
+static bool check_jobs = false;
 static cynara *pCynara;
 
 /*namespace _SyncManager
@@ -64,7 +65,7 @@ static cynara *pCynara;
 #define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
 #endif
 
-
+#define SYNC_MANAGER_DBUS_SERVICE		"org.tizen.sync"
 #define SYS_DBUS_INTERFACE				"org.tizen.system.deviced.PowerOff"
 #define SYS_DBUS_MATCH_RULE				"type='signal',interface='org.tizen.system.deviced.PowerOff'"
 #define SYS_DBUS_PATH					"/Org/Tizen/System/DeviceD/PowerOff"
@@ -303,6 +304,8 @@ int _check_privilege_contact_read(GDBusMethodInvocation *invocation)
 #endif
 
 
+gboolean sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine, gint sync_result, const gchar* sync_job_name);
+
 int
 SyncService::TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras)
 {
@@ -352,10 +355,14 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 				LOG_LOGD("g_dbus_connection_call_sync gdbus error [%s]", error->message);
 				g_clear_error(&error);
 			}
-			return SYNC_ERROR_SYSTEM;
 		}
+
+		app_context_destroy(app_context);
+
+		return SYNC_ERROR_SYSTEM;
 	}
-	else {
+	else
+	{
 		bool isRunning = false;
 		app_manager_is_running(appId, &isRunning);
 		if (!isRunning) {
@@ -373,23 +380,58 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 			sa_app_id.clear();
 			ret = app_control_send_launch_request(app_control, NULL, NULL);
 			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control launch request failed %d", ret);
+
+			return SYNC_ERROR_SYSTEM;
 		}
-		else {
+		else
+		{
 			LOG_LOGD("app is already running");
+			TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
+
+			if (!pSyncAdapter)
+			{
+				LOG_LOGD("Sync adapter entry not found. Preparing sync adapter object");
+				pid_t pid;
+
+				int ret = app_context_get_pid(app_context, &pid);
+				SYNC_LOGE_RET_RES(ret == APP_MANAGER_ERROR_NONE, SYNC_ERROR_SYSTEM, "getting pid from app_context is failed");
+
+				GError* error = NULL;
+				char obj_path[50];
+				snprintf(obj_path, 50, "%s%d", SYNC_ADAPTER_DBUS_PATH, pid);
+
+				GDBusInterfaceSkeleton* interface = NULL;
+				pSyncAdapter = tizen_sync_adapter_skeleton_new();
+
+				if (pSyncAdapter != NULL)
+				{
+					interface = G_DBUS_INTERFACE_SKELETON(pSyncAdapter);
+					if (g_dbus_interface_skeleton_export(interface, gdbusConnection, obj_path, &error))
+					{
+						g_signal_connect(pSyncAdapter, "handle-send-result", G_CALLBACK(sync_adapter_handle_send_result), NULL);
+
+						LOG_LOGD("inserting sync adapter ipc %s %x", appId, pSyncAdapter);
+						g_hash_table_insert(g_hash_table, strdup(appId), pSyncAdapter);
+					}
+					else
+					{
+						LOG_LOGD("export failed %s", error->message);
+						return SYNC_ERROR_SYSTEM;
+					}
+				}
+				else
+				{
+					LOG_LOGD("Remote object creation failed");
+					return SYNC_ERROR_SYSTEM;
+				}
+			}
+
+			GVariant* pBundle = marshal_bundle(pExtras);
+			tizen_sync_adapter_emit_start_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
 		}
-
-		app_context_destroy(app_context);
 	}
 
-	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
-	if (pSyncAdapter) {
-		GVariant* pBundle = marshal_bundle(pExtras);
-		tizen_sync_adapter_emit_start_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
-	}
-	else {
-		LOG_LOGD("Sync adapter entry not found");
-		return SYNC_ERROR_SYSTEM;
-	}
+	app_context_destroy(app_context);
 
 	return SYNC_ERROR_NONE;
 }
@@ -407,6 +449,7 @@ SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJ
 		LOG_LOGD("Failed to lookup syncadapter");
 		return;
 	}
+
 	GVariant* pBundle = marshal_bundle(pExtras);
 	tizen_sync_adapter_emit_cancel_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
 }
@@ -451,19 +494,27 @@ int
 SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, unsigned long pollFrequency, int* pSyncJobId)
 {
 	int ret = SYNC_ERROR_NONE;
-	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 	int syncJobId = -1;
+	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
+
+	pSyncJobsAggregator->SetMinPeriod((int)pollFrequency/60);
+	pSyncJobsAggregator->SetLimitTime(pSyncJobsAggregator->GetMinPeriod());
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
 	if (pSyncJob) {
 		PeriodicSyncJob* pSyncJobEntry = dynamic_cast< PeriodicSyncJob* > (pSyncJob);
-		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get syn job");
+		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
 		syncJobId = pSyncJobEntry->GetSyncJobId();
 		LOG_LOGD("Sync request with job name [%s] already found. Sync job id [%d]", pSyncJobName, syncJobId);
 
 		pSyncJobEntry->Reset(accountId, pExtras, syncOption, pollFrequency);
-		LOG_LOGD("sync parameters are updated with new parameters", pSyncJobName);
+		LOG_LOGD("sync parameters are updated with new parameters");
+
+		if (pSyncJobEntry->IsExpedited()) {
+			LOG_LOGD("sync request with priority. Adding sync job with Sync job name [%s] Sync job id [%d]", pSyncJobName, syncJobId);
+			SyncManager::GetInstance()->ScheduleSyncJob(pSyncJobEntry);
+		}
 	}
 	else {
 		syncJobId = pSyncJobsAggregator->GenerateSyncJobId(pPackageId);
@@ -476,6 +527,7 @@ SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobNam
 	if (ret == SYNC_ERROR_NONE) {
 		*pSyncJobId = syncJobId;
 	}
+
 	return ret;
 }
 
@@ -490,13 +542,18 @@ SyncService::RequestDataSync(const char* pPackageId, const char* pSyncJobName, i
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
 	if (pSyncJob) {
 		DataSyncJob* pSyncJobEntry = dynamic_cast< DataSyncJob* > (pSyncJob);
-		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get syn job");
+		SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
 		syncJobId = pSyncJobEntry->GetSyncJobId();
 		LOG_LOGD("Sync request with job name [%s] already found. Sync job id [%d]", pSyncJobName, syncJobId);
 
 		pSyncJobEntry->Reset(accountId, pExtras, syncOption, pCapability);
-		LOG_LOGD("sync parameters are updated with new parameters", pSyncJobName);
+		LOG_LOGD("sync parameters are updated with new parameters");
+
+		if (pSyncJobEntry->IsExpedited()) {
+			LOG_LOGD("sync request with priority. Adding sync job with Sync job name [%s] Sync job id [%d]", pSyncJobName, syncJobId);
+			SyncManager::GetInstance()->ScheduleSyncJob(pSyncJobEntry);
+		}
 	}
 	else {
 		syncJobId = pSyncJobsAggregator->GenerateSyncJobId(pPackageId);
@@ -733,6 +790,15 @@ sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* p
 	else
 		tizen_sync_manager_complete_remove_sync_job(pObject, pInvocation);
 
+	LOG_LOGD("sync service: recoding the change of registered sync job");
+	SyncManager::GetInstance()->RecordSyncJob();
+
+	RepositoryEngine* pRepositoryEngine = SyncManager::GetInstance()->GetSyncRepositoryEngine();
+	//ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
+
+	//if (!pRepositoryEngine->CheckSyncJobsData())
+		//pManageIdleState->SetTermTimer();
+
 	LOG_LOGD("sync service: remove sync job ends");
 
 	return true;
@@ -791,6 +857,15 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 	}
 	else
 		tizen_sync_manager_complete_add_periodic_sync_job(pObject, pInvocation, sync_job_id);
+
+	RepositoryEngine* pRepositoryEngine = SyncManager::GetInstance()->GetSyncRepositoryEngine();
+	//ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
+
+	//if (!pRepositoryEngine->CheckSyncJobsData())
+		//pManageIdleState->UnsetTermTimer()
+
+	LOG_LOGD("sync service: recoding the change of registered sync job");
+	SyncManager::GetInstance()->RecordSyncJob();
 
 	LOG_LOGD("sync service: add periodic sync job ends");
 
@@ -867,6 +942,15 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 	else
 		tizen_sync_manager_complete_add_data_change_sync_job(pObject, pInvocation, sync_job_id);
 
+	RepositoryEngine* pRepositoryEngine = SyncManager::GetInstance()->GetSyncRepositoryEngine();
+	//ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
+
+	//if (!pRepositoryEngine->CheckSyncJobsData())
+		//pManageIdleState->UnsetTermTimer();
+
+	LOG_LOGD("sync service: recoding the change of registered sync job");
+	SyncManager::GetInstance()->RecordSyncJob();
+
 	LOG_LOGD("sync service: add data sync job ends");
 
 	return true;
@@ -914,6 +998,7 @@ is_service_app(pid_t pid)
 	}
 
 	free(current_app_id);
+
 	return true;
 }
 
@@ -961,7 +1046,7 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 			GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 			g_dbus_method_invocation_return_gerror(pInvocation, error);
 			g_clear_error(&error);
-			return true;
+			return false;
 		}
 
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
@@ -973,7 +1058,7 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	}
 
 	if (!pkgIdStr.empty()) {
-		bool check_jobs = false;
+		//check_jobs = false;
 		SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 		if (pAggregator == NULL) {
 			LOG_LOGD("sync adapter aggregator is NULL");
@@ -1009,9 +1094,7 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 
 				LOG_LOGD("inserting sync adapter ipc %s", pAppId);
 				g_hash_table_insert(g_hash_table, strdup(pAppId), syncAdapterObj);
-				if (check_jobs) {
-					SyncManager::GetInstance()->AlertForChange();
-				}
+
 				ret = SYNC_ERROR_NONE;
 			}
 			else {
@@ -1034,7 +1117,13 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	else
 		tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
 
-	LOG_LOGD("sync service: add sync adapter ends");
+	if (check_jobs) {
+		SyncManager::GetInstance()->AlertForChange();
+	}
+
+	SyncManager::GetInstance()->RecordSyncAdapter();
+
+	LOG_LOGD("sync service: adding sync adapter ends");
 
 	return true;
 }
@@ -1051,7 +1140,7 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 		GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
-		return true;
+		return false;
 	}
 
 	char* pAppId;
@@ -1086,6 +1175,8 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	}
 
 	tizen_sync_manager_complete_remove_sync_adapter(pObject, pInvocation);
+
+	SyncManager::GetInstance()->RecordSyncAdapter();
 
 	LOG_LOGD("sync service: remove sync adapter ends");
 
@@ -1178,6 +1269,12 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 	else
 		tizen_sync_manager_complete_get_all_sync_jobs(pObject, pInvocation, outSyncJobList);
 
+	RepositoryEngine* pRepositoryEngine = SyncManager::GetInstance()->GetSyncRepositoryEngine();
+	//ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
+
+	//if (!pRepositoryEngine->CheckSyncJobsData())
+		//pManageIdleState->ResetTermTimer();
+
 	LOG_LOGD("sync service: get all sync jobs ends");
 
 	return true;
@@ -1217,6 +1314,7 @@ DbusSignalHandler(GDBusConnection* pConnection,
 	}
 }
 
+
 /*
  * DBus related initialization and setup
  */
@@ -1251,6 +1349,14 @@ OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDat
 		return;
 	}
 	LOG_LOGD("Sync Service started [%s]", pName);
+
+	RepositoryEngine* __pSyncRepositoryEngine;
+	__pSyncRepositoryEngine = RepositoryEngine::GetInstance();
+
+	if (__pSyncRepositoryEngine == NULL)
+		LOG_LOGD("Failed to construct RepositoryEngine");
+
+	__pSyncRepositoryEngine->OnBooting();
 }
 
 
@@ -1272,7 +1378,7 @@ static bool
 __initialize_dbus()
 {
 	static guint ownerId = g_bus_own_name(G_BUS_TYPE_SESSION,
-			"org.tizen.sync",
+			SYNC_MANAGER_DBUS_SERVICE,
 			G_BUS_NAME_OWNER_FLAGS_NONE,
 			OnBusAcquired,
 			OnNameAcquired,

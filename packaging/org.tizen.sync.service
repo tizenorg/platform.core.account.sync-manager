@@ -3,3 +3,4 @@ Name=org.tizen.sync
 Exec=/usr/bin/false
 SystemdService=sync-manager.service
 User=app
+#User=system

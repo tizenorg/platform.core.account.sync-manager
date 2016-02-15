@@ -31,6 +31,7 @@
 #include "SyncManager_CurrentSyncJobQueue.h"
 #include "SyncManager_SyncDefines.h"
 
+#define MAX_COUNT 12
 
 /*namespace _SyncManager
 {
@@ -153,7 +154,6 @@ SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobNam
 }
 
 
-
 ISyncJob*
 SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
 {
@@ -223,10 +223,50 @@ SyncJobsAggregator::GetSyncJobsInfo(const char* pPackageId)
 	return NULL;
 }
 
+
 map<string, SyncJobsInfo*>&
 SyncJobsAggregator::GetAllSyncJobs()
 {
 	return __syncJobsContainer;
+}
+
+
+void
+SyncJobsAggregator::SetMinPeriod(int min_period)
+{
+	this->min_period = min_period;
+	LOG_LOGD("Minimum period is set as [%d]", this->min_period);
+}
+
+
+void
+SyncJobsAggregator::SetLimitTime(int min_period)
+{
+	int idx;
+	int limit_time = 1;
+
+	for (idx = 1; idx < MAX_COUNT; idx++) {
+		limit_time *= 2;
+		if (min_period < limit_time) {
+			this->limit_time = limit_time;
+			LOG_LOGD("Limit time is set as [%d]", this->limit_time);
+			return;
+		}
+	}
+}
+
+
+int
+SyncJobsAggregator::GetMinPeriod()
+{
+	return min_period;
+}
+
+
+int
+SyncJobsAggregator::GetLimitTime()
+{
+	return limit_time;
 }
 
 //}//_SyncManager

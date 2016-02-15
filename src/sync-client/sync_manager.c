@@ -110,13 +110,13 @@ static int _sync_get_error_code(bool is_success, GError *error)
 		if (g_dbus_error_is_remote_error(error)) {
 			gchar *remote_error = g_dbus_error_get_remote_error(error);
 			if (remote_error) {
-				LOG_LOGD("Remote error[%s]", remote_error);
+				LOG_LOGD("Remote error [%s]", remote_error);
 
 				int error_enum_count = G_N_ELEMENTS(_sync_errors);
 				int i = 0;
 				for (i = 0; i < error_enum_count; i++) {
 					if (g_strcmp0(_sync_errors[i].dbus_error_name, remote_error) == 0) {
-						LOG_LOGD("Remote error code matched[%d]", _sync_errors[i].error_code);
+						LOG_LOGD("Remote error code matched [%d]", _sync_errors[i].error_code);
 						return _sync_errors[i].error_code;
 					}
 				}
@@ -235,13 +235,13 @@ int get_interval(sync_period_e period)
 int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
 	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
-	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid [%d]", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
 	int ret = initialize_connection();
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
-	LOG_LOGC("sync client: %s requesting one time sync", g_sync_manager->appid);
+	LOG_LOGC("sync client: [%s] requesting one time sync", g_sync_manager->appid);
 
 	int id = -1;
 	if (account) {
@@ -250,9 +250,9 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
 			LOG_LOGC("sync client: account_get_account_id failure");
 			return SYNC_ERROR_SYSTEM;
 		}
-		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s] ", g_sync_manager->appid, id, sync_job_name);
+		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s]", g_sync_manager->appid, id, sync_job_name);
 	} else
-		LOG_LOGC("appid [%s] sync_job_name [%s] ", g_sync_manager->appid, sync_job_name);
+		LOG_LOGC("appid [%s] sync_job_name [%s]", g_sync_manager->appid, sync_job_name);
 
 	GError *error = NULL;
 	GVariant *user_data = marshal_bundle(sync_job_user_data);
@@ -275,14 +275,14 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
 int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_name, sync_period_e sync_period, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
 	SYNC_LOGE_RET_RES(sync_job_name != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_name is NULL");
-	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_30MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported %d", sync_period);
-	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES((sync_period >= SYNC_PERIOD_INTERVAL_30MIN && sync_period < SYNC_PERIOD_INTERVAL_MAX), SYNC_ERROR_INVALID_PARAMETER, "Time interval not supported [%d]", sync_period);
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid [%d]", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
 	int ret = initialize_connection();
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
-	LOG_LOGC("sync client: %s requesting periodic sync", g_sync_manager->appid);
+	LOG_LOGC("sync client: [%s] requesting periodic sync", g_sync_manager->appid);
 
 	int id = -1;
 	if (account) {
@@ -291,9 +291,9 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
 			LOG_LOGC("sync client: account_get_account_id failure");
 			return SYNC_ERROR_SYSTEM;
 		}
-		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s] ", g_sync_manager->appid, id, sync_job_name);
+		LOG_LOGC("appid [%s] accid [%d] sync_job_name [%s]", g_sync_manager->appid, id, sync_job_name);
 	} else
-		LOG_LOGC("appid [%s] sync_job_name [%s] ", g_sync_manager->appid, sync_job_name);
+		LOG_LOGC("appid [%s] sync_job_name [%s]", g_sync_manager->appid, sync_job_name);
 
 	int sync_interval = get_interval(sync_period);
 
@@ -325,7 +325,7 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/video")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/sound")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/music"))) {
-			LOG_LOGC("sync client: capability [%s] ", sync_capability);
+			LOG_LOGC("sync client: capability [%s]", sync_capability);
 		} else {
 			LOG_LOGD("sync client: invalid capability");
 			return SYNC_ERROR_INVALID_PARAMETER;
@@ -335,13 +335,13 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 		return SYNC_ERROR_INVALID_PARAMETER;
 	}
 
-	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid %d", sync_option);
+	SYNC_LOGE_RET_RES(sync_option >= SYNC_OPTION_NONE && sync_option <= (SYNC_OPTION_EXPEDITED | SYNC_OPTION_NO_RETRY), SYNC_ERROR_INVALID_PARAMETER, "sync_option is invalid [%d]", sync_option);
 	SYNC_LOGE_RET_RES(sync_job_id != NULL, SYNC_ERROR_INVALID_PARAMETER, "sync_job_id is NULL");
 
 	int ret = initialize_connection();
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
-	LOG_LOGC("sync client: %s requesting data change callback", g_sync_manager->appid);
+	LOG_LOGC("sync client: [%s] requesting data change callback", g_sync_manager->appid);
 
 	int id = -1;
 	if (account) {
@@ -350,9 +350,9 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 			LOG_LOGC("sync client: account_get_account_id failure");
 			return SYNC_ERROR_SYSTEM;
 		}
-		LOG_LOGC("appid [%s] accid [%d] capability [%s] ", g_sync_manager->appid, id, sync_capability);
+		LOG_LOGC("appid [%s] accid [%d] capability [%s]", g_sync_manager->appid, id, sync_capability);
 	} else
-		LOG_LOGC("appid [%s] capability [%s] ", g_sync_manager->appid, sync_capability);
+		LOG_LOGC("appid [%s] capability [%s]", g_sync_manager->appid, sync_capability);
 
 	GError *error = NULL;
 	GVariant *user_data = marshal_bundle(sync_job_user_data);
@@ -378,7 +378,7 @@ int sync_manager_remove_sync_job(int sync_job_id)
 	int ret = initialize_connection();
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, ret, "Connection to sync-service failed");
 
-	LOG_LOGC("sync client: %s removing sync job with sync_job_id [%d] ", g_sync_manager->appid, sync_job_id);
+	LOG_LOGC("sync client: [%s] removing sync job with sync_job_id [%d]", g_sync_manager->appid, sync_job_id);
 
 	GError *error = NULL;
 	bool is_success = tizen_sync_manager_call_remove_sync_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, sync_job_id, NULL, &error);

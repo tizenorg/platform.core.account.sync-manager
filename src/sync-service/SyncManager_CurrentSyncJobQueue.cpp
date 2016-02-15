@@ -65,10 +65,21 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 			LOG_LOGD("Failed to construct CurrentSyncContext instance");
 			return SYNC_ERROR_OUT_OF_MEMORY;
 		}
-		//adding timeout of 30 seconds
-		pCurrentSyncContext->SetTimerId(g_timeout_add(300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+
+		if (syncJob->GetSyncType() == SYNC_TYPE_PERIODIC) {
+			SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
+			LOG_LOGD("pSyncJobsAggregator->GetMinPeriod() [%d]", pSyncJobsAggregator->GetMinPeriod());
+			LOG_LOGD("pSyncJobsAggregator->GetLimitTime() [%d]", pSyncJobsAggregator->GetLimitTime());
+
+			guint interval = (guint)(pSyncJobsAggregator->GetLimitTime() * 60 * 1000);
+			pCurrentSyncContext->SetTimerId(g_timeout_add(interval, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+			LOG_LOGD("Sync operation time limit is set as [%d]", (int)interval);
+			//pCurrentSyncContext->SetTimerId(g_timeout_add(300000, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+		}
+
 		pair<map<const string, CurrentSyncContext*>::iterator, bool> ret;
 		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(syncJob->__key, pCurrentSyncContext));
+
 		if (ret.second == false) {
 			 return SYNC_ERROR_ALREADY_IN_PROGRESS;
 		}
@@ -98,7 +109,7 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 		}
 	}
 	else {
-		LOG_LOGD(" context null");
+		LOG_LOGD("context null");
 	}
 
 	LOG_LOGD("CurrentSyncJobQueue::onTimerExpired Ends");

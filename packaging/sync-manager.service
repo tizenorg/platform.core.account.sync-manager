@@ -2,8 +2,14 @@
 Description=sync manager service startup script
 
 [Service]
-Type=simple
+#User=app
+#Group=app
+
 ExecStart=/usr/bin/sync-service
+Type=simple
+#Type=dbus
+
+#BusName=org.tizen.sync
 Restart=always
 RestartSec=1
 
