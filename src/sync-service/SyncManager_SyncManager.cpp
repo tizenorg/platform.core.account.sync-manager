@@ -113,7 +113,6 @@ SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int 
 {
 	if (period < 1800) {
 		LOG_LOGD("Requested period %d is less than minimum, rounding up to 30 mins", period);
-
 		period = 1800;
 	}
 
@@ -132,7 +131,10 @@ SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int 
 	__pSyncJobsAggregator->AddSyncJob(pPackageId.c_str(), syncJobName, pRequestedJob);
 	__pPeriodicSyncScheduler->SchedulePeriodicSyncJob(pRequestedJob);
 	if (pRequestedJob->IsExpedited()) {
+		LOG_LOGD("The sync job has priority");
 		ScheduleSyncJob(pRequestedJob);
+	} else {
+		LOG_LOGD("It's non-priority sync job");
 	}
 
 	return SYNC_ERROR_NONE;
@@ -607,6 +609,7 @@ SyncManager::SyncManager(void)
 	, __isSimDataConnectionPresent(false)
 	, __isUPSModeEnabled(false)
 	, __isSyncPermitted(true)
+	, __pManageIdleState(NULL)
 	, __pNetworkChangeListener(NULL)
 	, __pStorageListener(NULL)
 	, __pBatteryStatusListener(NULL)
@@ -642,6 +645,9 @@ SyncManager::Construct(void)
 	ret = vconf_get_int(VCONFKEY_SETAPPL_PSMODE, &upsMode);
 	LOG_LOGE_BOOL(ret == VCONF_OK, "vconf_get_int failed %d", ret);
 	__isUPSModeEnabled = (upsMode == SETTING_PSMODE_EMERGENCY) ? true : false;
+
+	__pManageIdleState = new (std::nothrow) ManageIdleState();
+	LOG_LOGE_BOOL(__pManageIdleState, "Failed to construct ManageIdleState");
 
 	__pNetworkChangeListener = new (std::nothrow) NetworkChangeListener();
 	LOG_LOGE_BOOL(__pNetworkChangeListener, "Failed to construct NetworkChangeListener");
@@ -712,8 +718,8 @@ SyncManager::Construct(void)
 */
 
 	Initialize();
+	//__pSyncRepositoryEngine->OnBooting();
 
-	__pSyncRepositoryEngine->OnBooting();
 	return true;
 }
 
@@ -816,6 +822,14 @@ SyncManager::GetSyncJobsAggregator()
 	return __pSyncJobsAggregator;
 }
 
+
+ManageIdleState*
+SyncManager::GetManageIdleState()
+{
+	return __pManageIdleState;
+}
+
+
 void
 SyncManager::HandleShutdown(void)
 {
@@ -824,6 +838,24 @@ SyncManager::HandleShutdown(void)
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
 
+/*
+void
+SyncManager::RecordSyncAdapter(void)
+{
+	pthread_mutex_lock(&__syncJobQueueMutex);
+	__pSyncRepositoryEngine->SaveCurrentSyncAdapter();
+	pthread_mutex_unlock(&__syncJobQueueMutex);
+}
+*/
+/*
+void
+SyncManager::RecordSyncJob(void)
+{
+	pthread_mutex_lock(&__syncJobQueueMutex);
+	__pSyncRepositoryEngine->SaveCurrentSyncJob();
+	pthread_mutex_unlock(&__syncJobQueueMutex);
+}
+*/
 
 bool
 SyncManager::GetSyncSupport(int accountId)
@@ -845,6 +877,8 @@ SyncManager::GetSyncSupport(int accountId)
 		LOG_LOGD("The account does not support sync");
 		return false;
 	}
+
+	LOG_LOGD("The account supports sync");
 
 	return true;
 }
@@ -933,7 +967,7 @@ SyncManager::SendSyncAlarmMessage()
 void
 SyncManager::SendSyncCheckAlarmMessage()
 {
-	LOG_LOGD("Fire SYNC_CHECK_ALARM ");
+	LOG_LOGD("Fire SYNC_CHECK_ALARM");
 	Message msg;
 	msg.type = SYNC_CHECK_ALARM;
 	//TO DO: Implement code to remove all the pending messages from queue before firing a new one
@@ -974,7 +1008,7 @@ SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 
 	if (err == SYNC_ERROR_NONE) {
 		if(fireCheckAlarm) {
-			LOG_LOGD("Added sync job [%s] to Main queue, Intiating dispatch sequence", pJob->__key.c_str());
+			LOG_LOGD("Added sync job [%s] to Main queue, Initiating dispatch sequence", pJob->__key.c_str());
 			SendSyncCheckAlarmMessage();
 		}
 	}

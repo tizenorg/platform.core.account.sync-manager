@@ -53,8 +53,7 @@ SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServi
 {
 	if (HasSyncAdapter(pPackageId)) {
 		LOG_LOGD("Sync adapter already registered for package [%s]", pPackageId);
-	}
-	else {
+	} else {
 		LOG_LOGD("Registering sync-adapter [%s] for package [%s]", pServiceAppId, pPackageId);
 		__syncAdapterList.insert(std::pair<string, string> (pPackageId, pServiceAppId));
 	}
