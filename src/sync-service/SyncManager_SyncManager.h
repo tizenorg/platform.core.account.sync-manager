@@ -43,6 +43,7 @@
 #include "SyncManager_Singleton.h"
 #include "SyncManager_CurrentSyncJobQueue.h"
 #include "SyncManager_SyncDefines.h"
+#include "SyncManager_ManageIdleState.h"
 
 
 /*namespace _SyncManager
@@ -103,6 +104,8 @@ public:
 
 	SyncJobsAggregator* GetSyncJobsAggregator();
 
+	ManageIdleState* GetManageIdleState();
+
 	void AddSyncAdapter(string packageId, string svcAppId);
 
 	void AddRunningAccount(int account_id, int pid);
@@ -124,6 +127,10 @@ public:
 	string GetPkgIdByCommandline(const char* pCommandLine);
 
 	void HandleShutdown(void);
+
+	//void RecordSyncAdapter(void);
+
+	//void RecordSyncJob(void);
 
 	void CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext);
 
@@ -189,6 +196,7 @@ private:
 	bool __isUPSModeEnabled;
 	bool __isSyncPermitted;
 
+	ManageIdleState* __pManageIdleState;
 	NetworkChangeListener* __pNetworkChangeListener;
 	StorageChangeListener* __pStorageListener;
 	BatteryStatusListener* __pBatteryStatusListener;
@@ -216,5 +224,6 @@ private:
 	friend class RepositoryEngine;
 	friend class SyncService;
 };
+
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_MANAGER_H
