@@ -9,10 +9,6 @@ Source1:   sync-manager.service
 Source2:   org.tizen.sync.service
 Source3:   org.tizen.sync.conf
 
-%if "%{?profile}" == "wearable"
-ExcludeArch: %{arm} %ix86 x86_64
-%endif
-
 BuildRequires: cmake
 BuildRequires: pkgconfig(capi-appfw-app-manager)
 BuildRequires: pkgconfig(capi-appfw-application)
