@@ -28,7 +28,7 @@ BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(cynara-client)
 BuildRequires: pkgconfig(cynara-session)
 BuildRequires: pkgconfig(cynara-creds-gdbus)
-%if "%{?profile}" != "tv"
+%if ("%{?profile}" != "tv") && ("%{?profile}" != "wearable")
 BuildRequires: pkgconfig(calendar-service2)
 BuildRequires: pkgconfig(contacts-service2)
 %endif
@@ -66,7 +66,7 @@ cp %{SOURCE2} .
 %build
 _CONTAINER_ENABLE=OFF
 
-%if "%{?profile}" != "tv"
+%if ("%{?profile}" != "tv") && ("%{?profile}" != "wearable")
 _CALENDAR_CONTACTS_ENABLE=ON
 %else
 _CALENDAR_CONTACTS_ENABLE=OFF
