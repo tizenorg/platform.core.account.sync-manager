@@ -103,7 +103,8 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 	SYNC_LOGE_RET_RES(ret == SYNC_ERROR_NONE, SYNC_ERROR_SYSTEM, "Failed to remove previous alarm for [%s], [%d]", jobKey.c_str(), ret);
 
 	alarm_id_t alarm_id;
-	ret = alarmmgr_add_periodic_alarm_withcb(periodicSyncJob->__period, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
+	//ret = alarmmgr_add_periodic_alarm_withcb(periodicSyncJob->__period, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
+	ret = alarmmgr_add_periodic_alarm_withcb(2, QUANTUMIZE, PeriodicSyncScheduler::OnAlarmExpired, this, &alarm_id);
 	if (ret == ALARMMGR_RESULT_SUCCESS) {
 		LOG_LOGD("Alarm added for %ld min, id %ld", periodicSyncJob->__period, alarm_id);
 

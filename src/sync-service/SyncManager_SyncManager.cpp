@@ -838,7 +838,7 @@ SyncManager::HandleShutdown(void)
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
 
-/*
+
 void
 SyncManager::RecordSyncAdapter(void)
 {
@@ -846,8 +846,8 @@ SyncManager::RecordSyncAdapter(void)
 	__pSyncRepositoryEngine->SaveCurrentSyncAdapter();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
-*/
-/*
+
+
 void
 SyncManager::RecordSyncJob(void)
 {
@@ -855,7 +855,7 @@ SyncManager::RecordSyncJob(void)
 	__pSyncRepositoryEngine->SaveCurrentSyncJob();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
-*/
+
 
 bool
 SyncManager::GetSyncSupport(int accountId)

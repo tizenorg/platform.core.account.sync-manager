@@ -181,8 +181,12 @@ RepositoryEngine::ReadSyncJobsData(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		/*
 		LOG_LOGD("Failed to parse syncjobs.xml");
 		return;
+		*/
+		SyncManager::GetInstance()->RecordSyncJob();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -190,6 +194,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
+
 	}
 
 	//Parse sync jobs
@@ -274,8 +279,12 @@ RepositoryEngine::ReadSyncAdapters(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		/*
 		LOG_LOGD("Failed to parse syncadapters.xml");
 		return;
+		*/
+		SyncManager::GetInstance()->RecordSyncAdapter();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -552,7 +561,7 @@ RepositoryEngine::SaveCurrentState(void)
 	WriteSyncAdapters();
 }
 
-/*
+
 void
 RepositoryEngine::SaveCurrentSyncAdapter(void)
 {
@@ -561,8 +570,8 @@ RepositoryEngine::SaveCurrentSyncAdapter(void)
 	WriteSyncAdapters();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
-/*
+
+
 void
 RepositoryEngine::SaveCurrentSyncJob(void)
 {
@@ -571,5 +580,5 @@ RepositoryEngine::SaveCurrentSyncJob(void)
 	WriteSyncJobsData();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
+
 //}//_SyncManager

@@ -128,9 +128,9 @@ public:
 
 	void HandleShutdown(void);
 
-	//void RecordSyncAdapter(void);
+	void RecordSyncAdapter(void);
 
-	//void RecordSyncJob(void);
+	void RecordSyncJob(void);
 
 	void CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext);
 
