@@ -65,10 +65,18 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 			LOG_LOGD("Failed to construct CurrentSyncContext instance");
 			return SYNC_ERROR_OUT_OF_MEMORY;
 		}
-		//adding timeout of 5 minutes
-		guint interval = (guint)(5 * 60 * 1000);
-		pCurrentSyncContext->SetTimerId(g_timeout_add(interval, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
-		LOG_LOGD("Sync operation time limit is set as [%d]", (int)interval);
+
+		//adding timeout as depending on the interval
+		if (syncJob->GetSyncType() == SYNC_TYPE_PERIODIC) {
+			SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
+			LOG_LOGD("pSyncJobsAggregator->GetMinPeriod() [%d]", pSyncJobsAggregator->GetMinPeriod());
+			LOG_LOGD("pSyncJobsAggregator->GetLimitTime() [%d]", pSyncJobsAggregator->GetLimitTime());
+
+			guint interval = (guint)(pSyncJobsAggregator->GetLimitTime() * 60 * 1000);
+			//guint interval = (guint)(5 * 60 * 1000);
+			pCurrentSyncContext->SetTimerId(g_timeout_add(interval, CurrentSyncJobQueue::OnTimerExpired, pCurrentSyncContext));
+			LOG_LOGD("Sync operation time limit is set as [%d]", (int)interval);
+		}
 
 		pair<map<const string, CurrentSyncContext*>::iterator, bool> ret;
 		ret = __currentSyncJobQueue.insert(pair<const string, CurrentSyncContext*>(syncJob->__key, pCurrentSyncContext));

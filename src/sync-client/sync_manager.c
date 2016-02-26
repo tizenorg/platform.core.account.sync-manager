@@ -43,6 +43,7 @@ typedef struct sync_manager_s {
 
 static sync_manager_s *g_sync_manager;
 
+
 int read_proc(const char *path, char *buf, int size)
 {
 	int fd;
@@ -70,6 +71,7 @@ int read_proc(const char *path, char *buf, int size)
 
 	return ret;
 }
+
 
 char *proc_get_cmdline_self()
 {

@@ -137,7 +137,7 @@ void
 PeriodicSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, long frequency)
 {
 	SyncJob::Reset(accountId, pUserData, syncOption);
-	__period = frequency;
+	__period = frequency/60;
 }
 
 //}//_SyncManager

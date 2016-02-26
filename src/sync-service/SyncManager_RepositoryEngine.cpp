@@ -181,8 +181,12 @@ RepositoryEngine::ReadSyncJobsData(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		/*
 		LOG_LOGD("Failed to parse syncjobs.xml");
 		return;
+		*/
+		SyncManager::GetInstance()->RecordSyncJob();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -190,6 +194,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
+
 	}
 
 	//Parse sync jobs
@@ -228,7 +233,6 @@ RepositoryEngine::ReadSyncJobsData(void)
 					curJob = curJob->next;
 				}
 			}
-
 			cur = cur->next;
 		}
 	}
@@ -274,8 +278,12 @@ RepositoryEngine::ReadSyncAdapters(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		/*
 		LOG_LOGD("Failed to parse syncadapters.xml");
 		return;
+		*/
+		SyncManager::GetInstance()->RecordSyncAdapter();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -501,6 +509,9 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 	xmlChar* pJobExpedit = xmlGetProp(cur, XML_ATTR_JOB_OPTION_EXPEDIT);
 	xmlChar* pJobType = xmlGetProp(cur, XML_ATTR_JOB_TYPE);
 
+	xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PERIOD);
+	int period = (pPeriod == NULL)? 1800 : atoi((char*)pPeriod) * 60;
+
 	SyncType type = (pJobType == NULL) ? SYNC_TYPE_UNKNOWN : (SyncType)atoi((char*)pJobType);
 	bool noretry = (pJobNoRetry == NULL) ? false : atoi((char*)pJobNoRetry);
 	bool expedit = (pJobExpedit == NULL) ? false : atoi((char*)pJobExpedit);
@@ -527,8 +538,11 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 			break;
 		}
 		case SYNC_TYPE_PERIODIC: {
-			xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PERIOD);
-			int period = (pPeriod == NULL)? 1800 : atoi((char*)pPeriod);
+			SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
+
+			//upper (* 60) and this can be removed?
+			pSyncJobsAggregator->SetMinPeriod(period/60);
+			pSyncJobsAggregator->SetLimitTime(pSyncJobsAggregator->GetMinPeriod());
 
 			SyncManager::GetInstance()->AddPeriodicSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, period);
 			break;
@@ -552,7 +566,7 @@ RepositoryEngine::SaveCurrentState(void)
 	WriteSyncAdapters();
 }
 
-/*
+
 void
 RepositoryEngine::SaveCurrentSyncAdapter(void)
 {
@@ -561,8 +575,8 @@ RepositoryEngine::SaveCurrentSyncAdapter(void)
 	WriteSyncAdapters();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
-/*
+
+
 void
 RepositoryEngine::SaveCurrentSyncJob(void)
 {
@@ -571,5 +585,5 @@ RepositoryEngine::SaveCurrentSyncJob(void)
 	WriteSyncJobsData();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
+
 //}//_SyncManager

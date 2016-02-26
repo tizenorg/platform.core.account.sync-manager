@@ -72,5 +72,6 @@ private:
 private:
 	SyncManager* __pSyncManagerInstance;
 };
+
 //}//_SyncManager
 #endif //SYNC_SERVICE_SYNC_SERVICE_H

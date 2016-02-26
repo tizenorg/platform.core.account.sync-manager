@@ -135,7 +135,7 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 
 	LOG_LOGD("Adding a request to sync worker");
 
-	RequestData* pRequestData = new (std::nothrow) RequestData();
+	RequestData* pRequestData = new (std::nothrow)RequestData();
 	if (pRequestData != NULL) {
 		pRequestData->message = msg;
 		pRequestData->pResultListener = pSyncWorkerResultListener;
@@ -179,7 +179,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 		GError* pError = NULL;
 		GIOStatus status;
 
-		status = g_io_channel_read_chars (pChannel, (gchar*)&tmp, sizeof(tmp), &readSize, &pError);
+		status = g_io_channel_read_chars(pChannel, (gchar*)&tmp, sizeof(tmp), &readSize, &pError);
 
 		if (readSize == 0 || status != G_IO_STATUS_NORMAL) {
 			LOG_LOGD("Failed with IO Read Error");
@@ -228,4 +228,5 @@ SyncWorker::ThreadLoop(gpointer data)
 
 	return NULL;
 }
+
 //}//_SyncManager

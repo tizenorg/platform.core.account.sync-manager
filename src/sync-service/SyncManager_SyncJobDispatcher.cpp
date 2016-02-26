@@ -176,8 +176,8 @@ void
 SyncJobDispatcher::TryStartingNextJobLocked()
 {
 	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false) {
-		LOG_LOGD("No network available: Skipping sync");
-		return;
+//		LOG_LOGD("No network available: Skipping sync");
+//		return;
 	}
 
 	if (!SyncManager::GetInstance()->__isSyncPermitted) {
