@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <node name="/org/tizen/sync/manager">
 	<interface name="org.tizen.sync.manager">
-		<method name="add_on_demand_sync_job">
+		<method name="add_on_demand_job">
 			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_job_name" direction="in" />
@@ -9,7 +9,7 @@
 			<arg type="a{sv}" name="extra" direction="in" />
 			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
-		<method name="add_periodic_sync_job">
+		<method name="add_periodic_job">
 			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_job_name" direction="in" />
@@ -18,7 +18,7 @@
 			<arg type="a{sv}" name="extra" direction="in" />
 			<arg type="i" name="sync_job_id" direction="out" />
 		</method>
-		<method name="add_data_change_sync_job">
+		<method name="add_data_change_job">
 			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="account_id" direction="in" />
 			<arg type="s" name="sync_capability" direction="in" />
@@ -30,7 +30,7 @@
 			<arg type="s" name="command_line" direction="in" />
 			<arg type="aa{sv}" name="sync_jobs" direction="out" />
 		</method>
-		<method name="remove_sync_job">
+		<method name="remove_job">
 			<arg type="s" name="command_line" direction="in" />
 			<arg type="i" name="sync_job_id" direction="in" />
 		</method>

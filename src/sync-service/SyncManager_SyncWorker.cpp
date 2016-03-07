@@ -29,13 +29,6 @@
 {*/
 
 SyncWorker::SyncWorker(void)
-			: __pendingRequestsMutex(PTHREAD_MUTEX_INITIALIZER)
-			, __message(SYNC_CHECK_ALARM)
-			, __pContext(NULL)
-			, __pLoop(NULL)
-			, __pChannel(NULL)
-			, __pSource(NULL)
-			, __pThread(NULL)
 {
 }
 

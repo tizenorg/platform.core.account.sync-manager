@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.3
+Version:   0.1.4
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
@@ -78,10 +78,8 @@ cmake \
 	-DBINDIR=%{_bindir} \
 	-DLIBDIR=%{_libdir} \
 	-DINCLUDEDIR=%{_includedir} \
-	-DSYSTEMD_DIR=%{_unitdir} \
 	-D_SEC_FEATURE_CONTAINER_ENABLE:BOOL=${_CONTAINER_ENABLE} \
 	-D_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE:BOOL=${_CALENDAR_CONTACTS_ENABLE} \
-	-DMANIFESTDIR=%{_manifestdir} \
 	-DVERSION=%{version}
 
 make %{?jobs:-j%jobs}

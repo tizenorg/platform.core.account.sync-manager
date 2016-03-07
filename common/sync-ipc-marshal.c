@@ -16,7 +16,6 @@
 
 #include <stdlib.h>
 #include "sync-log.h"
-#include "sync_manager.h"
 #include "sync-ipc-marshal.h"
 
 

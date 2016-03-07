@@ -288,6 +288,7 @@ int sync_manager_remove_sync_job(int sync_job_id);
  * @pre sync_manager_add_periodic_sync_job()
  * @pre sync_manager_add_data_change_sync_job()
  *
+ * @see sync_manager_sync_job_cb()
  * @see sync_manager_on_demand_sync_job()
  * @see sync_manager_add_periodic_sync_job()
  * @see sync_manager_add_data_change_sync_job()

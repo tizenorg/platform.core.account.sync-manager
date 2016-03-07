@@ -18,6 +18,7 @@
 #define SYNC_IPC_MARSHAL_H_
 
 #include "glib.h"
+#include "sync_manager.h"
 #include <bundle.h>
 #include <bundle_internal.h>
 
@@ -37,6 +38,7 @@ extern "C"
 
 GVariant *marshal_bundle(bundle* extras);
 bundle *umarshal_bundle(GVariant* in_data);
+void umarshal_sync_job_list(GVariant *variant, sync_manager_sync_job_cb callback, void *user_data);
 
 
 #ifdef __cplusplus
