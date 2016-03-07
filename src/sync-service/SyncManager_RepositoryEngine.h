@@ -63,9 +63,9 @@ public:
 
 	void SaveCurrentState(void);
 
-	//void SaveCurrentSyncAdapter(void);
+	void SaveCurrentSyncAdapter(void);
 
-	//void SaveCurrentSyncJob(void);
+	void SaveCurrentSyncJob(void);
 
 public:
 	static const long NOT_IN_BACKOFF_MODE;

@@ -257,7 +257,7 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
 	GError *error = NULL;
 	GVariant *user_data = marshal_bundle(sync_job_user_data);
 
-	bool is_success = tizen_sync_manager_call_add_on_demand_sync_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_job_name, sync_option, user_data, sync_job_id, NULL, &error);
+	bool is_success = tizen_sync_manager_call_add_on_demand_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_job_name, sync_option, user_data, sync_job_id, NULL, &error);
 	if (!is_success || error) {
 		int error_code = _sync_get_error_code(is_success, error);
 		LOG_LOGC("sync client: gdbus error [%s]", error->message);
@@ -300,7 +300,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
 	GError *error = NULL;
 	GVariant *user_data = marshal_bundle(sync_job_user_data);
 
-	bool is_success = tizen_sync_manager_call_add_periodic_sync_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_job_name, sync_interval, sync_option, user_data, sync_job_id, NULL, &error);
+	bool is_success = tizen_sync_manager_call_add_periodic_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_job_name, sync_interval, sync_option, user_data, sync_job_id, NULL, &error);
 	if (!is_success || error) {
 		int error_code = _sync_get_error_code(is_success, error);
 		LOG_LOGC("sync client: gdbus error [%s]", error->message);
@@ -357,7 +357,7 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 	GError *error = NULL;
 	GVariant *user_data = marshal_bundle(sync_job_user_data);
 
-	bool is_success = tizen_sync_manager_call_add_data_change_sync_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_capability, sync_option, user_data, sync_job_id, NULL, &error);
+	bool is_success = tizen_sync_manager_call_add_data_change_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, id, sync_capability, sync_option, user_data, sync_job_id, NULL, &error);
 	if (!is_success || error) {
 		int error_code = _sync_get_error_code(is_success, error);
 		LOG_LOGC("sync client: gdbus error [%s]", error->message);
@@ -381,7 +381,7 @@ int sync_manager_remove_sync_job(int sync_job_id)
 	LOG_LOGC("sync client: [%s] removing sync job with sync_job_id [%d]", g_sync_manager->appid, sync_job_id);
 
 	GError *error = NULL;
-	bool is_success = tizen_sync_manager_call_remove_sync_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, sync_job_id, NULL, &error);
+	bool is_success = tizen_sync_manager_call_remove_job_sync(g_sync_manager->ipcObj, g_sync_manager->appid, sync_job_id, NULL, &error);
 
 	if (!is_success || error) {
 		int error_code = _sync_get_error_code(is_success, error);

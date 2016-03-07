@@ -31,10 +31,10 @@
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_SyncJobQueue.h"
-#include "SyncManager_SyncManager.h"
 #include "SyncManager_SyncAdapterAggregator.h"
 #include "SyncManager_SyncJobsAggregator.h"
 #include "SyncManager_SyncJobsInfo.h"
+#include "SyncManager_SyncManager.h"
 #include "sync-log.h"
 #include "sync-error.h"
 
@@ -182,7 +182,8 @@ RepositoryEngine::ReadSyncJobsData(void)
 
 	if (doc == NULL) {
 		LOG_LOGD("Failed to parse syncjobs.xml");
-		return;
+		SaveCurrentSyncJob();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -275,7 +276,8 @@ RepositoryEngine::ReadSyncAdapters(void)
 
 	if (doc == NULL) {
 		LOG_LOGD("Failed to parse syncadapters.xml");
-		return;
+		SaveCurrentSyncAdapter();
+		doc = xmlParseFile(pDocName);
 	}
 
 	cur = xmlDocGetRootElement(doc);
@@ -552,7 +554,7 @@ RepositoryEngine::SaveCurrentState(void)
 	WriteSyncAdapters();
 }
 
-/*
+
 void
 RepositoryEngine::SaveCurrentSyncAdapter(void)
 {
@@ -561,8 +563,8 @@ RepositoryEngine::SaveCurrentSyncAdapter(void)
 	WriteSyncAdapters();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
-/*
+
+
 void
 RepositoryEngine::SaveCurrentSyncJob(void)
 {
@@ -571,5 +573,5 @@ RepositoryEngine::SaveCurrentSyncJob(void)
 	WriteSyncJobsData();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
-*/
+
 //}//_SyncManager

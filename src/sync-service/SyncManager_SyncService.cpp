@@ -693,7 +693,7 @@ sync_adapter_handle_init_complete(TizenSyncAdapter* pObject, GDBusMethodInvocati
 * org.tizen.sync.manager interface methods
 */
 gboolean
-sync_manager_add_on_demand_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
+sync_manager_add_on_demand_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
 																const gchar* pCommandLine,
 																gint accountId,
 																const gchar* pSyncJobName,
@@ -734,7 +734,7 @@ sync_manager_add_on_demand_sync_job(TizenSyncManager* pObject, GDBusMethodInvoca
 		g_clear_error(&error);
 	}
 	else
-		tizen_sync_manager_complete_add_on_demand_sync_job(pObject, pInvocation, sync_job_id);
+		tizen_sync_manager_complete_add_on_demand_job(pObject, pInvocation, sync_job_id);
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -748,7 +748,7 @@ sync_manager_add_on_demand_sync_job(TizenSyncManager* pObject, GDBusMethodInvoca
 
 
 gboolean
-sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine, gint sync_job_id)
+sync_manager_remove_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine, gint sync_job_id)
 {
 	LOG_LOGD("Request to remove sync job %d", sync_job_id);
 
@@ -779,7 +779,7 @@ sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* p
 		g_clear_error(&error);
 	}
 	else
-		tizen_sync_manager_complete_remove_sync_job(pObject, pInvocation);
+		tizen_sync_manager_complete_remove_job(pObject, pInvocation);
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -793,7 +793,7 @@ sync_manager_remove_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* p
 
 
 gboolean
-sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
+sync_manager_add_periodic_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
 																const gchar* pCommandLine,
 																gint accountId,
 																const gchar* pSyncJobName,
@@ -843,7 +843,7 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 		g_clear_error(&error);
 	}
 	else
-		tizen_sync_manager_complete_add_periodic_sync_job(pObject, pInvocation, sync_job_id);
+		tizen_sync_manager_complete_add_periodic_job(pObject, pInvocation, sync_job_id);
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -860,7 +860,7 @@ sync_manager_add_periodic_sync_job(TizenSyncManager* pObject, GDBusMethodInvocat
 
 
 gboolean
-sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
+sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation,
 																	const gchar* pCommandLine,
 																	gint accountId,
 																	const gchar* pCapabilityArg,
@@ -926,7 +926,7 @@ sync_manager_add_data_change_sync_job(TizenSyncManager* pObject, GDBusMethodInvo
 		g_clear_error(&error);
 	}
 	else
-		tizen_sync_manager_complete_add_data_change_sync_job(pObject, pInvocation, sync_job_id);
+		tizen_sync_manager_complete_add_data_change_job(pObject, pInvocation, sync_job_id);
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -1335,11 +1335,11 @@ OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDat
 	}
 	g_signal_connect(sync_ipc_obj, "handle-add-sync-adapter", G_CALLBACK(sync_manager_add_sync_adapter), NULL);
 	g_signal_connect(sync_ipc_obj, "handle-remove-sync-adapter", G_CALLBACK(sync_manager_remove_sync_adapter), NULL);
-	g_signal_connect(sync_ipc_obj, "handle-add-on-demand-sync-job", G_CALLBACK(sync_manager_add_on_demand_sync_job), NULL);
-	g_signal_connect(sync_ipc_obj, "handle-add-periodic-sync-job", G_CALLBACK(sync_manager_add_periodic_sync_job), NULL);
-	g_signal_connect(sync_ipc_obj, "handle-add-data-change-sync-job", G_CALLBACK(sync_manager_add_data_change_sync_job), NULL);
+	g_signal_connect(sync_ipc_obj, "handle-add-on-demand-sync-job", G_CALLBACK(sync_manager_add_on_demand_job), NULL);
+	g_signal_connect(sync_ipc_obj, "handle-add-periodic-sync-job", G_CALLBACK(sync_manager_add_periodic_job), NULL);
+	g_signal_connect(sync_ipc_obj, "handle-add-data-change-sync-job", G_CALLBACK(sync_manager_add_data_change_job), NULL);
 	g_signal_connect(sync_ipc_obj, "handle-get-all-sync-jobs", G_CALLBACK(sync_manager_get_all_sync_jobs), NULL);
-	g_signal_connect(sync_ipc_obj, "handle-remove-sync-job", G_CALLBACK(sync_manager_remove_sync_job), NULL);
+	g_signal_connect(sync_ipc_obj, "handle-remove-sync-job", G_CALLBACK(sync_manager_remove_job), NULL);
 	g_signal_connect(sync_ipc_obj, "handle-set-sync-status", G_CALLBACK(sync_manager_set_sync_status), NULL);
 
 	gdbusConnection = pConnection;
