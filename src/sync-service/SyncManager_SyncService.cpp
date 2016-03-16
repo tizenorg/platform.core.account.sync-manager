@@ -871,8 +871,8 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 	int ret = SYNC_ERROR_NONE;
 
-	const char *capability = (char *)pCapabilityArg;
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+	const char *capability = (char *)pCapabilityArg;
 	if (!strcmp(capability, "http://tizen.org/sync/capability/calendar") ||
 		!strcmp(capability, "http://tizen.org/sync/capability/contact")) {
 		if (!strcmp(capability, "http://tizen.org/sync/capability/calendar"))
