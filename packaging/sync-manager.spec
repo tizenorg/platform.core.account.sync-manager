@@ -28,12 +28,17 @@ BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(cynara-client)
 BuildRequires: pkgconfig(cynara-session)
 BuildRequires: pkgconfig(cynara-creds-gdbus)
-%if ("%{?profile}" != "tv") && ("%{?profile}" != "wearable")
+%if "%{?profile}" == "mobile"
 BuildRequires: pkgconfig(calendar-service2)
 BuildRequires: pkgconfig(contacts-service2)
 %endif
 BuildRequires: pkgconfig(capi-content-media-content)
 BuildRequires: pkgconfig(libtzplatform-config)
+
+
+%if "%{?profile}" == "tv"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
 
 
 %description
@@ -66,7 +71,7 @@ cp %{SOURCE2} .
 %build
 _CONTAINER_ENABLE=OFF
 
-%if ("%{?profile}" != "tv") && ("%{?profile}" != "wearable")
+%if "%{?profile}" == "mobile"
 _CALENDAR_CONTACTS_ENABLE=ON
 %else
 _CALENDAR_CONTACTS_ENABLE=OFF
