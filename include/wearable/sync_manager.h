@@ -42,26 +42,8 @@ extern "C"
 
 
 /**
- *  @brief		This is calendar capability string.
- *  @since_tizen 2.4
- *  @remarks	This capability is not supported on TV profile. If you want to receive notification about calendar DB change, add it through sync_manager_add_data_change_sync_job().
- *  @see		sync_manager_add_data_change_sync_job()
- */
-#define SYNC_SUPPORTS_CAPABILITY_CALENDAR	"http://tizen.org/sync/capability/calendar"
-
-
-/**
- *  @brief		This is contact capability string.
- *  @since_tizen 2.4
- *  @remarks	This capability is not supported on TV profile. If you want to receive notification about contact DB change, add it through sync_manager_add_data_change_sync_job().
- *  @see		sync_manager_add_data_change_sync_job()
-  */
-#define SYNC_SUPPORTS_CAPABILITY_CONTACT	"http://tizen.org/sync/capability/contact"
-
-
-/**
  *  @brief		This is image capability string.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  *  @remarks	If you want to receive notification about media image DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
@@ -70,7 +52,7 @@ extern "C"
 
 /**
  *  @brief		This is video capability string.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  *  @remarks	If you want to receive notification about media video DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
@@ -79,7 +61,7 @@ extern "C"
 
 /**
  *  @brief		This is sound capability string.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  *  @remarks	If you want to receive notification about media sound DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
@@ -88,7 +70,7 @@ extern "C"
 
 /**
  *  @brief		This is music capability string.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  *  @remarks	If you want to receive notification about media music DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
  */
@@ -97,7 +79,7 @@ extern "C"
 
 /**
  *  @brief   Enumerations for sync options of sync job request APIs.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  */
 typedef enum {
 	SYNC_OPTION_NONE = 0,														/**< Sync job will be operated normally */
@@ -108,7 +90,7 @@ typedef enum {
 
 /**
  *  @brief   Enumerations for time intervals of a periodic sync.
- *  @since_tizen 2.4
+ *  @since_tizen 3.0
  */
 typedef enum {
 	SYNC_PERIOD_INTERVAL_30MIN = 0,		/**< Sync within 30 minutes */
@@ -125,7 +107,7 @@ typedef enum {
 /**
  * @brief Called to get the information once for each sync job.
  *
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
@@ -147,7 +129,7 @@ typedef bool (*sync_manager_sync_job_cb)(account_h account, const char *sync_job
 /**
  * @brief Requests Sync Manager to perform one time sync operation.
  *
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which will be operated just one time
@@ -175,7 +157,7 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
 /**
  * @brief Requests Sync Manager to perform periodic sync operations.
  *
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @privlevel	public
  * @privilege	%http://tizen.org/privilege/alarm.set
@@ -210,14 +192,9 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
 /**
  * @brief Requests Sync Manager to perform sync operations whenever corresponding DB changed.
  *
- * @since_tizen 2.4
- * @privlevel	public
- * @privilege	%http://tizen.org/privilege/calendar.read
- * @privilege	%http://tizen.org/privilege/contact.read
+ * @since_tizen 3.0
  *
  * @remarks Data change sync job can be added by using its capability. In the case of adding a sync job with same capability, it will replace previous setting with new one. \n\n
- * %http://tizen.org/privilege/calendar.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CALENDAR. This capability is not supported on TV profile. \n\n
- * %http://tizen.org/privilege/contact.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CONTACT. This capability is not supported on TV profile.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_capability		A string representing a sync job which will be operated whenever data change of this capability
@@ -245,7 +222,7 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 /**
  * @brief Requests Sync Manager to remove corresponding sync job id.
  *
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @remarks			sync_job_id can not be @c NULL.
  *
@@ -272,7 +249,7 @@ int sync_manager_remove_sync_job(int sync_job_id);
 /**
  * @brief Requests Sync Manager to query corresponding sync request.
  *
- * @since_tizen 2.4
+ * @since_tizen 3.0
  *
  * @param[in] sync_job_cb			A callback function for receiving the result of this API
  * @param[in] user_data				User data which contains additional information related foreach job or @c NULL if do not want to transfer user data

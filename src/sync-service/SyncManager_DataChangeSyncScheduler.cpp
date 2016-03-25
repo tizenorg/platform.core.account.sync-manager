@@ -19,7 +19,6 @@
  * @brief   This is the implementation file for the DataChangeListener class.
  */
 
-
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 #include <calendar.h>
 #include <contacts.h>

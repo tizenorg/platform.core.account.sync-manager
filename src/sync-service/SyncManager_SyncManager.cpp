@@ -38,7 +38,6 @@
 #include "SyncManager_SyncDefines.h"
 #include "SyncManager_PeriodicSyncJob.h"
 #include "SyncManager_DataSyncJob.h"
-#include "sync_manager.h"
 
 
 /*namespace _SyncManager

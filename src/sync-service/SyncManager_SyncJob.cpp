@@ -24,7 +24,6 @@
 #include <sstream>
 #include <account.h>
 #include "sync-log.h"
-#include "sync_manager.h"
 #include "SyncManager_SyncManager.h"
 #include "SyncManager_SyncJob.h"
 

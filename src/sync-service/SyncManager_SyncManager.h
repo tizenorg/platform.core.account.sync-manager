@@ -30,6 +30,7 @@
 #include <account.h>
 #include <package-manager.h>
 #include <media_content_type.h>
+#include "sync_manager.h"
 #include "SyncManager_SyncJobQueue.h"
 #include "SyncManager_RepositoryEngine.h"
 #include "SyncManager_NetworkChangeListener.h"
