@@ -73,8 +73,10 @@ _CONTAINER_ENABLE=OFF
 
 %if "%{?profile}" == "mobile"
 _CALENDAR_CONTACTS_ENABLE=ON
+_FEATURE_MOBILE_PROFILE=ON
 %else
 _CALENDAR_CONTACTS_ENABLE=OFF
+_FEATURE_MOBILE_PROFILE=OFF
 %endif
 
 cmake \
@@ -85,7 +87,9 @@ cmake \
 	-DINCLUDEDIR=%{_includedir} \
 	-D_SEC_FEATURE_CONTAINER_ENABLE:BOOL=${_CONTAINER_ENABLE} \
 	-D_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE:BOOL=${_CALENDAR_CONTACTS_ENABLE} \
+	-D_SEC_FEATURE_MOBILE_PROFILE:BOOL=${_FEATURE_MOBILE_PROFILE} \
 	-DVERSION=%{version}
+
 
 make %{?jobs:-j%jobs}
 
@@ -126,14 +130,12 @@ rm -rf %{buildroot}
 #%{TZ_SYS_DATA}/sync-manager/
 %{_unitdir_user}/sync-manager.service
 %{_unitdir_user}/default.target.wants/sync-manager.service
-/usr/share/dbus-1/services/org.tizen.sync.service
 %attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
 
 %files -n libcore-sync-client
 %manifest libcore-sync-client.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libcore-sync-client.so*
-%attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
 
 %files -n libcore-sync-client-devel
 %manifest libcore-sync-client.manifest
@@ -141,5 +143,4 @@ rm -rf %{buildroot}
 %{_includedir}/*sync*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/libcore-sync-client.so*
-%attr(0644,root,root) /usr/share/dbus-1/services/org.tizen.sync.service
 
