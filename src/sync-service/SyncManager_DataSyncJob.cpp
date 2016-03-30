@@ -38,28 +38,34 @@ DataSyncJob::DataSyncJob(const string appId, const string syncJobName, int accou
 }
 
 
+//LCOV_EXCL_START
 DataSyncJob::DataSyncJob(const DataSyncJob& other)
 	: SyncJob(other)
 {
-/*	this->__accountHandle = other.__accountHandle;
+/*
+	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
 	this->__pExtras = bundle_dup(other.__pExtras);
 	this->__period = other.__period;
-	this->__syncAdapter = other.__syncAdapter;*/
+	this->__syncAdapter = other.__syncAdapter;
+*/
 }
 
 
 DataSyncJob&
 DataSyncJob::operator= (const DataSyncJob& other)
 {
-	/*this->__accountHandle = other.__accountHandle;
+/*
+	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
 	this->__pExtras = bundle_dup(other.__pExtras);
 	this->__period = other.__period;
-	this->__syncAdapter = other.__syncAdapter;*/
+	this->__syncAdapter = other.__syncAdapter;
+*/
 
 	return *this;
 }
+
 
 void
 DataSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, string capability)
@@ -67,6 +73,6 @@ DataSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, string capa
 	SyncJob::Reset(accountId, pUserData, syncOption);
 	__capability = capability;
 }
-
+//LCOV_EXCL_STOP
 
 //}//_SyncManager

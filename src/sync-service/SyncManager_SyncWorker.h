@@ -36,6 +36,7 @@
 
 using namespace std;
 
+
 class SyncWorker
 {
 public:

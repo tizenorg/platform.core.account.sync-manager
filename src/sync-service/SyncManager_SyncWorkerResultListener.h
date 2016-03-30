@@ -26,7 +26,7 @@
 class ISyncWorkerResultListener
 {
 public:
-	virtual ~ISyncWorkerResultListener() {};
+	virtual ~ISyncWorkerResultListener() {};	//LCOV_EXCL_LINE
 
 	virtual void OnEventReceived(Message msg) = 0;
 };

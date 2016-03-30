@@ -30,9 +30,9 @@
 {*/
 
 
+//LCOV_EXCL_START
 CapabilityInfo::CapabilityInfo(void)
 {
-	//Empty
 }
 
 
@@ -58,18 +58,18 @@ CapabilityInfo::AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob)
 	__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (account_id, pJob));
 }
 
+
 void
 CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob)
 {
-	/*
+/*
 	int acc_id;
 	int ret = account_get_account_id(pJob->accountHandle, &acc_id);
 	LOG_LOGE_VOID(ret == ACCOUNT_ERROR_NONE, "app account_get_account_id failed %d", ret);
 
 	__periodicSyncList.erase(__periodicSyncList.find(acc_id));
-	*/
+*/
 }
-
 
 
 bool
@@ -108,6 +108,7 @@ CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
 	this->__capability = capabilityInfo.__capability;
 
 	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
+
 	for(map<int, PeriodicSyncJob*>::const_iterator itr = capabilityInfo.__periodicSyncList.begin(); itr != endItr; ++itr) {
 		PeriodicSyncJob* pJob  = new PeriodicSyncJob(*(itr->second));
 		if (pJob) {
@@ -117,5 +118,6 @@ CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
 
 	return *this;
 }
+//LCOV_EXCL_STOP
 
 //}//_SyncManager

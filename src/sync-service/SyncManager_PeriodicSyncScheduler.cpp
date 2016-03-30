@@ -19,7 +19,6 @@
  * @brief   This is the implementation file for the PeriodicSyncScheduler class.
  */
 
-
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 #include <calendar.h>
 #include <contacts.h>
@@ -32,12 +31,13 @@
 #include "SyncManager_SyncManager.h"
 
 
-PeriodicSyncScheduler::~PeriodicSyncScheduler(void)
+PeriodicSyncScheduler::PeriodicSyncScheduler(void)
 {
 }
 
 
-PeriodicSyncScheduler::PeriodicSyncScheduler(void)
+//LCOV_EXCL_START
+PeriodicSyncScheduler::~PeriodicSyncScheduler(void)
 {
 }
 
@@ -56,15 +56,18 @@ PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
 		SyncManager::GetInstance()->ScheduleSyncJob(pSyncJob, true);
 	}
 
-	/*SyncJob* pJob = new (std::nothrow) SyncJob(pSyncJob->__appId,
+	/*
+	SyncJob* pJob = new (std::nothrow) SyncJob(pSyncJob->__appId,
 												pSyncJob->__accountId,
 												pSyncJob->__syncJobName,
 												pSyncJob->__pExtras,
 												pSyncJob->__isExpedited
-												);*/
+												);
+	*/
 
 	return true;
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -111,7 +114,7 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 		__activeAlarmList.insert(make_pair(jobKey, alarm_id));
 	}
 	else {
-		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);
+		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);	//LCOV_EXCL_LINE
 		return SYNC_ERROR_SYSTEM;
 	}
 

@@ -63,11 +63,13 @@ SyncManager::SetSyncSetting(bool enable)
 }
 
 
+//LCOV_EXCL_START
 bool
 SyncManager::GetSyncSetting()
 {
 	return __isSyncPermitted;
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -77,9 +79,10 @@ SyncManager::AddOnDemandSync(string pPackageId, const char* syncJobName, int acc
 	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
 
 	if (accountId != -1 && !GetSyncSupport(accountId)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
-
 		return SYNC_ERROR_SYSTEM;
+		//LCOV_EXCL_STOP
 	}
 
 	SyncJob* pJob = new (std::nothrow) SyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_ON_DEMAND);
@@ -111,8 +114,10 @@ int
 SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, long period)
 {
 	if (period < 1800) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Requested period %d is less than minimum, rounding up to 30 mins", period);
 		period = 1800;
+		//LCOV_EXCL_STOP
 	}
 
 	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
@@ -120,8 +125,10 @@ SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int 
 	LOG_LOGD("Found sync adapter [%s]", pSyncAdapterApp);
 
 	if (accountId != -1 && !GetSyncSupport(accountId)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
 		return SYNC_ERROR_SYSTEM;
+		//LCOV_EXCL_STOP
 	}
 
 	PeriodicSyncJob* pRequestedJob = new (std::nothrow) PeriodicSyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_PERIODIC, period / 60);
@@ -148,8 +155,10 @@ SyncManager::AddDataSyncJob(string pPackageId, const char* syncJobName, int acco
 	LOG_LOGD("Found sync adapter [%s]", pSyncAdapterApp);
 
 	if (accountId != -1 && !GetSyncSupport(accountId)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Sync is not enabled for account ID %s", accountId);
 		return SYNC_ERROR_SYSTEM;
+		//LCOV_EXCL_STOP
 	}
 
 	DataSyncJob* pRequestedJob = new (std::nothrow) DataSyncJob(pSyncAdapterApp, syncJobName, accountId, pExtras, syncOption, syncJobId, SYNC_TYPE_DATA_CHANGE, pCapability);
@@ -200,6 +209,7 @@ SyncManager::RemoveSyncJob(string packageId, int syncJobId)
 }
 
 
+//LCOV_EXCL_START
 SyncJobQueue*
 SyncManager::GetSyncJobQueue(void) const
 {
@@ -213,6 +223,7 @@ SyncManager::AddToSyncQueue(SyncJob* pJob)
 	//No need to add mutex here, will be called during startup only
 	return __pSyncJobQueue->AddSyncJob(pJob);
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -222,6 +233,7 @@ SyncManager::AddRunningAccount(int account_id, int pid)
 }
 
 
+//LCOV_EXCL_START
 int
 SyncManager::GetAccountPid(int account_id)
 {
@@ -364,6 +376,7 @@ static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkg
 
 	return 0;
 }
+//LCOV_EXCL_STOP
 
 
 string
@@ -381,18 +394,19 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 			pkgId.append(pPkgId);
 		}
 		else {
-			LOG_LOGD("Failed to get Pkg ID from App Id [%s]", pAppId);
+			LOG_LOGD("Failed to get Pkg ID from App Id [%s]", pAppId);	//LCOV_EXCL_LINE
 		}
 		pkgmgrinfo_appinfo_destroy_appinfo(handle);
 	}
 	else {
-		LOG_LOGD("Failed to get pkgmgr AppInfoHandle from App Id [%s]", pAppId);
+		LOG_LOGD("Failed to get pkgmgr AppInfoHandle from App Id [%s]", pAppId);	//LCOV_EXCL_LINE
 	}
 
 	return pkgId;
 }
 
 
+//LCOV_EXCL_START
 string
 SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 {
@@ -421,6 +435,7 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 	return pkgId;
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -431,12 +446,13 @@ SyncManager::RegisterForNetworkChange(void)
 			LOG_LOGD("Network listener : Success");
 		}
 		else {
-			LOG_LOGD("Network listener : Failed");
+			LOG_LOGD("Network listener : Failed");	//LCOV_EXCL_LINE
 		}
 	}
 }
 
 
+//LCOV_EXCL_START
 int
 SyncManager::DeRegisterForNetworkChange(void)
 {
@@ -455,6 +471,7 @@ void OnUPSModeChangedCb(keynode_t* pKey, void* pData)
 
 	SyncManager::GetInstance()->OnUPSModeChanged(enabled);
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -464,11 +481,12 @@ SyncManager::RegisterForUPSModeChange(void)
 		LOG_LOGD("UPS mode listener : Success");
 	}
 	else {
-		LOG_LOGD("UPS mode listener : Failed");
+		LOG_LOGD("UPS mode listener : Failed");	//LCOV_EXCL_LINE
 	}
 }
 
 
+//LCOV_EXCL_START
 int
 SyncManager::DeRegisterForUPSModeChange(void)
 {
@@ -476,6 +494,7 @@ SyncManager::DeRegisterForUPSModeChange(void)
 
 	return vconf_ignore_key_changed(VCONFKEY_SETAPPL_PSMODE, OnUPSModeChangedCb);
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -486,12 +505,13 @@ SyncManager::RegisterForStorageChange(void)
 			LOG_LOGD("Storage listener : Success");
 		}
 		else {
-			LOG_LOGD("Storage listener : Failed");
+			LOG_LOGD("Storage listener : Failed");	//LCOV_EXCL_LINE
 		}
 	}
 }
 
 
+//LCOV_EXCL_START
 int
 SyncManager::DeRegisterForStorageChange(void)
 {
@@ -500,6 +520,7 @@ SyncManager::DeRegisterForStorageChange(void)
 	}
 	return -1;
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -510,12 +531,13 @@ SyncManager::RegisterForBatteryStatus(void)
 			LOG_LOGD("Battery listener : Success");
 		}
 		else {
-			LOG_LOGD("Battery listener : Failed");
+			LOG_LOGD("Battery listener : Failed");	//LCOV_EXCL_LINE
 		}
 	}
 }
 
 
+//LCOV_EXCL_START
 int
 SyncManager::DeRegisterForBatteryStatus(void)
 {
@@ -524,6 +546,7 @@ SyncManager::DeRegisterForBatteryStatus(void)
 	}
 	return -1;
 }
+//LCOV_EXCL_STOP
 
 
 void SyncManager::RegisterForDataChange(void)
@@ -533,12 +556,13 @@ void SyncManager::RegisterForDataChange(void)
 			LOG_LOGD("Data listener : Success");
 		}
 		else {
-			LOG_LOGD("Data listener : Failed");
+			LOG_LOGD("Data listener : Failed");	//LCOV_EXCL_LINE
 		}
 	}
 }
 
 
+//LCOV_EXCL_START
 int SyncManager::DeRegisterForDataChange(void)
 {
 	if (__pDataChangeSyncScheduler) {
@@ -547,6 +571,7 @@ int SyncManager::DeRegisterForDataChange(void)
 
 	return -1;
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -555,28 +580,34 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 	int eventType = PKGMGR_CLIENT_STATUS_UNINSTALL;
 
 	if (pkgmgr_client_set_status_type(__pPkgmgrClient, eventType) != PKGMGR_R_OK) {
+		//LCOV_EXCL_START
 		LOG_LOGD("pkgmgr_client_set_status_type failed.");
 		pkgmgr_client_free(__pPkgmgrClient);
 		__pPkgmgrClient = NULL;
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	if (pkgmgr_client_listen_status(__pPkgmgrClient, OnPackageUninstalled, &__syncJobQueueMutex) < 0) {
+		//LCOV_EXCL_START
 		LOG_LOGD("pkgmgr_client_listen_status failed.");
 		pkgmgr_client_free(__pPkgmgrClient);
 		__pPkgmgrClient = NULL;
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	return 0;
 }
 
 
+//LCOV_EXCL_START
 RepositoryEngine*
 SyncManager::GetSyncRepositoryEngine(void)
 {
 	return __pSyncRepositoryEngine;
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -595,9 +626,11 @@ SyncManager::CancelActiveSyncJob(SyncJob* pSyncJob)
 	CurrentSyncContext *pCurrSyncContext = __pCurrentSyncJobQueue->GetCurrJobfromKey(pSyncJob->__key);
 	pthread_mutex_unlock(&__currJobQueueMutex);
 	if (pCurrSyncContext != NULL) {
+		//LCOV_EXCL_START
 		g_source_remove(pCurrSyncContext->GetTimerId());
 		CloseCurrentSyncContext(pCurrSyncContext);
 		SendCancelSyncsMessage(pSyncJob);
+		//LCOV_EXCL_STOP
 	}
 }
 
@@ -638,7 +671,7 @@ SyncManager::Construct(void)
 	int upsMode;
 
 	if (-1 == access(SYNC_DATA_DIR, F_OK)) {
-		mkdir(SYNC_DATA_DIR, 755);
+		mkdir(SYNC_DATA_DIR, 755);	//LCOV_EXCL_LINE
 	}
 
 	ret = vconf_get_int(VCONFKEY_SETAPPL_PSMODE, &upsMode);
@@ -723,6 +756,7 @@ SyncManager::Construct(void)
 }
 
 
+//LCOV_EXCL_START
 SyncManager::~SyncManager(void)
 {
 	LOG_LOGD("SyncManager::~SyncManager() Starts");
@@ -795,7 +829,7 @@ SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
 {
  return true;
  //TODO: uncomment while implementing __running accounts logic
- /*
+/*
 	for (unsigned int i = 0; i < accounts.size(); i++)
 	{
 		if (AreAccountsEqual(accounts[i], account))
@@ -804,8 +838,10 @@ SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
 		}
 	}
 
-	return false;*/
+	return false;
+*/
 }
+//LCOV_EXCL_STOP
 
 
 SyncAdapterAggregator*
@@ -838,6 +874,7 @@ SyncManager::HandleShutdown(void)
 }
 
 
+//LCOV_EXCL_START
 void
 SyncManager::RecordSyncAdapter(void)
 {
@@ -854,6 +891,7 @@ SyncManager::RecordSyncJob(void)
 	__pSyncRepositoryEngine->SaveCurrentSyncJob();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
+//LCOV_EXCL_STOP
 
 
 bool
@@ -873,7 +911,7 @@ SyncManager::GetSyncSupport(int accountId)
 	LOG_LOGE_BOOL(ret == ACCOUNT_ERROR_NONE, "account access failed [%d]", ret);
 
 	if (syncSupport == ACCOUNT_SYNC_INVALID || syncSupport == ACCOUNT_SYNC_NOT_SUPPORT) {
-		LOG_LOGD("The account does not support sync");
+		LOG_LOGD("The account does not support sync");	//LCOV_EXCL_LINE
 		return false;
 	}
 
@@ -883,6 +921,7 @@ SyncManager::GetSyncSupport(int accountId)
 }
 
 
+//LCOV_EXCL_START
 void
 SyncManager::SendCancelSyncsMessage(SyncJob* pJob)
 {
@@ -962,6 +1001,8 @@ SyncManager::SendSyncAlarmMessage()
 	msg.type = SYNC_ALARM;
 	FireEvent(__pSyncJobDispatcher, msg);
 }
+//LCOV_EXCL_STOP
+
 
 void
 SyncManager::SendSyncCheckAlarmMessage()
@@ -973,16 +1014,16 @@ SyncManager::SendSyncCheckAlarmMessage()
 	FireEvent(__pSyncJobDispatcher, msg);
 }
 
-/*
- *
- */
+
+//LCOV_EXCL_START
 bool
 SyncManager::GetBundleVal(const char* pVal)
 {
 	if (pVal == NULL) {
 		return false;
 	}
-	else return strcmp(pVal, "true")? true: false;
+	else
+		return strcmp(pVal, "true")? true: false;
 }
 
 
@@ -993,8 +1034,10 @@ bool get_capability_all_cb(const char* capability_type, account_capability_state
 	if (capability_state == ACCOUNT_CAPABILITY_ENABLED) {
 		pSsncableCapabilities->insert(capability_type);
 	}
+
 	return true;
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -1011,15 +1054,18 @@ SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 			SendSyncCheckAlarmMessage();
 		}
 	}
+	//LCOV_EXCL_START
 	else if (err == SYNC_ERROR_ALREADY_IN_PROGRESS) {
 		LOG_LOGD("Duplicate sync job [%s], No need to enqueue", pJob->__key.c_str());
 	}
 	else {
 		LOG_LOGD("Failed to add into sync job list");
 	}
+	//LCOV_EXCL_STOP
 }
 
 
+//LCOV_EXCL_START
 void
 SyncManager::TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob)
 {
@@ -1049,5 +1095,6 @@ SyncManager::IsJobActive(CurrentSyncContext *pCurrSync)
 	pthread_mutex_unlock(&__currJobQueueMutex);
 	return ret;
 }
+//LCOV_EXCL_STOP
 
 //}//_SyncManager

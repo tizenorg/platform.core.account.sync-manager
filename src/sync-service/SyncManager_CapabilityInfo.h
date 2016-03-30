@@ -27,9 +27,11 @@
 #include <account.h>
 #include "SyncManager_PeriodicSyncJob.h"
 
+
 /*namespace _SyncManager
-{
-*/
+{*/
+
+
 using namespace std;
 
 class CapabilityInfo
@@ -55,5 +57,6 @@ public:
 	string __capability;
 	map<int, PeriodicSyncJob*> __periodicSyncList;
 };
+
 //}//_SyncManager
 #endif // SYNC_SERVICE_CAPABILITY_INFO_H
