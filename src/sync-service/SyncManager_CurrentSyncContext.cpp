@@ -26,9 +26,12 @@
 #include "SyncManager_SyncManager.h"
 #include "sync-log.h"
 
+
 /*namespace _SyncManager
 {*/
 
+
+//LCOV_EXCL_START
 CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob)
 {
 	__pCurrentSyncJob = pSyncJob;
@@ -57,11 +60,13 @@ CurrentSyncContext::GetSyncJob() const
 	return __pCurrentSyncJob;
 }
 
+
 long
 CurrentSyncContext::GetStartTime() const
 {
 	return __startTime;
 }
+
 
 long
 CurrentSyncContext::GetTimerId() const
@@ -69,8 +74,10 @@ CurrentSyncContext::GetTimerId() const
 	return __timerId;
 }
 
+
 void
 CurrentSyncContext::SetTimerId(long id)
 {
 	__timerId  = id;
 }
+//LCOV_EXCL_STOP

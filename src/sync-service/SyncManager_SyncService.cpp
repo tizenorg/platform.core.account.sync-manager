@@ -65,11 +65,13 @@ static bool check_jobs = false;
 #define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
 #endif
 
-
 #define SYS_DBUS_INTERFACE				"org.tizen.system.deviced.PowerOff"
 #define SYS_DBUS_MATCH_RULE				"type='signal',interface='org.tizen.system.deviced.PowerOff'"
 #define SYS_DBUS_PATH					"/Org/Tizen/System/DeviceD/PowerOff"
 #define POWEROFF_MSG					"ChangeState"
+
+
+using namespace std;
 
 bool ShutdownInitiated = false;
 static TizenSyncManager* sync_ipc_obj = NULL;
@@ -77,7 +79,6 @@ GHashTable* g_hash_table = NULL;
 string sa_app_id;
 static guint signal_id = -1;
 
-using namespace std;
 
 void convert_to_path(char app_id[])
 {
@@ -96,20 +97,26 @@ SyncService::StartService()
 {
 	__pSyncManagerInstance = SyncManager::GetInstance();
 	if (__pSyncManagerInstance == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Failed to initialize sync manager");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	bool ret = __pSyncManagerInstance->Construct();
 	if (!ret) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Sync Manager Construct failed");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	int cynara_result = cynara_initialize(&pCynara, NULL);
 	if (cynara_result != CYNARA_API_SUCCESS) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Cynara Initialization is failed");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	return 0;
@@ -156,7 +163,7 @@ get_caller_pid(GDBusMethodInvocation* pMethodInvocation)
 	const char *name = NULL;
 	name = g_dbus_method_invocation_get_sender(pMethodInvocation);
 	if (name == NULL) {
-		LOG_LOGD("GDbus error: Failed to get sender name");
+		LOG_LOGD("GDbus error: Failed to get sender name");	//LCOV_EXCL_LINE
 		return -1;
 	}
 
@@ -191,26 +198,34 @@ __get_data_for_checking_privilege(GDBusMethodInvocation *invocation, char **clie
 
 	gdbus_conn = g_dbus_method_invocation_get_connection(invocation);
 	if (gdbus_conn == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: g_dbus_method_invocation_get_connection failed");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	sender = (char*) g_dbus_method_invocation_get_sender(invocation);
 	if (sender == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: g_dbus_method_invocation_get_sender failed");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	ret = cynara_creds_gdbus_get_user(gdbus_conn, sender, USER_METHOD_DEFAULT, user);
 	if (ret != CYNARA_API_SUCCESS) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: cynara_creds_gdbus_get_user failed, ret = %d", ret);
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	ret = cynara_creds_gdbus_get_client(gdbus_conn, sender, CLIENT_METHOD_DEFAULT, client);
 	if (ret != CYNARA_API_SUCCESS) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: cynara_creds_gdbus_get_client failed, ret = %d", ret);
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	guint pid = get_caller_pid(invocation);
@@ -218,8 +233,10 @@ __get_data_for_checking_privilege(GDBusMethodInvocation *invocation, char **clie
 
 	*session = cynara_session_from_pid(pid);
 	if (*session == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: cynara_session_from_pid failed");
 		return -1;
+		//LCOV_EXCL_STOP
 	}
 
 	return SYNC_ERROR_NONE;
@@ -238,11 +255,13 @@ __check_privilege_by_cynara(const char *client, const char *session, const char 
 			LOG_LOGD("sync service: cynara_check success, privilege [%s], result [CYNARA_API_ACCESS_ALLOWED]", privilege);
 			return SYNC_ERROR_NONE;
 		case CYNARA_API_ACCESS_DENIED:
-			LOG_LOGD("sync service: cynara_check failed, privilege [%s], result [CYNARA_API_ACCESS_DENIED]", privilege);
+			LOG_LOGD("sync service: cynara_check failed, privilege [%s], result [CYNARA_API_ACCESS_DENIED]", privilege);	//LCOV_EXCL_LINE
 			return SYNC_ERROR_PERMISSION_DENIED;
 		default:
+			//LCOV_EXCL_START
 			cynara_strerror(ret, err_buf, sizeof(err_buf));
 			LOG_LOGD("sync service: cynara_check error [%s], privilege [%s] is required", err_buf, privilege);
+			//LCOV_EXCL_STOP
 			return SYNC_ERROR_PERMISSION_DENIED;
 	}
 }
@@ -258,21 +277,25 @@ _check_privilege(GDBusMethodInvocation *invocation, const char *privilege)
 
 	ret = __get_data_for_checking_privilege(invocation, &client, &session, &user);
 	if (ret != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: __get_data_for_checking_privilege is failed, ret [%d]", ret);
 		g_free(client);
 		g_free(user);
 		if (session != NULL)
 			g_free(session);
+		//LCOV_EXCL_STOP
 		return SYNC_ERROR_PERMISSION_DENIED;
 	}
 
 	ret = __check_privilege_by_cynara(client, session, user, privilege);
 	if (ret != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync service: __check_privilege_by_cynara is failed, ret [%d]", ret);
 		g_free(client);
 		g_free(user);
 		if (session != NULL)
 			g_free(session);
+		//LCOV_EXCL_STOP
 		return SYNC_ERROR_PERMISSION_DENIED;
 	}
 
@@ -305,6 +328,7 @@ int _check_privilege_contact_read(GDBusMethodInvocation *invocation)
 #endif
 
 
+//LCOV_EXCL_START
 int
 SyncService::TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras)
 {
@@ -418,6 +442,7 @@ SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJ
 	GVariant* pBundle = marshal_bundle(pExtras);
 	tizen_sync_adapter_emit_cancel_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -544,6 +569,7 @@ SyncService::HandleShutdown(void)
 }
 
 
+//LCOV_EXCL_START
 int
 get_service_name_by_pid(guint pid, char** pAppId)
 {
@@ -600,6 +626,7 @@ get_service_name_by_pid(guint pid, char** pAppId)
 
 		return SYNC_ERROR_NONE;
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -629,6 +656,7 @@ get_num_of_sync_jobs(string pkgId)
 /*
 * org.tizen.sync.adapter interface methods
 */
+//LCOV_EXCL_START
 gboolean
 sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation,
 																const gchar* pCommandLine,
@@ -687,6 +715,7 @@ sync_adapter_handle_init_complete(TizenSyncAdapter* pObject, GDBusMethodInvocati
 
 	return true;
 }
+//LCOV_EXCL_STOP
 
 
 /*
@@ -711,8 +740,10 @@ sync_manager_add_on_demand_job(TizenSyncManager* pObject, GDBusMethodInvocation*
 		free(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request %s", pCommandLine);
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 
 	int sync_job_id = 0;
@@ -724,7 +755,7 @@ sync_manager_add_on_demand_job(TizenSyncManager* pObject, GDBusMethodInvocation*
 		bundle_free(pBundle);
 	}
 	else {
-		LOG_LOGD("Failed to get package id");
+		LOG_LOGD("Failed to get package id");	//LCOV_EXCL_LINE
 		ret = SYNC_ERROR_SYSTEM;
 	}
 
@@ -763,20 +794,24 @@ sync_manager_remove_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvoc
 		free(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 	if (!pkgIdStr.empty()) {
 		LOG_LOGD("package id [%s]", pkgIdStr.c_str());
 		ret = SyncManager::GetInstance()->RemoveSyncJob(pkgIdStr, sync_job_id);
 	}
 	else
-		LOG_LOGD("sync service: Get package Id fail %d", ret);
+		LOG_LOGD("sync service: Get package Id fail %d", ret);	//LCOV_EXCL_LINE
 
 	if (ret != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 	}
 	else
 		tizen_sync_manager_complete_remove_job(pObject, pInvocation);
@@ -807,9 +842,11 @@ sync_manager_add_periodic_job(TizenSyncManager* pObject, GDBusMethodInvocation* 
 
 	ret = _check_privilege_alarm_set(pInvocation);
 	if (ret != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		GError *error = g_error_new(_sync_error_quark(), ret, "sync service: alarm.set permission denied");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 		return true;
 	}
 
@@ -824,8 +861,10 @@ sync_manager_add_periodic_job(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		free(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Params acc[%d] name[%s] option[%d] period[%d] package[%s]", accountId, pSyncJobName, sync_option, sync_interval, pkgIdStr.c_str());
@@ -835,7 +874,7 @@ sync_manager_add_periodic_job(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		bundle_free(pBundle);
 	}
 	else
-		LOG_LOGD("sync service: Get package Id fail %d", ret);
+		LOG_LOGD("sync service: Get package Id fail %d", ret);	//LCOV_EXCL_LINE
 
 	if (ret != SYNC_ERROR_NONE) {
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
@@ -881,6 +920,7 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 			ret = _check_privilege_contact_read(pInvocation);
 
 		if (ret != SYNC_ERROR_NONE) {
+			//LCOV_EXCL_START
 			GError* error = NULL;
 			if (!strcmp(capability, "http://tizen.org/sync/capability/calendar"))
 				error = g_error_new(_sync_error_quark(), ret, "sync service: calendar.read permission denied");
@@ -889,6 +929,7 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 			g_dbus_method_invocation_return_gerror(pInvocation, error);
 			g_clear_error(&error);
+			//LCOV_EXCL_STOP
 			return true;
 		}
 	}
@@ -905,8 +946,10 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 		free(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 	if (!pkgIdStr.empty()) {
 		LOG_LOGD("Params account [%d] job_name [%s] sync_option[%d] sync_job_id[%d] package [%s] ", accountId, pCapabilityArg, sync_option, sync_job_id, pkgIdStr.c_str());
@@ -918,7 +961,7 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 		bundle_free(pBundle);
 	}
 	else
-		LOG_LOGD("sync service: Get package Id fail %d", ret);
+		LOG_LOGD("sync service: Get package Id fail %d", ret);	//LCOV_EXCL_LINE
 
 	if (ret != SYNC_ERROR_NONE) {
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
@@ -948,7 +991,7 @@ is_service_app(pid_t pid)
 	char *current_app_id = NULL;
 	int ret = app_manager_get_app_id(pid, &current_app_id);
 	if (ret != APP_MANAGER_ERROR_NONE) {
-		LOG_LOGD("Getting current app id is failed : %d, %s", ret, get_error_message(ret));
+		LOG_LOGD("Getting current app id is failed : %d, %s", ret, get_error_message(ret));	//LCOV_EXCL_LINE
 		return false;
 	}
 
@@ -956,18 +999,22 @@ is_service_app(pid_t pid)
 
 	ret = pkgmgrinfo_appinfo_get_appinfo(current_app_id, &current_app_info);
 	if (ret != PMINFO_R_OK) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Current app info handle creation error : %d, %s", ret, get_error_message(ret));
 		free(current_app_id);
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	char *current_app_type = NULL;
 	ret = pkgmgrinfo_appinfo_get_component_type(current_app_info, &current_app_type);
 	if (ret != PMINFO_R_OK) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Current app info getting app type error : %d, %s", ret, get_error_message(ret));
 
 		pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 		free(current_app_id);
 		return false;
+		//LCOV_EXCL_STOP
 	}
 	else {
 		if (!strcmp(current_app_type, "svcapp")) {
@@ -975,10 +1022,12 @@ is_service_app(pid_t pid)
 			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 		}
 		else {
+			//LCOV_EXCL_START
 			LOG_LOGD("Current app is not a service application : %s", current_app_type);
 			pkgmgrinfo_appinfo_destroy_appinfo(current_app_info);
 			free(current_app_id);
 			return false;
+			//LCOV_EXCL_STOP
 		}
 	}
 
@@ -1023,9 +1072,11 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 	guint pid = get_caller_pid(pInvocation);
 
 	if (!is_service_app(pid)) {
+		//LCOV_EXCL_START
 		GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 		return false;
 	}
 
@@ -1037,19 +1088,24 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		ret = get_service_name_by_pid(pid, &pAppId);
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 
 	if (!pkgIdStr.empty()) {
 		SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 		if (pAggregator == NULL) {
+			//LCOV_EXCL_START
 			LOG_LOGD("sync adapter aggregator is NULL");
 			tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
 			return true;
+			//LCOV_EXCL_STOP
 		}
 		if (pAggregator->HasSyncAdapter(pkgIdStr.c_str())) {
+			//LCOV_EXCL_START
 			const char *registered_app_id = pAggregator->GetSyncAdapter(pkgIdStr.c_str());
 			LOG_LOGD("registered appId is [%s]", registered_app_id);
 			LOG_LOGD("caller appId is [%s]", pAppId);
@@ -1061,6 +1117,7 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 			}
 			else {
 				check_jobs = true; // Probably sync service may have started this service. Alert sync manager for scheduling pending jobs.
+			//LCOV_EXCL_STOP
 			}
 		}
 
@@ -1082,27 +1139,29 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 				ret = SYNC_ERROR_NONE;
 			}
 			else {
-				LOG_LOGD("export failed %s", error->message);
+				LOG_LOGD("export failed %s", error->message);	//LCOV_EXCL_LINE
 			}
 		}
 		else {
-			LOG_LOGD("sync adapter object creation failed");
+			LOG_LOGD("sync adapter object creation failed");	//LCOV_EXCL_LINE
 		}
 	}
 	else {
-		LOG_LOGD("Failed to get package ID");
+		LOG_LOGD("Failed to get package ID");	//LCOV_EXCL_LINE
 	}
 
 	if (ret != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 	}
 	else
 		tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
 
 	if (check_jobs) {
-		SyncManager::GetInstance()->AlertForChange();
+		SyncManager::GetInstance()->AlertForChange();	//LCOV_EXCL_LINE
 	}
 
 	LOG_LOGD("sync service: adding sync adapter ends");
@@ -1119,9 +1178,11 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 	guint pid = get_caller_pid(pInvocation);
 	if (!is_service_app(pid)) {
+		//LCOV_EXCL_START
 		GError* error = g_error_new(_sync_error_quark(), SYNC_ERROR_INVALID_OPERATION, "App not supported");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 		return false;
 	}
 
@@ -1133,8 +1194,10 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgIdStr = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 
 	SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
@@ -1144,10 +1207,11 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 		LOG_LOGD("Sync adapter removed for package [%s]", pkgIdStr.c_str());
 	}
 	else
-		LOG_LOGD("sync service: Get package Id fail %d", ret);
+		LOG_LOGD("sync service: Get package Id fail %d", ret);	//LCOV_EXCL_LINE
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, pAppId);
 	if (pSyncAdapter == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Failed to lookup syncadapter gdbus object for [%s]", pAppId);
 		char object_path[50];
 		snprintf(object_path, 50, "%s%d", SYNC_ADAPTER_DBUS_PATH, pid);
@@ -1166,11 +1230,12 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 				ret = SYNC_ERROR_NONE;
 			}
 			else {
-				LOG_LOGD("export failed %s", error->message);
+				LOG_LOGD("export failed %s", error->message);	//LCOV_EXCL_LINE
 			}
 		}
 
 		free(pAppId);
+		//LCOV_EXCL_STOP
 	}
 	else {
 		GDBusInterfaceSkeleton* interface = NULL;
@@ -1228,8 +1293,10 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 		free(pAppId);
 	}
 	else {
+		//LCOV_EXCL_START
 		LOG_LOGD("Request seems to be from app-id less/command line based request");
 		pkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pCommandLine);
+		//LCOV_EXCL_STOP
 	}
 
 	GVariant* outSyncJobList = NULL;
@@ -1256,17 +1323,19 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 			}
 		}
 		else {
-			LOG_LOGD("sync service: registered sync jobs are not found");
+			LOG_LOGD("sync service: registered sync jobs are not found");	//LCOV_EXCL_LINE
 		}
 	}
 	else {
-		LOG_LOGD("Sync jobs information not found for package [%s], pkgId.str()");
+		LOG_LOGD("Sync jobs information not found for package [%s], pkgId.str()");	//LCOV_EXCL_LINE
 	}
 
 	if (outSyncJobList == NULL) {
+		//LCOV_EXCL_START
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
+		//LCOV_EXCL_STOP
 	}
 	else
 		tizen_sync_manager_complete_get_all_sync_jobs(pObject, pInvocation, outSyncJobList);
@@ -1274,7 +1343,7 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
 	if (pManageIdleState->GetTermTimerId() != -1)
-		pManageIdleState->ResetTermTimer();
+		pManageIdleState->ResetTermTimer();	//LCOV_EXCL_LINE
 
 	LOG_LOGD("sync service: get all sync jobs ends");
 
@@ -1282,6 +1351,7 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 }
 
 
+//LCOV_EXCL_START
 gboolean
 sync_manager_set_sync_status(TizenSyncManager* pObject, GDBusMethodInvocation* pInvocation, gboolean sync_enable)
 {
@@ -1314,6 +1384,7 @@ DbusSignalHandler(GDBusConnection* pConnection,
 		}
 	}
 }
+//LCOV_EXCL_STOP
 
 
 /*
@@ -1325,13 +1396,17 @@ OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDat
 	GDBusInterfaceSkeleton* interface = NULL;
 	sync_ipc_obj = tizen_sync_manager_skeleton_new();
 	if (sync_ipc_obj == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("sync_ipc_obj NULL!!");
 		return;
+		//LCOV_EXCL_STOP
 	}
 	interface = G_DBUS_INTERFACE_SKELETON(sync_ipc_obj);
 	if (!g_dbus_interface_skeleton_export(interface, pConnection, SYNC_MANAGER_DBUS_PATH, NULL)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("export failed!!");
 		return;
+		//LCOV_EXCL_STOP
 	}
 	g_signal_connect(sync_ipc_obj, "handle-add-sync-adapter", G_CALLBACK(sync_manager_add_sync_adapter), NULL);
 	g_signal_connect(sync_ipc_obj, "handle-remove-sync-adapter", G_CALLBACK(sync_manager_remove_sync_adapter), NULL);
@@ -1346,8 +1421,10 @@ OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDat
 
 	signal_id = g_dbus_connection_signal_subscribe(pConnection, NULL, SYS_DBUS_INTERFACE, POWEROFF_MSG, SYS_DBUS_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE, DbusSignalHandler, NULL, NULL);
 	if (signal_id == (unsigned int)-1) {
+		//LCOV_EXCL_START
 		LOG_LOGD("unable to register for PowerOff Signal");
 		return;
+		//LCOV_EXCL_STOP
 	}
 	LOG_LOGD("Sync Service started [%s]", pName);
 
@@ -1355,7 +1432,7 @@ OnBusAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDat
 	__pSyncRepositoryEngine = RepositoryEngine::GetInstance();
 
 	if (__pSyncRepositoryEngine == NULL)
-		LOG_LOGD("Failed to construct RepositoryEngine");
+		LOG_LOGD("Failed to construct RepositoryEngine");	//LCOV_EXCL_LINE
 	else
 		__pSyncRepositoryEngine->OnBooting();
 }
@@ -1367,12 +1444,14 @@ OnNameAcquired(GDBusConnection* pConnection, const gchar* pName, gpointer userDa
 }
 
 
+//LCOV_EXCL_START
 static void
 OnNameLost(GDBusConnection* pConnection, const gchar* pName, gpointer userData)
 {
 	LOG_LOGD("OnNameLost");
 	//exit (1);
 }
+//LCOV_EXCL_STOP
 
 
 static bool
@@ -1388,8 +1467,10 @@ __initialize_dbus()
 			NULL);
 
 	if (ownerId == 0) {
+		//LCOV_EXCL_START
 		LOG_LOGD("gdbus own failed!!");
 		return false;
+		//LCOV_EXCL_STOP
 	}
 
 	return true;
@@ -1402,8 +1483,10 @@ SyncService::InitializeDbus(void)
 	LOG_LOGD("Dbus initialization starts");
 
 	if (__initialize_dbus() == false) {
+		//LCOV_EXCL_START
 		LOG_LOGD("__initialize_dbus failed");
 		exit(1);
+		//LCOV_EXCL_STOP
 	}
 
 	g_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
@@ -1422,8 +1505,10 @@ SyncService::SyncService(void)
 }
 
 
+//LCOV_EXCL_START
 SyncService::~SyncService(void)
 {
 }
+//LCOV_EXCL_STOP
 
 //}//_SyncManager

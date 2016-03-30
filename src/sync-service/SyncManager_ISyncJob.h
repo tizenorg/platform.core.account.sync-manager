@@ -19,7 +19,6 @@
  * @brief	This is the header file for the SyncJob class.
  */
 
-
 #ifndef SYNC_SERVICE_ISYNC_JOB_H
 #define SYNC_SERVICE_ISYNC_JOB_H
 
@@ -28,11 +27,13 @@
 {
 */
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 using namespace std;
+
 
 enum SyncType
 {
@@ -42,12 +43,12 @@ enum SyncType
 	SYNC_TYPE_UNKNOWN
 };
 
+
 class ISyncJob
 {
 public:
 	ISyncJob()
-		: __syncJobId(-1)
-		, __syncType(SYNC_TYPE_UNKNOWN) {}
+		: __syncJobId(-1), __syncType(SYNC_TYPE_UNKNOWN) {}
 
 	ISyncJob(int syncJobId, SyncType type)
 			: __syncJobId(syncJobId)
@@ -66,8 +67,10 @@ protected:
 	SyncType __syncType;
 };
 
+
 #ifdef __cplusplus
 }
 #endif
+
 //}//_SyncManager
 #endif//SYNC_SERVICE_ISYNC_JOB_H

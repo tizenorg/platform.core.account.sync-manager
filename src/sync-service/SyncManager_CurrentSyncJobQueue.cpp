@@ -28,7 +28,9 @@
 #include "SyncManager_SyncManager.h"
 #include "SyncManager_CurrentSyncJobQueue.h"
 
+
 using namespace std;
+
 /*namespace _SyncManager
 {*/
 
@@ -39,6 +41,7 @@ CurrentSyncJobQueue::CurrentSyncJobQueue(void)
 }
 
 
+//LCOV_EXCL_START
 CurrentSyncJobQueue::~CurrentSyncJobQueue(void)
 {
 	//Empty
@@ -120,6 +123,7 @@ CurrentSyncJobQueue::GetOperations(void)
 		CurrentSyncContext *pContext = new CurrentSyncContext(*(it->second));
 		opsList.push_back(pContext);
 	}
+
 	return opsList;
 }
 
@@ -220,6 +224,7 @@ CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 
 	return (CurrentSyncContext*)it->second;
 }
+//LCOV_EXCL_STOP
 
 
 CurrentSyncContext*
@@ -231,7 +236,7 @@ CurrentSyncJobQueue::GetCurrJobfromKey(string key)
 		return NULL;
 	}
 
-	return (CurrentSyncContext*)it->second;
+	return (CurrentSyncContext*)it->second;	//LCOV_EXCL_LINE
 }
 
 //}//_SyncManager

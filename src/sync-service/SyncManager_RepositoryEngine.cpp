@@ -125,8 +125,10 @@ RepositoryEngine::GetInstance(void)
 	if (!__pInstance) {
 		__pInstance = new (std::nothrow) RepositoryEngine();
 		if (__pInstance == NULL) {
+			//LCOV_EXCL_START
 			LOG_LOGD("Failed to construct RepositoryEngine");
 			return NULL;
+			//LCOV_EXCL_STOP
 		}
 	}
 
@@ -134,16 +136,18 @@ RepositoryEngine::GetInstance(void)
 }
 
 
+//LCOV_EXCL_START
 RepositoryEngine::~RepositoryEngine(void)
 {
 	pthread_mutex_destroy(&__capabilityInfoMutex);
 }
+//LCOV_EXCL_STOP
 
 
 RepositoryEngine::RepositoryEngine(void)
 {
 	if (pthread_mutex_init(&__capabilityInfoMutex, NULL) != 0) {
-		LOG_LOGD("\n __syncJobQueueMutex init failed\n");
+		LOG_LOGD("\n __syncJobQueueMutex init failed\n");	//LCOV_EXCL_LINE
 		return;
 	}
 }
@@ -181,23 +185,29 @@ RepositoryEngine::ReadSyncJobsData(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Failed to parse syncjobs.xml");
 		SaveCurrentSyncJob();
 		doc = xmlParseFile(pDocName);
+		//LCOV_EXCL_STOP
 	}
 
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
+		//LCOV_EXCL_STOP
 	}
 
 	//Parse sync jobs
 	if (xmlStrcmp(cur->name, XML_NODE_JOBS)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Found empty document while parsing syncjobs.xml");
 		xmlFreeDoc(doc);
 		return;
+		//LCOV_EXCL_STOP
 	}
 	else {
 		xmlChar* pTotalJobsCount = xmlGetProp(cur, XML_ATTR_JOBS_COUNT);
@@ -211,6 +221,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 
 		cur = cur->xmlChildrenNode;
 		while (cur != NULL) {
+			//LCOV_EXCL_START
 			if (!xmlStrcmp(cur->name, XML_NODE_PACKAGE)) {
 				xmlChar* pPackageId;
 				xmlChar* pJobsCount;
@@ -229,8 +240,8 @@ RepositoryEngine::ReadSyncJobsData(void)
 					curJob = curJob->next;
 				}
 			}
-
 			cur = cur->next;
+			//LCOV_EXCL_STOP
 		}
 	}
 
@@ -275,23 +286,29 @@ RepositoryEngine::ReadSyncAdapters(void)
 	doc = xmlParseFile(pDocName);
 
 	if (doc == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Failed to parse syncadapters.xml");
 		SaveCurrentSyncAdapter();
 		doc = xmlParseFile(pDocName);
+		//LCOV_EXCL_STOP
 	}
 
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Found empty document while parsing syncadapters.xml");
 		xmlFreeDoc(doc);
 		return;
+		//LCOV_EXCL_STOP
 	}
 
 	//Parse sync jobs
 	if (xmlStrcmp(cur->name, XML_NODE_SYNCADAPTERS)) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Found empty document while parsing syncadapters.xml");
 		xmlFreeDoc(doc);
 		return;
+		//LCOV_EXCL_STOP
 	}
 	else {
 		xmlChar* pSACount;
@@ -322,6 +339,7 @@ RepositoryEngine::ReadSyncAdapters(void)
 }
 
 
+//LCOV_EXCL_START
 static void
 bndl_iterator(const char* pKey, const char* pVal, void* pData)
 {
@@ -331,6 +349,7 @@ bndl_iterator(const char* pKey, const char* pVal, void* pData)
 	xmlNewProp(extraNode, XML_ATTR_SYNC_EXTRA_KEY, (const xmlChar*)pKey);
 	xmlNewProp(extraNode, XML_ATTR_SYNC_EXTRA_VALUE, (const xmlChar*)pVal);
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -357,6 +376,7 @@ RepositoryEngine::WriteSyncJobsData(void)
 
 	map<string, SyncJobsInfo*>::iterator itr = syncJobs.begin();
 	while (itr != syncJobs.end()) {
+		//LCOV_EXCL_START
 		string package = itr->first;
 		SyncJobsInfo* pJobsInfo = itr->second;
 
@@ -418,13 +438,13 @@ RepositoryEngine::WriteSyncJobsData(void)
 				ss.str(string());
 			}
 		}
-
 		itr++;
+		//LCOV_EXCL_STOP
 	}
 
 	int ret = xmlSaveFormatFileEnc(PATH_SYNCJOBS, doc, "UTF-8" , 1);
 	if (ret < 0) {
-		LOG_LOGD("Failed to write account data, error [%d], errno [%d]", ret, errno);
+		LOG_LOGD("Failed to write account data, error [%d], errno [%d]", ret, errno);	//LCOV_EXCL_LINE
 	}
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
@@ -449,9 +469,11 @@ RepositoryEngine::WriteSyncAdapters(void)
 
 	SyncAdapterAggregator* pAggregator = SyncManager::GetInstance()->GetSyncAdapterAggregator();
 	if (!pAggregator) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Failed to get sync adapter aggregator, skip writing to file");
 		xmlFreeDoc(doc);
 		return;
+		//LCOV_EXCL_STOP
 	}
 
 	ss << pAggregator->__syncAdapterList.size();
@@ -469,7 +491,7 @@ RepositoryEngine::WriteSyncAdapters(void)
 
 	int ret = xmlSaveFormatFileEnc(PATH_SYNCADAPTERS, doc, "UTF-8" , 1);
 	if (ret < 0) {
-		LOG_LOGD("Failed to write sync adapter data, error [%d]", ret);
+		LOG_LOGD("Failed to write sync adapter data, error [%d]", ret);	//LCOV_EXCL_LINE
 	}
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
@@ -478,6 +500,7 @@ RepositoryEngine::WriteSyncAdapters(void)
 }
 
 
+//LCOV_EXCL_START
 void
 RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra)
 {
@@ -542,6 +565,7 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 		}
 	}
 }
+//LCOV_EXCL_STOP
 
 
 void
@@ -555,6 +579,7 @@ RepositoryEngine::SaveCurrentState(void)
 }
 
 
+//LCOV_EXCL_START
 void
 RepositoryEngine::SaveCurrentSyncAdapter(void)
 {
@@ -573,5 +598,6 @@ RepositoryEngine::SaveCurrentSyncJob(void)
 	WriteSyncJobsData();
 	pthread_mutex_unlock(&__capabilityInfoMutex);
 }
+//LCOV_EXCL_STOP
 
 //}//_SyncManager

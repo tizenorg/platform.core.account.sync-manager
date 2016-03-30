@@ -32,6 +32,7 @@
 #include "SyncManager_SyncManager.h"
 
 
+//LCOV_EXCL_START
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 void OnCalendarBookChanged(const char* view_uri, void* user_data)
 {
@@ -105,6 +106,7 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 	}
 	}
 }
+//LCOV_EXCL_STOP
 
 
 DataChangeSyncScheduler::DataChangeSyncScheduler(void)
@@ -115,9 +117,11 @@ DataChangeSyncScheduler::DataChangeSyncScheduler(void)
 }
 
 
+//LCOV_EXCL_START
 DataChangeSyncScheduler::~DataChangeSyncScheduler(void)
 {
 }
+//LCOV_EXCL_STOP
 
 
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
@@ -130,31 +134,36 @@ DataChangeSyncScheduler::SubscribeCalendarCallback(void)
 	err = calendar_connect_with_flags(CALENDAR_CONNECT_FLAG_RETRY);
 
 	if (err != CALENDAR_ERROR_NONE)
-		LOG_LOGD("Calendar connection failed : %d, %s", err, get_error_message(err));
+		LOG_LOGD("Calendar connection failed : %d, %s", err, get_error_message(err));	//LCOV_EXCL_LINE
 
 	SYNC_LOGE_RET_RES(err == CALENDAR_ERROR_NONE, SYNC_ERROR_INVALID_OPERATION, "Calendar Connection Failed");
 
 	err = calendar_db_add_changed_cb(_calendar_book._uri, OnCalendarBookChanged, this);
 	if (err != CALENDAR_ERROR_NONE) {
+		//LCOV_EXCL_START
 		calendar_disconnect();
 
 		LOG_LOGD("Subscribing Calendar Callback for BOOK Failed");
 
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	err = calendar_db_add_changed_cb(_calendar_event._uri, OnCalendarEventChanged, this);
 	if (err != CALENDAR_ERROR_NONE) {
+		//LCOV_EXCL_START
 		calendar_db_remove_changed_cb(_calendar_book._uri, OnCalendarBookChanged, NULL);
 		calendar_disconnect();
 
 		LOG_LOGD("Subscribing Calendar Callback for EVENT Failed");
 
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	err = calendar_db_add_changed_cb(_calendar_todo._uri, OnCalendarTodoChanged, this);
 	if (err != CALENDAR_ERROR_NONE) {
+		//LCOV_EXCL_START
 		calendar_db_remove_changed_cb(_calendar_book._uri, OnCalendarBookChanged, NULL);
 		calendar_db_remove_changed_cb(_calendar_event._uri, OnCalendarEventChanged, NULL);
 		calendar_disconnect();
@@ -162,6 +171,7 @@ DataChangeSyncScheduler::SubscribeCalendarCallback(void)
 		LOG_LOGD("Subscribing Calendar Callback for TODO Failed");
 
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	calendar_subscription_started = true;
@@ -181,11 +191,13 @@ DataChangeSyncScheduler::SubscribeContactsCallback(void)
 
 	err = contacts_db_add_changed_cb(_contacts_contact._uri, OnContactsDataChanged, this);
 	if (err != CONTACTS_ERROR_NONE) {
+		//LCOV_EXCL_START
 		contacts_disconnect();
 
 		LOG_LOGD("Subscribing Contacts Callback for DataChanged Failed");
 
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	contacts_subscription_started = true;
@@ -203,16 +215,18 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void)
 
 	err = media_content_connect();
 	if (err == MEDIA_CONTENT_ERROR_DB_FAILED)
-		LOG_LOGD("media content connection error [%s]", get_error_message(err));
+		LOG_LOGD("media content connection error [%s]", get_error_message(err));	//LCOV_EXCL_LINE
 	SYNC_LOGE_RET_RES(err == MEDIA_CONTENT_ERROR_NONE, SYNC_ERROR_INVALID_OPERATION, "Media Content Connection Failed");
 
 	err = media_content_set_db_updated_cb(OnMediaContentDataChanged, this);
 	if (err != MEDIA_CONTENT_ERROR_NONE) {
+		//LCOV_EXCL_START
 		media_content_disconnect();
 
 		LOG_LOGD("Subscribing Media Content Callback for DataChanged Failed");
 
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	media_content_subscription_started = true;
@@ -221,6 +235,7 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void)
 }
 
 
+//LCOV_EXCL_START
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int
 DataChangeSyncScheduler::UnSubscribeCalendarCallback(void)
@@ -265,6 +280,7 @@ DataChangeSyncScheduler::UnSubscribeMediaContentCallback(void)
 
 	return SYNC_ERROR_NONE;
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -275,21 +291,27 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void)
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 	err = SubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Registration of Calendar DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	err = SubscribeContactsCallback();
 	if (err != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Registration of Contacts DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 #endif
 
 	err = SubscribeMediaContentCallback();
 	if (err != SYNC_ERROR_NONE) {
+		//LCOV_EXCL_START
 		LOG_LOGD("Registration of Media Content DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
+		//LCOV_EXCL_STOP
 	}
 
 	LOG_LOGD("Registration of DataChangeListener Successfully Ends");
@@ -298,6 +320,7 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void)
 }
 
 
+//LCOV_EXCL_START
 int
 DataChangeSyncScheduler::DeRegisterDataChangeListeners(void)
 {
@@ -346,6 +369,7 @@ DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability)
 
 	LOG_LOGD("DataChangeSyncScheduler::HandleDataChangeEvent() Ends");
 }
+//LCOV_EXCL_STOP
 
 
 /* capability can be called as syncJobName in SyncManager */

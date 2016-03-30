@@ -42,4 +42,5 @@ API int sync_service_finalise(void)
 
 	return 0;
 }
+
 //}//_SyncManager

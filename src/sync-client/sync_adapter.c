@@ -59,6 +59,7 @@ extern int read_proc(const char *path, char *buf, int size);
 extern char *proc_get_cmdline_self();
 
 
+//LCOV_EXCL_START
 gboolean
 __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 											gint accountId,
@@ -66,7 +67,6 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 											gboolean is_data_sync,
 											GVariant *pSyncJobUserData)
 {
-	//LCOV_EXCL_START
 	SYNC_LOGE_RET_RES(pObject != NULL && pSyncJobName != NULL, true, "sync adapter object is null");
 	LOG_LOGD("Received start sync request in sync adapter: params account[%d] jobname [%s] Data sync [%s]", accountId, pSyncJobName, is_data_sync ? "YES" : "NO");
 
@@ -108,7 +108,6 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 		return false;
 
 	return true;
-	//LCOV_EXCL_STOP
 }
 
 
@@ -120,7 +119,6 @@ __sync_adapter_on_stop_sync(
 		gboolean is_data_sync,
 		GVariant *pSyncJobUserData)
 {
-	//LCOV_EXCL_START
 	LOG_LOGD("handle stop in adapter");
 
 	SYNC_LOGE_RET_RES(pObject != NULL, true, "sync adapter object is null");
@@ -139,8 +137,8 @@ __sync_adapter_on_stop_sync(
 		g_sync_adapter->cancel_sync_cb(account, pSyncJobName, NULL, sync_job_user_data);
 
 	return true;
-	//LCOV_EXCL_STOP
 }
+//LCOV_EXCL_STOP
 
 
 /* flag == true => register */

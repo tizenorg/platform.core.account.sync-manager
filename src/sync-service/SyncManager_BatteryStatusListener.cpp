@@ -32,6 +32,7 @@
 {*/
 
 
+//LCOV_EXCL_START
 void OnBatteryStatusChanged(keynode_t* pKey, void* pData)
 {
 	LOG_LOGD("OnBatteryStatusChanged Starts");
@@ -42,6 +43,7 @@ void OnBatteryStatusChanged(keynode_t* pKey, void* pData)
 
 	LOG_LOGD("OnBatteryStatusChanged Ends");
 }
+//LCOV_EXCL_STOP
 
 
 BatteryStatusListener::BatteryStatusListener(void)
@@ -49,9 +51,11 @@ BatteryStatusListener::BatteryStatusListener(void)
 }
 
 
+//LCOV_EXCL_START
 BatteryStatusListener::~BatteryStatusListener(void)
 {
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -61,6 +65,7 @@ BatteryStatusListener::RegisterBatteryStatusListener(void)
 }
 
 
+//LCOV_EXCL_START
 int
 BatteryStatusListener::DeRegisterBatteryStatusListener(void)
 {
@@ -68,4 +73,6 @@ BatteryStatusListener::DeRegisterBatteryStatusListener(void)
 
 	return(vconf_ignore_key_changed(VCONFKEY_SYSMAN_BATTERY_STATUS_LOW, OnBatteryStatusChanged));
 }
+//LCOV_EXCL_STOP
+
 //}//_SyncManager

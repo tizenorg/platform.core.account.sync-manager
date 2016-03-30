@@ -110,13 +110,14 @@ SyncJobsInfo::RemoveSyncJob(string syncJobname)
 		__syncIdList.erase(syncJobId);
 	}
 	else {
-		LOG_LOGD("Sync job name doesnt exists in package [%s] for job name [%s]", __packageId.c_str(), syncJobname.c_str());
+		LOG_LOGD("Sync job name doesnt exists in package [%s] for job name [%s]", __packageId.c_str(), syncJobname.c_str());	//LCOV_EXCL_LINE
 	}
 
 	return SYNC_ERROR_NONE;
 }
 
 
+//LCOV_EXCL_START
 void
 SyncJobsInfo::RemoveAllSyncJobs()
 {
@@ -128,6 +129,7 @@ SyncJobsInfo::RemoveAllSyncJobs()
 		itr++;
 	}
 }
+//LCOV_EXCL_STOP
 
 
 int
@@ -151,6 +153,7 @@ SyncJobsInfo::GetNextSyncJobId()
 }
 
 
+//LCOV_EXCL_START
 vector <int>
 SyncJobsInfo::GetSyncJobIdList()
 {
@@ -164,6 +167,7 @@ SyncJobsInfo::GetSyncJobIdList()
 	}
 	return idList;
 }
+//LCOV_EXCL_STOP
 
 
 map<int, ISyncJob*>&

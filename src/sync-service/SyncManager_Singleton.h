@@ -20,9 +20,11 @@
 #include <stdlib.h>
 #include "sync-log.h"
 
+
 /*namespace _SyncManager
 {
 */
+
 
 template<typename TYPE>
 class Singleton
@@ -33,7 +35,7 @@ public:
 			LOG_LOGD("singleton creation called");
 			__pInstance = new (std::nothrow) TYPE;
 			if (__pInstance == NULL) {
-				LOG_LOGD("heap error");
+				LOG_LOGD("heap error");	//LCOV_EXCL_LINE
 			}
 		}
 		return __pInstance;
@@ -44,7 +46,7 @@ public:
 protected:
 	Singleton(void) {}
 
-	virtual ~Singleton(void) {}
+	virtual ~Singleton(void) {}	//LCOV_EXCL_LINE
 
 private:
 	Singleton(const Singleton& obj);
@@ -55,8 +57,10 @@ private:
 	static TYPE* __pInstance;
 };
 
+
 template<typename TYPE>
 TYPE* Singleton<TYPE>::__pInstance = NULL;
+
 
 //}//_SyncManager
 #endif // SYNC_SERVICE_SINGLETON_H

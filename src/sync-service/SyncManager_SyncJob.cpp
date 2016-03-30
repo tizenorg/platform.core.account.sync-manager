@@ -46,6 +46,7 @@ SyncJob::~SyncJob(void)
 }
 
 
+//LCOV_EXCL_START
 SyncJob::SyncJob(const SyncJob& job)
 {
 	__appId = job.__appId;
@@ -79,6 +80,7 @@ void
 SyncJob::CleanBundle(bundle* pData)
 {
 }
+//LCOV_EXCL_STOP
 
 
 SyncJob::SyncJob(const string appId, const string syncJobName, int account, bundle* pExtras, int syncOption, int syncJobId, SyncType syncType)
@@ -101,16 +103,17 @@ SyncJob::SyncJob(const string appId, const string syncJobName, int account, bund
 
 
 bool
-SyncJob::IsNoRetry(void)
-{
-	return __noRetry;
-}
-
-
-bool
 SyncJob::IsExpedited(void)
 {
 	return __isExpedited;
+}
+
+
+//LCOV_EXCL_START
+bool
+SyncJob::IsNoRetry(void)
+{
+	return __noRetry;
 }
 
 
@@ -119,6 +122,7 @@ SyncJob::IncrementWaitCounter()
 {
 	__waitCounter++;
 }
+//LCOV_EXCL_STOP
 
 
 string
@@ -135,6 +139,7 @@ SyncJob::ToKey(void)
 }
 
 
+//LCOV_EXCL_START
 static void
 bndl_iterator(const char* pKey, const char* pVal, void* pData)
 {
@@ -147,13 +152,16 @@ string
 SyncJob::GetExtrasInfo(bundle* pData)
 {
 	string str;
+
 	if (pData == NULL) {
 		LOG_LOGD("Invalid Parameter");
 		return str;
 	}
+
 	str.append("[");
 	bundle_iterate(pData, bndl_iterator, &str);
 	str.append("]");
+
 	return str;
 }
 
@@ -164,11 +172,13 @@ SyncJob::Reset(int accountId, bundle* pUserData, int syncOption)
 	__accountId = accountId;
 	__noRetry = syncOption & SYNC_OPTION_NO_RETRY;
 	__isExpedited = syncOption & SYNC_OPTION_EXPEDITED;
+
 	if (__pExtras) {
 		bundle_free(__pExtras);
 		__pExtras = bundle_dup(pUserData);
 	}
 }
+//LCOV_EXCL_STOP
 
 }
 
