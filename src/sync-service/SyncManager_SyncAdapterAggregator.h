@@ -71,18 +71,22 @@ protected:
 
 	~SyncAdapterAggregator(void);
 
-	friend class Singleton<SyncManager>;
+	friend class Singleton < SyncManager > ;
 
 private:
 	SyncAdapterAggregator(const SyncAdapterAggregator&);
 
-	const SyncAdapterAggregator& operator=(const SyncAdapterAggregator&);
+	const SyncAdapterAggregator &operator = (const SyncAdapterAggregator&);
 
 private:
-	map<string, string> __syncAdapterList;
+	map < string, string > __syncAdapterList;
 
 	friend class SyncManager;
 	friend class RepositoryEngine;
 };
-//}//_SyncManager
-#endif //SYNC_SERVICE_SYNC_ADAPTER_AGGREGATOR_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_ADAPTER_AGGREGATOR_H */

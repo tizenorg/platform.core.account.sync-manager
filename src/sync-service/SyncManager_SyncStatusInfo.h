@@ -40,7 +40,7 @@ public:
 
 	SyncStatusInfo(SyncStatusInfo &other);
 
-	SyncStatusInfo& operator =(SyncStatusInfo& other);
+	SyncStatusInfo &operator = (SyncStatusInfo &other);
 
 	SyncStatusInfo(string statusInfo);
 
@@ -58,10 +58,14 @@ public:
 private:
 	void EnsurePeriodicSyncTimeSize(unsigned int index);
 
-	// Warning: It is up to the external caller to ensure there are
-	// no race conditions when accessing this list
+	/* Warning: It is up to the external caller to ensure there are */
+	/* no race conditions when accessing this list */
 private:
-	vector<long long> __periodicSyncTimes;
+	vector < long long > __periodicSyncTimes;
 };
-//}//_SyncManager
+
+/*
+} _SyncManager
+*/
+
 #endif

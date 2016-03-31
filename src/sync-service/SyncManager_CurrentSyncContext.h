@@ -34,8 +34,8 @@
 class CurrentSyncContext
 {
 public:
-	CurrentSyncContext(SyncJob* pSyncJob);
-	CurrentSyncContext(const CurrentSyncContext& job);
+	CurrentSyncContext(SyncJob *pSyncJob);
+	CurrentSyncContext(const CurrentSyncContext &job);
 	~CurrentSyncContext(void);
 	SyncJob *GetSyncJob() const;
 	long GetStartTime() const;
@@ -52,5 +52,8 @@ private:
 	friend class CurrentSyncJobQueue;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_CURRENT_SYNC_CONTEXT_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_CURRENT_SYNC_CONTEXT_H */

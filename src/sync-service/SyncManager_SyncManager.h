@@ -61,7 +61,7 @@ class SyncJobsAggregator;
 using namespace std;
 
 class SyncManager
-		: public SyncWorker, public Singleton<SyncManager>
+		: public SyncWorker, public Singleton < SyncManager >
 {
 public:
 	void SetSyncSetting(bool enable);
@@ -82,7 +82,7 @@ public:
 
 	int AddToSyncQueue(SyncJob* pJob);
 
-	//Callback on wifi, cellular, bt and wifidirect status change
+	/* Callback on wifi, cellular, bt and wifidirect status change */
 	void OnDNetStatusChanged(bool connected);
 
 	void OnWifiStatusChanged(bool connected);
@@ -140,7 +140,7 @@ protected:
 
 	~SyncManager(void);
 
-	friend class Singleton< SyncManager >;
+	friend class Singleton < SyncManager > ;
 
 private:
 	bool Construct();
@@ -171,7 +171,7 @@ private:
 
 	void CancelActiveSyncJob(SyncJob* pSyncJob);
 
-	bool IsActiveAccount(vector<account_h> accounts, account_h account);
+	bool IsActiveAccount(vector < account_h > accounts, account_h account);
 
 	void TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob);
 
@@ -188,7 +188,7 @@ private:
 private:
 	SyncManager(const SyncManager&);
 
-	const SyncManager& operator=(const SyncManager&);
+	const SyncManager &operator = (const SyncManager&);
 
 private:
 	bool __isStorageLow;
@@ -207,14 +207,14 @@ private:
 	RepositoryEngine* __pSyncRepositoryEngine;
 	SyncJobQueue* __pSyncJobQueue;
 	SyncJobDispatcher* __pSyncJobDispatcher;
-	map<string, string> __syncAdapterList;
+	map < string, string > __syncAdapterList;
 
 	SyncAdapterAggregator* __pSyncAdapterAggregator;
 	SyncJobsAggregator* __pSyncJobsAggregator;
 	CurrentSyncJobQueue* __pCurrentSyncJobQueue;
 	account_subscribe_h __accountSubscriptionHandle;
-	map<int, int> __runningAccounts;
-	//vector<account_h> __runningAccounts;
+	map < int, int > __runningAccounts;
+	/* vector < account_h > __runningAccounts; */
 
 	pthread_mutex_t __syncJobQueueMutex;
 	pthread_mutex_t __currJobQueueMutex;
@@ -226,5 +226,8 @@ private:
 	friend class SyncService;
 };
 
-//}//_SyncManager
-#endif //SYNC_SERVICE_SYNC_MANAGER_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_MANAGER_H */

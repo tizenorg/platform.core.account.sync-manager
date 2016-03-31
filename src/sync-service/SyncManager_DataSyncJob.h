@@ -34,16 +34,17 @@
 */
 using namespace std;
 
-class DataSyncJob : public SyncJob
+class DataSyncJob
+			: public SyncJob
 {
 public:
 	~DataSyncJob(void);
 
-	DataSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, string capability);
+	DataSyncJob(const string appId, const string syncJobName, int accountId, bundle *pUserData, int syncOption, int syncJobId, SyncType type, string capability);
 
 	DataSyncJob(const DataSyncJob&);
 
-	DataSyncJob& operator=(const DataSyncJob&);
+	DataSyncJob &operator = (const DataSyncJob&);
 
 	void Reset(int accountId, bundle* pUserData, int syncOption, string capability);
 
@@ -54,5 +55,9 @@ public:
 public:
 	string __capability;
 };
-//}//_SyncManager
-#endif// SYNC_SERVICE_PERIODIC_SYNC_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_PERIODIC_SYNC_H */

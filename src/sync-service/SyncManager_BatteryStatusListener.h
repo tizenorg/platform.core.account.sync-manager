@@ -39,5 +39,9 @@ public:
 
 	int DeRegisterBatteryStatusListener(void);
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_BATTERY_STATUS_LISTENER_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_BATTERY_STATUS_LISTENER_H */

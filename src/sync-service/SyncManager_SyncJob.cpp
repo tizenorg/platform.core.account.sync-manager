@@ -46,7 +46,7 @@ SyncJob::~SyncJob(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncJob::SyncJob(const SyncJob& job)
 {
 	__appId = job.__appId;
@@ -80,7 +80,7 @@ void
 SyncJob::CleanBundle(bundle* pData)
 {
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 SyncJob::SyncJob(const string appId, const string syncJobName, int account, bundle* pExtras, int syncOption, int syncJobId, SyncType syncType)
@@ -109,7 +109,7 @@ SyncJob::IsExpedited(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 bool
 SyncJob::IsNoRetry(void)
 {
@@ -122,7 +122,7 @@ SyncJob::IncrementWaitCounter()
 {
 	__waitCounter++;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 string
@@ -139,7 +139,7 @@ SyncJob::ToKey(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 static void
 bndl_iterator(const char* pKey, const char* pVal, void* pData)
 {
@@ -178,7 +178,7 @@ SyncJob::Reset(int accountId, bundle* pUserData, int syncOption)
 		__pExtras = bundle_dup(pUserData);
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 }
 

@@ -41,7 +41,7 @@ CurrentSyncJobQueue::CurrentSyncJobQueue(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 CurrentSyncJobQueue::~CurrentSyncJobQueue(void)
 {
 	//Empty
@@ -224,7 +224,7 @@ CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 
 	return (CurrentSyncContext*)it->second;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 CurrentSyncContext*
@@ -236,7 +236,7 @@ CurrentSyncJobQueue::GetCurrJobfromKey(string key)
 		return NULL;
 	}
 
-	return (CurrentSyncContext*)it->second;	//LCOV_EXCL_LINE
+	return (CurrentSyncContext*)it->second;	/* LCOV_EXCL_LINE */
 }
 
 //}//_SyncManager

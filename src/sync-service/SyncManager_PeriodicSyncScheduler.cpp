@@ -36,7 +36,7 @@ PeriodicSyncScheduler::PeriodicSyncScheduler(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 PeriodicSyncScheduler::~PeriodicSyncScheduler(void)
 {
 }
@@ -67,7 +67,7 @@ PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
 
 	return true;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 int
@@ -114,7 +114,7 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 		__activeAlarmList.insert(make_pair(jobKey, alarm_id));
 	}
 	else {
-		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);	//LCOV_EXCL_LINE
+		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);	/* LCOV_EXCL_LINE */
 		return SYNC_ERROR_SYSTEM;
 	}
 

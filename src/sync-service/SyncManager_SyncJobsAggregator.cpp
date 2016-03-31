@@ -42,7 +42,7 @@ SyncJobsAggregator::SyncJobsAggregator(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncJobsAggregator::~SyncJobsAggregator(void)
 {
 }
@@ -68,7 +68,7 @@ SyncJobsAggregator::HasSyncJob(const char* pPackageId, const char* pSyncJobName)
 	ISyncJob* pSyncJob = GetSyncJob(pPackageId, pSyncJobName);
 	return pSyncJob != NULL;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 int
@@ -100,12 +100,12 @@ SyncJobsAggregator::AddSyncJob(const char* pPackageId, const char* pSyncJobName,
 		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
 		pPackageSyncJobsInfo->AddSyncJob(pSyncJobName, pSyncJob);
 	} else {
-		//LCOV_EXCL_START
+		/* LCOV_EXCL_START */
 		LOG_LOGD("Creating new Sync Jobs info handle for package %s", pPackageId);
 		SyncJobsInfo* pPackageSyncJobsInfo = new (std::nothrow) SyncJobsInfo(pPackageId);
 		pPackageSyncJobsInfo->AddSyncJob(pSyncJobName, pSyncJob);
 		__syncJobsContainer.insert(make_pair(pPackageId, pPackageSyncJobsInfo));
-		//LCOV_EXCL_STOP
+		/* LCOV_EXCL_STOP */
 	}
 }
 
@@ -128,7 +128,7 @@ SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, int syncJobId)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 int
 SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, const char* pSyncJobName)
 {
@@ -158,7 +158,7 @@ SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobNam
 
 	return id;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 ISyncJob*
@@ -175,7 +175,7 @@ SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 void
 SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId)
 {
@@ -189,7 +189,7 @@ SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId)
 		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 ISyncJob*
@@ -202,13 +202,13 @@ SyncJobsAggregator::GetSyncJob(const char* pPackageId, int syncJobId)
 		pSyncJob = pPackageSyncJobsInfo->GetSyncJob(syncJobId);
 	}
 	else {
-		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);	//LCOV_EXCL_LINE
+		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);	/* LCOV_EXCL_LINE */
 	}
 	return pSyncJob;
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 vector< int >
 SyncJobsAggregator::GetSyncJobIDList(const char* pPackageId)
 {
@@ -220,7 +220,7 @@ SyncJobsAggregator::GetSyncJobIDList(const char* pPackageId)
 	}
 	return list;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 SyncJobsInfo*

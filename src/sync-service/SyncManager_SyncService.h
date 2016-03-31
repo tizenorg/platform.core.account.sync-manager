@@ -38,7 +38,7 @@
 class SyncManager;
 
 class SyncService
-		: public Singleton<SyncService>
+		: public Singleton < SyncService >
 {
 public:
 	int StartService(void);
@@ -60,17 +60,21 @@ protected:
 
 	~SyncService(void);
 
-	friend class Singleton<SyncService>;
+	friend class Singleton < SyncService > ;
 
 private:
 	SyncService(const SyncService&);
 
-	const SyncService& operator=(const SyncService&);
+	const SyncService &operator = (const SyncService&);
 
 	void InitializeDbus();
 
 private:
 	SyncManager* __pSyncManagerInstance;
 };
-//}//_SyncManager
-#endif //SYNC_SERVICE_SYNC_SERVICE_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_SERVICE_H */

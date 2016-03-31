@@ -36,7 +36,7 @@
 class CurrentSyncContext;
 
 class SyncJobDispatcher
-		:public ISyncWorkerResultListener
+			:public ISyncWorkerResultListener
 {
 public:
 	SyncJobDispatcher(void);
@@ -45,17 +45,21 @@ public:
 
 	int DispatchSyncJob(SyncJob* syncJob);
 
-	//ISyncWorkerResultListener
+	/* ISyncWorkerResultListener */
 	void OnEventReceived(Message msg);
 
 private:
 	SyncJobDispatcher(const SyncJobDispatcher&);
 
-	const SyncJobDispatcher& operator=(const SyncJobDispatcher&);
+	const SyncJobDispatcher &operator = (const SyncJobDispatcher&);
 
 	void HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *pJob);
 
 	void TryStartingNextJobLocked();
 };
-//}//_SyncManager
-#endif //SYNC_SERVICE_SYNC_JOB_DISPATCHER_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_JOB_DISPATCHER_H */

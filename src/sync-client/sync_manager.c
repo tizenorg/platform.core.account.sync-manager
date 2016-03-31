@@ -426,7 +426,7 @@ int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *us
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 int _sync_manager_enable_sync()
 {
 	int ret = initialize_connection();
@@ -459,4 +459,4 @@ int _sync_manager_disable_sync()
 
 	return SYNC_ERROR_NONE;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */

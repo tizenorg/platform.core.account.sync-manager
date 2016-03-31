@@ -38,7 +38,7 @@ PeriodicSyncJob::PeriodicSyncJob(const string appId, const string syncJobName, i
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 PeriodicSyncJob::PeriodicSyncJob(const PeriodicSyncJob& other)
 			: SyncJob(other), __period(other.__period)
 {
@@ -149,6 +149,6 @@ PeriodicSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, long fr
 	SyncJob::Reset(accountId, pUserData, syncOption);
 	__period = frequency;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager
