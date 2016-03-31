@@ -52,11 +52,11 @@ public:
 
 	~SyncJobQueue(void);
 
-	SyncJobQueue(RepositoryEngine* pSyncRepositoryEngine);
+	SyncJobQueue(RepositoryEngine *pSyncRepositoryEngine);
 
-	list< SyncJob* >& GetSyncJobQueue(void);
+	list < SyncJob * > &GetSyncJobQueue(void);
 
-	list< SyncJob* >& GetPrioritySyncJobQueue(void);
+	list < SyncJob * > &GetPrioritySyncJobQueue(void);
 
 	int AddSyncJob(SyncJob* pJob);
 
@@ -66,12 +66,16 @@ public:
 
 private:
 	RepositoryEngine* __pSyncRepositoryEngine;
-	list< SyncJob* > __syncJobsQueue;
-	list< SyncJob* > __prioritySyncJobsQueue;
+	list < SyncJob * > __syncJobsQueue;
+	list < SyncJob * > __prioritySyncJobsQueue;
 };
 
 #ifdef __cplusplus
 }
 #endif
-//}//_SyncManager
-#endif//SYNC_SERVICE_SYNC_JOB_QUEUE_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_JOB_QUEUE_H */

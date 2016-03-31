@@ -35,8 +35,7 @@ extern "C" {
 using namespace std;
 
 
-enum SyncType
-{
+enum SyncType {
 	SYNC_TYPE_ON_DEMAND = 0,
 	SYNC_TYPE_PERIODIC,
 	SYNC_TYPE_DATA_CHANGE,
@@ -58,7 +57,8 @@ public:
 
 	virtual SyncType GetSyncType() = 0;
 
-	virtual int GetSyncJobId() {
+	virtual int GetSyncJobId()
+	{
 		return __syncJobId;
 	}
 
@@ -72,5 +72,8 @@ protected:
 }
 #endif
 
-//}//_SyncManager
-#endif//SYNC_SERVICE_ISYNC_JOB_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_ISYNC_JOB_H */

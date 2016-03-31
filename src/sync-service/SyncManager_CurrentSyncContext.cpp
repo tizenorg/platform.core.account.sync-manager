@@ -31,7 +31,7 @@
 {*/
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob)
 {
 	__pCurrentSyncJob = pSyncJob;
@@ -80,4 +80,4 @@ CurrentSyncContext::SetTimerId(long id)
 {
 	__timerId  = id;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */

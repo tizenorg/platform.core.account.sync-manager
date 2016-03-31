@@ -25,18 +25,17 @@
 {
 */
 
-
-template<typename TYPE>
+template < typename TYPE >
 class Singleton
 {
 public:
-	static TYPE* GetInstance(void) {
+	static TYPE* GetInstance(void)
+	{
 		if (__pInstance == NULL) {
 			LOG_LOGD("singleton creation called");
-			__pInstance = new (std::nothrow) TYPE;
-			if (__pInstance == NULL) {
-				LOG_LOGD("heap error");	//LCOV_EXCL_LINE
-			}
+			__pInstance = new(std::nothrow) TYPE;
+			if (__pInstance == NULL)
+				LOG_LOGD("heap error");	/* LCOV_EXCL_LINE */
 		}
 		return __pInstance;
 	}
@@ -46,21 +45,24 @@ public:
 protected:
 	Singleton(void) {}
 
-	virtual ~Singleton(void) {}	//LCOV_EXCL_LINE
+	virtual ~Singleton(void) {}	/* LCOV_EXCL_LINE */
 
 private:
-	Singleton(const Singleton& obj);
+	Singleton(const Singleton &obj);
 
-	Singleton& operator=(const Singleton& obj);
+	Singleton &operator = (const Singleton &obj);
 
 private:
 	static TYPE* __pInstance;
 };
 
 
-template<typename TYPE>
-TYPE* Singleton<TYPE>::__pInstance = NULL;
+template < typename TYPE >
+TYPE* Singleton < TYPE > ::__pInstance = NULL;
 
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_SINGLETON_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SINGLETON_H */

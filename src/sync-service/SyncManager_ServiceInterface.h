@@ -34,5 +34,9 @@ int sync_service_finalise(void);
 #ifdef __cplusplus
 }
 #endif
-//}//_SyncManager
-#endif // SYNC_SERVICE_SERVICE_INTERFACE_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SERVICE_INTERFACE_H */

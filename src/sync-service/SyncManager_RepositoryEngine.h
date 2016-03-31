@@ -39,7 +39,6 @@
 #include "SyncManager_PeriodicSyncJob.h"
 
 
-
 /*namespace _SyncManager
 {
 */
@@ -75,7 +74,7 @@ private:
 
 	RepositoryEngine(const RepositoryEngine&);
 
-	const RepositoryEngine& operator=(const RepositoryEngine&);
+	const RepositoryEngine &operator = (const RepositoryEngine&);
 
 	void ReadSyncJobsData(void);
 
@@ -96,12 +95,11 @@ private:
 private:
 	pthread_mutex_t __capabilityInfoMutex;
 
-	vector<PeriodicSyncJob*> __pendingJobList;			// Pending periodic job list to be scheduled
-	//map<string, DataSyncJob*> __pendingDataSyncJobList;				// Data sync job list to be scheduled
-
-	map<string, CapabilityInfo*> __capabilities;
-	map<string, map<string, SyncJob*> > __Aggr;				// Data sync job list to be scheduled
-	map<int, SyncStatusInfo*> __syncStatus;
+	vector < PeriodicSyncJob * > __pendingJobList;					/* Pending periodic job list to be scheduled */
+	/* map < string, DataSyncJob * > __pendingDataSyncJobList; */	/* Data sync job list to be scheduled */
+	map < string, CapabilityInfo * > __capabilities;
+	map < string, map < string, SyncJob * > > __Aggr;				/* Data sync job list to be scheduled */
+	map < int, SyncStatusInfo * > __syncStatus;
 
 	static RepositoryEngine* __pInstance;
 
@@ -109,5 +107,9 @@ private:
 	static const double DEFAULT_FLEX_PERCENT;
 	static const long DEFAULT_MIN_FLEX_ALLOWED_SEC;
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_REPOSITORY_ENGINE_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_REPOSITORY_ENGINE_H */

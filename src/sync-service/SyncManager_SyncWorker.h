@@ -47,9 +47,9 @@ public:
 	int FireEvent(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg);
 
 private:
-	SyncWorker(const SyncWorker& obj);
+	SyncWorker(const SyncWorker &obj);
 
-	SyncWorker& operator=(const SyncWorker& obj);
+	SyncWorker &operator = (const SyncWorker &obj);
 
 	void Initialize(void);
 
@@ -57,19 +57,19 @@ private:
 
 	int AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg);
 
-	static gboolean OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpointer data);
+	static gboolean OnEventReceived(GIOChannel *pChannel, GIOCondition condition, gpointer data);
 
 	static gpointer ThreadLoop(gpointer data);
 
 private:
-	struct RequestData
-	{
+	struct RequestData {
 		ISyncWorkerResultListener* pResultListener;
 		Message message;
 	};
 
+std::list < RequestData * > __pendingRequests;
+
 	pthread_mutex_t __pendingRequestsMutex;
-	std::list<RequestData*> __pendingRequests;
 	SyncDispatchMessage __message;
 	GMainContext* __pContext;
 	GMainLoop* __pLoop;
@@ -80,5 +80,8 @@ private:
 	friend class SyncManager;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_SYNC_WORKER_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_WORKER_H */

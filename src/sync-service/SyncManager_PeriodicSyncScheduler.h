@@ -40,9 +40,9 @@ public:
 	int SchedulePeriodicSyncJob(PeriodicSyncJob* dataSyncJob);
 
 private:
-	std::map<int, PeriodicSyncJob*> __activePeriodicSyncJobs;
-	std::map<string, int> __activeAlarmList;
+std::map < int, PeriodicSyncJob * > __activePeriodicSyncJobs;
+std::map < string, int > __activeAlarmList;
+
 };
 
-
-#endif // _SYNC_SERVICE_DATA_CHANGE_SYNC_SCHEDULER_H_
+#endif /* _SYNC_SERVICE_DATA_CHANGE_SYNC_SCHEDULER_H_ */

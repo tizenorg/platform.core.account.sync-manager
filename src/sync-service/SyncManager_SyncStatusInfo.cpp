@@ -29,7 +29,7 @@
 {*/
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncStatusInfo::SyncStatusInfo(int capabilityId)
 {
 	this->capabilityId = capabilityId;
@@ -164,6 +164,6 @@ SyncStatusInfo::GetStatusInfoString(void)
 
 	return buff;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager

@@ -33,7 +33,7 @@
 #define KNOX_CONTAINER_ZONE_ENTER(pid)	struct vsm_context *ctx; \
 									struct vsm_zone* effective_zone; \
 									ctx = vsm_create_context();\
-									effective_zone = (pid == -1)? vsm_get_foreground(ctx) : vsm_lookup_zone_by_pid(ctx, pid);\
+									effective_zone = (pid == -1) ? vsm_get_foreground(ctx) : vsm_lookup_zone_by_pid(ctx, pid);\
 									vsm_zone* prev_zone = vsm_join_zone(effective_zone);
 
 #define KNOX_CONTAINER_ZONE_EXIT()	vsm_zone* zone = vsm_join_zone(prev_zone);
@@ -46,8 +46,7 @@
 
 typedef int account_id;
 
-enum BluetoothStatus
-{
+enum BluetoothStatus {
 	/** Bluetooth OFF */
 	BT_OFF,
 	/** Bluetooth ON */
@@ -59,8 +58,7 @@ enum BluetoothStatus
 };
 
 
-enum WifiStatus
-{
+enum WifiStatus {
 	/** power off */
 	WIFI_OFF,
 	/** power on */
@@ -69,8 +67,8 @@ enum WifiStatus
 	WIFI_CONNECTED
 };
 
-enum DNetStatus
-{
+
+enum DNetStatus {
 	/** not connected */
 	DNET_OFF = 0x00,
 	/** connected */
@@ -83,8 +81,7 @@ enum DNetStatus
 };
 
 
-enum WifiDirect
-{
+enum WifiDirect {
 	/** Power off */
 	WIFI_DIRECT_DEACTIVATED  = 0,
 	/** Power on */
@@ -98,8 +95,7 @@ enum WifiDirect
 };
 
 
-enum MemoryStatus
-{
+enum MemoryStatus {
 	/** Normal */
 	LOW_MEMORY_NORMAL = 0x01,
 	/** 60M and under */
@@ -109,8 +105,7 @@ enum MemoryStatus
 };
 
 
-enum BatteryStatus
-{
+enum BatteryStatus {
 	/** 1% and under */
 	BAT_POWER_OFF = 1,
 	/** 5% and under */
@@ -127,8 +122,7 @@ enum BatteryStatus
 
 
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
-enum DataChangeStatus
-{
+enum DataChangeStatus {
 	/** Calendar Book */
 	CALENDAR_BOOK_CHANGED = 0,
 	/** Calendar Event */
@@ -141,8 +135,7 @@ enum DataChangeStatus
 #endif
 
 
-enum SyncDispatchMessage
-{
+enum SyncDispatchMessage {
 	/** Sync Finished*/
 	SYNC_FINISHED = 0,
 	/** Sync Alaram*/
@@ -154,8 +147,7 @@ enum SyncDispatchMessage
 };
 
 
-enum SyncReason
-{
+enum SyncReason {
 	/** User initiated */
 	REASON_USER_INITIATED = -1,
 	/** Settings Changed */
@@ -173,8 +165,7 @@ enum SyncReason
 };
 
 
-enum SyncSource
-{
+enum SyncSource {
 	/** User initated*/
 	SOURCE_USER = 0,
 	/** Server initiated */
@@ -186,6 +177,7 @@ enum SyncSource
 	/** local-initiated source */
 	SOURCE_LOCAL
 };
+
 
 class BackOffMode
 {
@@ -210,8 +202,8 @@ typedef struct SyncStatus
 }SyncStatus;
 */
 
-enum SyncStatus
-{
+
+enum SyncStatus {
 	SYNC_STATUS_SUCCESS = 0,
 	SYNC_STATUS_CANCELLED =  -1,
 	SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS = -2,
@@ -219,11 +211,12 @@ enum SyncStatus
 	SYNC_STATUS_UNKNOWN = -4
 };
 
+
 #define SYNC_JOB_LIMIT 100
 class SyncJob;
 
-struct Message
-{
+
+struct Message {
 	Message() {
 		acc = NULL;
 		pSyncJob = NULL;
@@ -231,11 +224,16 @@ struct Message
 		type = SYNC_CHECK_ALARM;
 	}
 
+std::string capability;
+
 	SyncDispatchMessage type;
 	account_h acc;
-	std::string capability;
 	SyncStatus res;
 	SyncJob* pSyncJob;
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_SYNC_DEFINES_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_DEFINES_H */

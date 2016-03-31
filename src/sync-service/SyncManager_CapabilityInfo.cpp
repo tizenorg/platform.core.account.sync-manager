@@ -30,7 +30,7 @@
 {*/
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 CapabilityInfo::CapabilityInfo(void)
 {
 }
@@ -118,6 +118,6 @@ CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
 
 	return *this;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager

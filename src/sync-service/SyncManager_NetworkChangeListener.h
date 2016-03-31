@@ -48,5 +48,9 @@ public:
 private:
 	connection_h connection;
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_NETWORK_CHANGE_LISTENER_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_NETWORK_CHANGE_LISTENER_H */

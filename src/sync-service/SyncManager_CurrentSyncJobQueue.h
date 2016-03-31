@@ -50,7 +50,7 @@ public:
 
 	CurrentSyncContext* DoesAccAuthExist(account_h account, string auth);
 
-	list<CurrentSyncContext*> GetOperations(void);
+	list < CurrentSyncContext * > GetOperations(void);
 
 	static string ToKey(account_h account, string auth);
 
@@ -59,9 +59,12 @@ public:
 	static int OnTimerExpired(void* data);
 
 private:
-	map<const string, CurrentSyncContext*> __currentSyncJobQueue;
-	priority_queue<string> __name;
+	map < const string, CurrentSyncContext * > __currentSyncJobQueue;
+	priority_queue < string > __name;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_CURRENT_SYNC_JOB_QUEUE_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_CURRENT_SYNC_JOB_QUEUE_H */
