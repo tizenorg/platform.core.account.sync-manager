@@ -35,7 +35,7 @@ public:
 			LOG_LOGD("singleton creation called");
 			__pInstance = new (std::nothrow) TYPE;
 			if (__pInstance == NULL) {
-				LOG_LOGD("heap error");	//LCOV_EXCL_LINE
+				LOG_LOGD("heap error");	/* LCOV_EXCL_LINE */
 			}
 		}
 		return __pInstance;
@@ -46,7 +46,7 @@ public:
 protected:
 	Singleton(void) {}
 
-	virtual ~Singleton(void) {}	//LCOV_EXCL_LINE
+	virtual ~Singleton(void) {}	/* LCOV_EXCL_LINE */
 
 private:
 	Singleton(const Singleton& obj);
