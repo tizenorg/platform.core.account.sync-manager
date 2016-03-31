@@ -59,7 +59,7 @@ extern int read_proc(const char *path, char *buf, int size);
 extern char *proc_get_cmdline_self();
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 gboolean
 __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 											gint accountId,
@@ -138,7 +138,7 @@ __sync_adapter_on_stop_sync(
 
 	return true;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 /* flag == true => register */

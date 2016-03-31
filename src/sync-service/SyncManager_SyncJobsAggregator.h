@@ -36,6 +36,7 @@
 /*namespace _SyncManager
 {
 */
+
 class RepositoryEngine;
 class SyncJobsInfo;
 
@@ -60,20 +61,20 @@ public:
 
 	ISyncJob* GetSyncJob(const char* pPackageId, int syncJobId);
 
-	vector< int > GetSyncJobIDList(const char* pPackageId);
+	vector < int > GetSyncJobIDList(const char* pPackageId);
 
 	SyncJobsInfo* GetSyncJobsInfo(const char* pPackageId);
 
 	void HandlePackageUninstalled(const char* pPackageId);
 
-	map<string, SyncJobsInfo*>& GetAllSyncJobs();
+	map < string, SyncJobsInfo * > &GetAllSyncJobs();
 
 protected:
 	SyncJobsAggregator(void);
 
 	~SyncJobsAggregator(void);
 
-	friend class Singleton<SyncManager>;
+	friend class Singleton < SyncManager > ;
 
 /*
 class SyncJobsInfo
@@ -95,14 +96,17 @@ public:
 private:
 	SyncJobsAggregator(const SyncJobsAggregator&);
 
-	const SyncJobsAggregator& operator=(const SyncJobsAggregator&);
+	const SyncJobsAggregator &operator = (const SyncJobsAggregator&);
 
 private:
-	map<string, SyncJobsInfo*> __syncJobsContainer;
+	map < string, SyncJobsInfo * > __syncJobsContainer;
 
 	friend class SyncManager;
 	friend class RepositoryEngine;
 };
 
-//}//_SyncManager
-#endif //SYNC_SERVICE_SYNC_JOBS_AGGREGATOR_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_JOBS_AGGREGATOR_H */

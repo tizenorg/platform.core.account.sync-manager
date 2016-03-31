@@ -60,7 +60,7 @@ SyncJobDispatcher::SyncJobDispatcher(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncJobDispatcher::~SyncJobDispatcher(void)
 {
 }
@@ -118,7 +118,7 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 		break;
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 void
@@ -127,12 +127,12 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 	LOG_LOGD("0. Sync Job dispatcher starts");
 
 	if (!SyncManager::GetInstance()->__isSyncPermitted) {
-		LOG_LOGD("Sync not permitted now");	//LCOV_EXCL_LINE
+		LOG_LOGD("Sync not permitted now");	/* LCOV_EXCL_LINE */
 		return;
 	}
 
 	switch (msg.type) {
-		//LCOV_EXCL_START
+		/* LCOV_EXCL_START */
 		case SYNC_CANCEL: {
 				LOG_LOGD("1. Handle Event : SYNC_CANCEL");
 				HandleJobCompletedOrCancelledLocked(SYNC_STATUS_CANCELLED, msg.pSyncJob);
@@ -148,7 +148,7 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 				TryStartingNextJobLocked();
 			}
 			break;
-		//LCOV_EXCL_STOP
+		/* LCOV_EXCL_STOP */
 
 		case SYNC_CHECK_ALARM: {
 				LOG_LOGD("1. Handle Event : SYNC_CHECK_ALARM");
@@ -157,14 +157,14 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 			}
 			break;
 
-		//LCOV_EXCL_START
+		/* LCOV_EXCL_START */
 		case SYNC_ALARM: {
 				LOG_LOGD("1. Handle Event : SYNC_ALARM");
 				LOG_LOGD("2. Start next Sync job from main queue");
 				TryStartingNextJobLocked();
 			}
 			break;
-		//LCOV_EXCL_STOP
+		/* LCOV_EXCL_STOP */
 
 		default:
 			break;
@@ -174,7 +174,7 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 bool
 sortFunc(const SyncJob* pJob1, const SyncJob* pJob2)
 {
@@ -265,6 +265,6 @@ SyncJobDispatcher::TryStartingNextJobLocked()
 		}
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager

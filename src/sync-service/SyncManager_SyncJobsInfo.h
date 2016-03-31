@@ -54,22 +54,26 @@ public:
 
 	int GetSyncJobsCount();
 
-	vector< int > GetSyncJobIdList();
+	vector < int > GetSyncJobIdList();
 
-	map<int, ISyncJob*>& GetAllSyncJobs();
+	map < int, ISyncJob * > &GetAllSyncJobs();
 
 	void RemoveAllSyncJobs();
 
 private:
 	SyncJobsInfo(const SyncJobsInfo&);
 
-	const SyncJobsInfo& operator=(const SyncJobsInfo&);
+	const SyncJobsInfo &operator = (const SyncJobsInfo&);
 
 public:
-	map<string, ISyncJob*> __syncJobsList;
-	map<int, ISyncJob*> __syncIdList;
+	map < string, ISyncJob * > __syncJobsList;
+	map < int, ISyncJob * > __syncIdList;
 	string __packageId;
 	bool __syncJobId[SYNC_JOB_LIMIT + 1];
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_SYNC_JOBS_INFO_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_JOBS_INFO_H */

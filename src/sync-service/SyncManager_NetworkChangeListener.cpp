@@ -28,7 +28,7 @@
 {*/
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 void OnConnectionChanged(connection_type_e type, void *user_data)
 {
 	LOG_LOGD("Network connection changed %d", type);
@@ -56,7 +56,7 @@ void OnConnectionChanged(connection_type_e type, void *user_data)
 			break;
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 NetworkChangeListener::NetworkChangeListener(void)
@@ -64,19 +64,19 @@ NetworkChangeListener::NetworkChangeListener(void)
 {
 	int ret = connection_create(&connection);
 	if (ret != CONNECTION_ERROR_NONE) {
-		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));	//LCOV_EXCL_LINE
+		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
 	}
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 NetworkChangeListener::~NetworkChangeListener(void)
 {
 	if (connection) {
 		connection_destroy(connection);
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 bool
@@ -86,7 +86,7 @@ NetworkChangeListener::IsWifiConnected()
 	connection_wifi_state_e state = CONNECTION_WIFI_STATE_DEACTIVATED;
 	ret = connection_get_wifi_state(connection, &state);
 	if (ret != CONNECTION_ERROR_NONE) {
-		LOG_LOGD("Connection wifi failure %d, %s", ret, get_error_message(ret));	//LCOV_EXCL_LINE
+		LOG_LOGD("Connection wifi failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
 	}
 
 	return (state == CONNECTION_WIFI_STATE_CONNECTED);
@@ -100,9 +100,9 @@ NetworkChangeListener::IsDataConnectionPresent()
 	connection_cellular_state_e state = CONNECTION_CELLULAR_STATE_OUT_OF_SERVICE;
 	ret = connection_get_cellular_state(connection, &state);
 	if (ret == CONNECTION_ERROR_NOT_SUPPORTED) {
-		LOG_LOGD("Telephony does not be supported on this target");	//LCOV_EXCL_LINE
+		LOG_LOGD("Telephony does not be supported on this target");	/* LCOV_EXCL_LINE */
 	} else if (ret != CONNECTION_ERROR_NONE) {
-		LOG_LOGD("Connection cellular failure %d, %s", ret, get_error_message(ret));	//LCOV_EXCL_LINE
+		LOG_LOGD("Connection cellular failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
 	}
 
 	return (state == CONNECTION_CELLULAR_STATE_CONNECTED);
@@ -115,14 +115,14 @@ NetworkChangeListener::RegisterNetworkChangeListener(void)
 	int ret = CONNECTION_ERROR_NONE;
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
 	if (ret != CONNECTION_ERROR_NONE) {
-		LOG_LOGD("Registration of network change listener failed %d, %s", ret, get_error_message(ret));	//LCOV_EXCL_LINE
+		LOG_LOGD("Registration of network change listener failed %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
 	}
 
 	return ret;
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 int
 NetworkChangeListener::DeRegisterNetworkChangeListener(void)
 {
@@ -136,6 +136,6 @@ NetworkChangeListener::DeRegisterNetworkChangeListener(void)
 
 	return ret;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager

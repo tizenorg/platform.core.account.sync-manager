@@ -38,11 +38,11 @@ ManageIdleState::ManageIdleState(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 ManageIdleState::~ManageIdleState(void)
 {
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 void terminate_service(void);

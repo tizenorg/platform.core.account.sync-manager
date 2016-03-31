@@ -49,14 +49,17 @@ public:
 
 	bool RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob);
 
-	CapabilityInfo(const CapabilityInfo& accountInfo);
+	CapabilityInfo(const CapabilityInfo &accountInfo);
 
-	CapabilityInfo& operator =(const CapabilityInfo& capabilityInfo);
+	CapabilityInfo &operator = (const CapabilityInfo &capabilityInfo);
 
-public:
+	map < int, PeriodicSyncJob * > __periodicSyncList;
+
 	string __capability;
-	map<int, PeriodicSyncJob*> __periodicSyncList;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_CAPABILITY_INFO_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_CAPABILITY_INFO_H */

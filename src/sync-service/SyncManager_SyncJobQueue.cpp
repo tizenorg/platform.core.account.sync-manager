@@ -38,13 +38,13 @@
 #endif
 
 extern "C" {
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncJobQueue::SyncJobQueue(void)
 				: __pSyncRepositoryEngine(NULL)
 {
 	//Empty
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 SyncJobQueue::SyncJobQueue(RepositoryEngine* pSyncRepositoryEngine)
@@ -53,7 +53,7 @@ SyncJobQueue::SyncJobQueue(RepositoryEngine* pSyncRepositoryEngine)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncJobQueue::~SyncJobQueue(void)
 {
 	//Empty
@@ -72,7 +72,7 @@ SyncJobQueue::GetPrioritySyncJobQueue(void)
 {
 	return __prioritySyncJobsQueue;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 int
@@ -114,7 +114,7 @@ SyncJobQueue::RemoveSyncJob(SyncJob* pSyncJob)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 void
 SyncJobQueue::UpdateAgeCount()
 {
@@ -123,7 +123,7 @@ SyncJobQueue::UpdateAgeCount()
 		(*itr)->IncrementWaitCounter();
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 }
 //}//_SyncManager

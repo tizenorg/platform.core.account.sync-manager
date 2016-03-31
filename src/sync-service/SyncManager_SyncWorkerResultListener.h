@@ -26,10 +26,13 @@
 class ISyncWorkerResultListener
 {
 public:
-	virtual ~ISyncWorkerResultListener() {};	//LCOV_EXCL_LINE
+	virtual ~ISyncWorkerResultListener() {};	/* LCOV_EXCL_LINE */
 
 	virtual void OnEventReceived(Message msg) = 0;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_SYNC_WORKER_RESULT_LISTENER_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_WORKER_RESULT_LISTENER_H */

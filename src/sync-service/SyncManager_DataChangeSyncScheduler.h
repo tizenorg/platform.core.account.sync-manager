@@ -47,11 +47,11 @@ public:
 
 	void HandleDataChangeEvent(const char* syncCapability);
 
-	//void OnCalendarDataChanged(int value);
+	/* void OnCalendarDataChanged(int value); */
 
-	//void OnContactsDataChanged(int value);
+	/* void OnContactsDataChanged(int value); */
 
-	//void OnMediaContentDataChanged(media_content_type_e media_content_type);
+	/* void OnMediaContentDataChanged(media_content_type_e media_content_type); */
 
 private:
 	int SubscribeCalendarCallback(void);
@@ -66,9 +66,7 @@ private:
 
 	int UnSubscribeMediaContentCallback(void);
 
-private:
-	std::multimap<string, DataSyncJob*> __dataChangeSyncJobs;
+	std::multimap < string, DataSyncJob * > __dataChangeSyncJobs;
 };
 
-
-#endif // _SYNC_SERVICE_DATA_CHANGE_SYNC_SCHEDULER_H_
+#endif /* _SYNC_SERVICE_DATA_CHANGE_SYNC_SCHEDULER_H_ */

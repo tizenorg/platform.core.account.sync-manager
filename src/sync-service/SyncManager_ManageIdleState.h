@@ -53,5 +53,8 @@ private:
 	long __termTimerId;
 };
 
-//}//_SyncManager
-#endif // SYNC_SERVICE_MANAGE_IDLE_STATE_H
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_MANAGE_IDLE_STATE_H */

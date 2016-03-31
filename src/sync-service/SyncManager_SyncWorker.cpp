@@ -34,12 +34,12 @@ SyncWorker::SyncWorker(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 SyncWorker::~SyncWorker(void)
 {
 	Finalize();
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 int
@@ -59,10 +59,10 @@ SyncWorker::Initialize(void)
 
 	ret = pthread_mutex_init(&__pendingRequestsMutex, NULL);
 	if (ret != 0) {
-		//LCOV_EXCL_START
+		/* LCOV_EXCL_START */
 		LOG_ERRORD("__pendingRequestsMutex Initialise Failed %d", ret);
 		return;
-		//LCOV_EXCL_STOP
+		/* LCOV_EXCL_STOP */
 	}
 	else {
 		__pContext = g_main_context_new();
@@ -93,7 +93,7 @@ SyncWorker::Initialize(void)
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 void
 SyncWorker::Finalize(void)
 {
@@ -126,7 +126,7 @@ SyncWorker::Finalize(void)
 		g_thread_exit(NULL);
 	}
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 
 int
@@ -154,7 +154,7 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 		GError* pError = NULL;
 		int status = g_io_channel_write_chars(__pChannel, (const gchar*) &count, sizeof(count), &writtenSize, &pError);
 		if (status != G_IO_STATUS_NORMAL) {
-			LOG_LOGD("SyncWorker::Add Request Failed with IO Write Error %d %d", status, count);	//LCOV_EXCL_LINE
+			LOG_LOGD("SyncWorker::Add Request Failed with IO Write Error %d %d", status, count);	/* LCOV_EXCL_LINE */
 			return SYNC_ERROR_SYSTEM;
 		}
 		g_io_channel_flush(__pChannel, &pError);
@@ -183,7 +183,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 		status = g_io_channel_read_chars (pChannel, (gchar*)&tmp, sizeof(tmp), &readSize, &pError);
 
 		if (readSize == 0 || status != G_IO_STATUS_NORMAL) {
-			LOG_LOGD("Failed with IO Read Error");	//LCOV_EXCL_LINE
+			LOG_LOGD("Failed with IO Read Error");	/* LCOV_EXCL_LINE */
 			return TRUE;
 		}
 
@@ -202,18 +202,18 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 			pData = NULL;
 		}
 		else {
-			pthread_mutex_unlock(&pSyncWorker->__pendingRequestsMutex);	//LCOV_EXCL_LINE
+			pthread_mutex_unlock(&pSyncWorker->__pendingRequestsMutex);	/* LCOV_EXCL_LINE */
 		}
 
 		LOG_LOGD("Event handled successfully");
 		return TRUE;
 	}
 
-	//LCOV_EXCL_START
+	/* LCOV_EXCL_START */
 	LOG_LOGD("UnSuccessfully Ends");
 
 	return FALSE;
-	//LCOV_EXCL_STOP
+	/* LCOV_EXCL_STOP */
 }
 
 
@@ -228,11 +228,11 @@ SyncWorker::ThreadLoop(gpointer data)
 		g_main_loop_run(pLoop);
 	}
 
-	//LCOV_EXCL_START
+	/* LCOV_EXCL_START */
 	LOG_LOGD("Sync worker thread ends");
 
 	return NULL;
-	//LCOV_EXCL_STOP
+	/* LCOV_EXCL_STOP */
 }
 
 //}//_SyncManager

@@ -42,16 +42,17 @@ extern "C" {
 
 using namespace std;
 
-class SyncJob : public ISyncJob
+class SyncJob
+		: public ISyncJob
 {
 public:
 	~SyncJob(void);
 
-	SyncJob(const SyncJob& job);
+	SyncJob(const SyncJob &job);
 
-	SyncJob& operator=(const SyncJob& job);
+	SyncJob &operator = (const SyncJob &job);
 
-	SyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type);
+	SyncJob(const string appId, const string syncJobName, int accountId, bundle *pUserData, int syncOption, int syncJobId, SyncType type);
 
 	void Reset(int accountId, bundle* pUserData, int syncOption);
 
@@ -78,8 +79,8 @@ public:
 	bundle* __pExtras;
 	bool __isExpedited;
 	bool __noRetry;
-	//SyncType __syncType;
-	//PendingJob* pPendingJob;
+	/* SyncType __syncType; */
+	/* PendingJob* pPendingJob; */
 	SyncReason __reason;
 	SyncSource __syncSource;
 	string __key;
@@ -94,8 +95,13 @@ private:
 
 	void RemoveFalseExtra(bundle* pBundle, const char* pExtraName);
 };
+
 #ifdef __cplusplus
 }
 #endif
-//}//_SyncManager
-#endif//SYNC_SERVICE_SYNC_JOB_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_SYNC_JOB_H */

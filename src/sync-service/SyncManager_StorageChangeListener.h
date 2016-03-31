@@ -38,5 +38,9 @@ public:
 
 	int DeRegisterStorageChangeListener(void);
 };
-//}//_SyncManager
-#endif // SYNC_SERVICE_STORAGE_CHANGE_LISTENER_H
+
+/*
+} _SyncManager
+*/
+
+#endif /* SYNC_SERVICE_STORAGE_CHANGE_LISTENER_H */

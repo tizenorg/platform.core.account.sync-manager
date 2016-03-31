@@ -38,7 +38,7 @@ DataSyncJob::DataSyncJob(const string appId, const string syncJobName, int accou
 }
 
 
-//LCOV_EXCL_START
+/* LCOV_EXCL_START */
 DataSyncJob::DataSyncJob(const DataSyncJob& other)
 	: SyncJob(other)
 {
@@ -73,6 +73,6 @@ DataSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, string capa
 	SyncJob::Reset(accountId, pUserData, syncOption);
 	__capability = capability;
 }
-//LCOV_EXCL_STOP
+/* LCOV_EXCL_STOP */
 
 //}//_SyncManager
