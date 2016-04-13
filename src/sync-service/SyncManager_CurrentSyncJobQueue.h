@@ -35,8 +35,7 @@
 
 using namespace std;
 
-class CurrentSyncJobQueue
-{
+class CurrentSyncJobQueue {
 public:
 	CurrentSyncJobQueue(void);
 

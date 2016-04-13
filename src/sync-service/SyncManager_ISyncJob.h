@@ -43,8 +43,7 @@ enum SyncType {
 };
 
 
-class ISyncJob
-{
+class ISyncJob {
 public:
 	ISyncJob()
 		: __syncJobId(-1), __syncType(SYNC_TYPE_UNKNOWN) {}

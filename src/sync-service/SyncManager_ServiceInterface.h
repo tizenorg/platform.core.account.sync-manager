@@ -23,8 +23,7 @@
 */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 int sync_service_initialise(void);

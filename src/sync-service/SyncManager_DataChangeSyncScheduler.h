@@ -25,8 +25,7 @@
 #include "SyncManager_DataSyncJob.h"
 #include <map>
 
-class DataChangeSyncScheduler
-{
+class DataChangeSyncScheduler {
 public:
 	bool calendar_subscription_started;
 	bool contacts_subscription_started;

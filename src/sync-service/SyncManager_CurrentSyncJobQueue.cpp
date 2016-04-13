@@ -35,22 +35,17 @@ using namespace std;
 {*/
 
 
-CurrentSyncJobQueue::CurrentSyncJobQueue(void)
-{
-	//Empty
+CurrentSyncJobQueue::CurrentSyncJobQueue(void) {
 }
 
 
 /* LCOV_EXCL_START */
-CurrentSyncJobQueue::~CurrentSyncJobQueue(void)
-{
-	//Empty
+CurrentSyncJobQueue::~CurrentSyncJobQueue(void) {
 }
 
 
 int
-CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
-{
+CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob) {
 	LOG_LOGD("Active Sync Jobs Queue size : Before = [%d]", __currentSyncJobQueue.size());
 
 	map<const string, CurrentSyncContext*>::iterator it;
@@ -59,8 +54,7 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 	if (it != __currentSyncJobQueue.end()) {
 		LOG_LOGD("Sync already in progress");
 		return SYNC_ERROR_ALREADY_IN_PROGRESS;
-	}
-	else {
+	} else {
 		LOG_LOGD("Create a Sync context");
 
 		CurrentSyncContext* pCurrentSyncContext = new (std::nothrow) CurrentSyncContext(syncJob);
@@ -87,8 +81,7 @@ CurrentSyncJobQueue::AddSyncJobToCurrentSyncQueue(SyncJob* syncJob)
 
 
 int
-CurrentSyncJobQueue::OnTimerExpired(void* data)
-{
+CurrentSyncJobQueue::OnTimerExpired(void* data) {
 	LOG_LOGD("CurrentSyncJobQueue::onTimerExpired Starts");
 
 	CurrentSyncContext* pSyncContext = static_cast<CurrentSyncContext*>(data);
@@ -99,12 +92,10 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 			SyncManager::GetInstance()->CloseCurrentSyncContext(pSyncContext);
 			SyncManager::GetInstance()->SendSyncCompletedOrCancelledMessage(pJob, SYNC_STATUS_CANCELLED);
 			LOG_LOGD("CurrentSyncJobQueue::onTimerExpired sending sync-cancelled message end");
-		}
-		else {
+		} else {
 			LOG_LOGD("Failed to get SyncJob");
 		}
-	}
-	else {
+	} else {
 		LOG_LOGD("context null");
 	}
 
@@ -115,8 +106,7 @@ CurrentSyncJobQueue::OnTimerExpired(void* data)
 
 
 list<CurrentSyncContext*>
-CurrentSyncJobQueue::GetOperations(void)
-{
+CurrentSyncJobQueue::GetOperations(void) {
 	list<CurrentSyncContext*> opsList;
 	map<const string, CurrentSyncContext*>::iterator it;
 	for (it = __currentSyncJobQueue.begin(); it != __currentSyncJobQueue.end(); it++) {
@@ -129,8 +119,7 @@ CurrentSyncJobQueue::GetOperations(void)
 
 
 bool
-CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
-{
+CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync) {
 	LOG_LOGD("CurrentSyncJobQueue::IsJobActive() Starts");
 
 	LOG_LOGD("job q size [%d]", __currentSyncJobQueue.size());
@@ -157,8 +146,7 @@ CurrentSyncJobQueue::IsJobActive(CurrentSyncContext *pCurrSync)
 
 
 int
-CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext)
-{
+CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* pSyncContext) {
 	LOG_LOGD("Remove sync job from Active Sync Jobs queue");
 
 	if (pSyncContext == NULL) {
@@ -180,8 +168,7 @@ CurrentSyncJobQueue::RemoveSyncContextFromCurrentSyncQueue(CurrentSyncContext* p
 
 
 string
-CurrentSyncJobQueue::ToKey(account_h account, string capability)
-{
+CurrentSyncJobQueue::ToKey(account_h account, string capability) {
 	int ret = ACCOUNT_ERROR_NONE;
 	string key;
 	char* pName;
@@ -204,8 +191,7 @@ CurrentSyncJobQueue::ToKey(account_h account, string capability)
 
 
 CurrentSyncContext*
-CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
-{
+CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth) {
 	if (account == NULL) {
 		LOG_LOGD("CurrentSyncJobQueue::DoesAccAuthExist account is null");
 		return NULL;
@@ -228,8 +214,7 @@ CurrentSyncJobQueue::DoesAccAuthExist(account_h account, string auth)
 
 
 CurrentSyncContext*
-CurrentSyncJobQueue::GetCurrJobfromKey(string key)
-{
+CurrentSyncJobQueue::GetCurrJobfromKey(string key) {
 	map<const string, CurrentSyncContext*>::iterator it;
 	it = __currentSyncJobQueue.find(key);
 	if (it == __currentSyncJobQueue.end()) {

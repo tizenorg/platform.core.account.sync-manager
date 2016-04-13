@@ -26,22 +26,19 @@
 {*/
 
 
-PeriodicSyncJob::~PeriodicSyncJob(void)
-{
+PeriodicSyncJob::~PeriodicSyncJob(void) {
 }
 
 
 PeriodicSyncJob::PeriodicSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, long frequency)
-	: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
-	, __period(frequency)
-{
+								: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
+								, __period(frequency) {
 }
 
 
 /* LCOV_EXCL_START */
 PeriodicSyncJob::PeriodicSyncJob(const PeriodicSyncJob& other)
-			: SyncJob(other), __period(other.__period)
-{
+								: SyncJob(other), __period(other.__period) {
 /*
 	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
@@ -53,8 +50,7 @@ PeriodicSyncJob::PeriodicSyncJob(const PeriodicSyncJob& other)
 
 
 PeriodicSyncJob&
-PeriodicSyncJob::operator = (const PeriodicSyncJob& other)
-{
+PeriodicSyncJob::operator = (const PeriodicSyncJob& other) {
 /*
 	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
@@ -68,8 +64,7 @@ PeriodicSyncJob::operator = (const PeriodicSyncJob& other)
 
 
 bool
-PeriodicSyncJob::operator==(const PeriodicSyncJob& other)
-{
+PeriodicSyncJob::operator==(const PeriodicSyncJob& other) {
 /*
 	if ((SyncManager::GetInstance())->AreAccountsEqual(this->__accountHandle, other.__accountHandle)
 			&& (this->__capability).compare(other.__capability) == 0
@@ -85,8 +80,7 @@ PeriodicSyncJob::operator==(const PeriodicSyncJob& other)
 
 
 bool
-PeriodicSyncJob::IsExtraEqual(PeriodicSyncJob* pJob)
-{
+PeriodicSyncJob::IsExtraEqual(PeriodicSyncJob* pJob) {
 /*
 	bundle* pExtra1 = this->__pExtras;
 	bundle* pExtra2 = pJob->__pExtras;
@@ -144,8 +138,7 @@ PeriodicSyncJob::IsExtraEqual(PeriodicSyncJob* pJob)
 
 
 void
-PeriodicSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, long frequency)
-{
+PeriodicSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, long frequency) {
 	SyncJob::Reset(accountId, pUserData, syncOption);
 	__period = frequency;
 }

@@ -37,14 +37,12 @@
 */
 
 
-SyncJobsAggregator::SyncJobsAggregator(void)
-{
+SyncJobsAggregator::SyncJobsAggregator(void) {
 }
 
 
 /* LCOV_EXCL_START */
-SyncJobsAggregator::~SyncJobsAggregator(void)
-{
+SyncJobsAggregator::~SyncJobsAggregator(void) {
 }
 
 
@@ -63,8 +61,7 @@ SyncJobsAggregator::GetOrCreateSyncJob(const char* pPackageId, const char* pSync
 
 
 bool
-SyncJobsAggregator::HasSyncJob(const char* pPackageId, const char* pSyncJobName)
-{
+SyncJobsAggregator::HasSyncJob(const char* pPackageId, const char* pSyncJobName) {
 	ISyncJob* pSyncJob = GetSyncJob(pPackageId, pSyncJobName);
 	return pSyncJob != NULL;
 }
@@ -72,8 +69,7 @@ SyncJobsAggregator::HasSyncJob(const char* pPackageId, const char* pSyncJobName)
 
 
 int
-SyncJobsAggregator::GenerateSyncJobId(const char* pPackageId)
-{
+SyncJobsAggregator::GenerateSyncJobId(const char* pPackageId) {
 	int id = -1;
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
@@ -92,8 +88,7 @@ SyncJobsAggregator::GenerateSyncJobId(const char* pPackageId)
 
 
 void
-SyncJobsAggregator::AddSyncJob(const char* pPackageId, const char* pSyncJobName, ISyncJob* pSyncJob)
-{
+SyncJobsAggregator::AddSyncJob(const char* pPackageId, const char* pSyncJobName, ISyncJob* pSyncJob) {
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		LOG_LOGD("Sync Jobs info found for package %s", pPackageId);
@@ -111,8 +106,7 @@ SyncJobsAggregator::AddSyncJob(const char* pPackageId, const char* pSyncJobName,
 
 
 int
-SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, int syncJobId)
-{
+SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, int syncJobId) {
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
@@ -130,8 +124,7 @@ SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, int syncJobId)
 
 /* LCOV_EXCL_START */
 int
-SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, const char* pSyncJobName)
-{
+SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, const char* pSyncJobName) {
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
@@ -141,8 +134,7 @@ SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, const char* pSyncJobNa
 			__syncJobsContainer.erase(itr);
 		}
 		return ret;
-	}
-	else {
+	} else {
 		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);
 	}
 
@@ -151,8 +143,7 @@ SyncJobsAggregator::RemoveSyncJob(const char* pPackageId, const char* pSyncJobNa
 
 
 int
-SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobName)
-{
+SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobName) {
 	ISyncJob* pSyncJob = GetSyncJob(pPackageId, pSyncJobName);
 	int id = (pSyncJob == NULL) ? -1 : pSyncJob->GetSyncJobId();
 
@@ -162,8 +153,7 @@ SyncJobsAggregator::GetSyncJobId(const char* pPackageId, const char* pSyncJobNam
 
 
 ISyncJob*
-SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
-{
+SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName) {
 	ISyncJob* pSyncJob = NULL;
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
@@ -177,15 +167,13 @@ SyncJobsAggregator::GetSyncJob(const char* pPackageId, const char* pSyncJobName)
 
 /* LCOV_EXCL_START */
 void
-SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId)
-{
+SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId) {
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
 		pPackageSyncJobsInfo->RemoveAllSyncJobs();
 		__syncJobsContainer.erase(pPackageId);
-	}
-	else {
+	} else {
 		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);
 	}
 }
@@ -193,15 +181,13 @@ SyncJobsAggregator::HandlePackageUninstalled(const char* pPackageId)
 
 
 ISyncJob*
-SyncJobsAggregator::GetSyncJob(const char* pPackageId, int syncJobId)
-{
+SyncJobsAggregator::GetSyncJob(const char* pPackageId, int syncJobId) {
 	ISyncJob* pSyncJob = NULL;
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		SyncJobsInfo* pPackageSyncJobsInfo = itr->second;
 		pSyncJob = pPackageSyncJobsInfo->GetSyncJob(syncJobId);
-	}
-	else {
+	} else {
 		LOG_LOGD("Sync jobs for package %s are not found", pPackageId);	/* LCOV_EXCL_LINE */
 	}
 	return pSyncJob;
@@ -210,8 +196,7 @@ SyncJobsAggregator::GetSyncJob(const char* pPackageId, int syncJobId)
 
 /* LCOV_EXCL_START */
 vector< int >
-SyncJobsAggregator::GetSyncJobIDList(const char* pPackageId)
-{
+SyncJobsAggregator::GetSyncJobIDList(const char* pPackageId) {
 	vector<int> list;
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
@@ -224,8 +209,7 @@ SyncJobsAggregator::GetSyncJobIDList(const char* pPackageId)
 
 
 SyncJobsInfo*
-SyncJobsAggregator::GetSyncJobsInfo(const char* pPackageId)
-{
+SyncJobsAggregator::GetSyncJobsInfo(const char* pPackageId) {
 	map<string, SyncJobsInfo*>::iterator itr = __syncJobsContainer.find(pPackageId);
 	if (itr != __syncJobsContainer.end()) {
 		return itr->second;
@@ -236,8 +220,7 @@ SyncJobsAggregator::GetSyncJobsInfo(const char* pPackageId)
 
 
 map<string, SyncJobsInfo*>&
-SyncJobsAggregator::GetAllSyncJobs()
-{
+SyncJobsAggregator::GetAllSyncJobs() {
 	return __syncJobsContainer;
 }
 

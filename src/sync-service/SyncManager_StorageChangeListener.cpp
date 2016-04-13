@@ -33,36 +33,31 @@
 
 
 /* LCOV_EXCL_START */
-void OnMemoryStatusChanged(keynode_t* pKey, void* pData)
-{
+void OnMemoryStatusChanged(keynode_t* pKey, void* pData) {
 	MemoryStatus value =  static_cast<MemoryStatus> (vconf_keynode_get_int(pKey));
 
 	SyncManager::GetInstance()->OnStorageStatusChanged(value);
 }
 
 
-StorageChangeListener::~StorageChangeListener(void)
-{
+StorageChangeListener::~StorageChangeListener(void) {
 }
 /* LCOV_EXCL_STOP */
 
 
-StorageChangeListener::StorageChangeListener(void)
-{
+StorageChangeListener::StorageChangeListener(void) {
 }
 
 
 int
-StorageChangeListener::RegisterStorageChangeListener(void)
-{
+StorageChangeListener::RegisterStorageChangeListener(void) {
 	return( vconf_notify_key_changed(VCONFKEY_SYSMAN_LOW_MEMORY, OnMemoryStatusChanged, NULL) );
 }
 
 
 /* LCOV_EXCL_START */
 int
-StorageChangeListener::DeRegisterStorageChangeListener(void)
-{
+StorageChangeListener::DeRegisterStorageChangeListener(void) {
 	LOG_LOGD("Remove storage listener");
 
 	return(vconf_ignore_key_changed(VCONFKEY_SYSMAN_LOW_MEMORY, OnMemoryStatusChanged));

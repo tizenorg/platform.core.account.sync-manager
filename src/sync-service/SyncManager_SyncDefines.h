@@ -179,8 +179,7 @@ enum SyncSource {
 };
 
 
-class BackOffMode
-{
+class BackOffMode {
 public:
 	static long NOT_IN_BACKOFF_MODE;
 };

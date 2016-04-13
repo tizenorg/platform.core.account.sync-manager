@@ -35,8 +35,7 @@
 using namespace std;
 
 class DataSyncJob
-			: public SyncJob
-{
+			: public SyncJob {
 public:
 	~DataSyncJob(void);
 

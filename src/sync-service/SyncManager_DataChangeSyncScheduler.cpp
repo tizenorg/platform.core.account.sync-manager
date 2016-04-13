@@ -34,8 +34,7 @@
 
 /* LCOV_EXCL_START */
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
-void OnCalendarBookChanged(const char* view_uri, void* user_data)
-{
+void OnCalendarBookChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Calendar Book Changed");
 
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
@@ -43,8 +42,7 @@ void OnCalendarBookChanged(const char* view_uri, void* user_data)
 }
 
 
-void OnCalendarEventChanged(const char* view_uri, void* user_data)
-{
+void OnCalendarEventChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Calendar Event Changed");
 
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
@@ -52,8 +50,7 @@ void OnCalendarEventChanged(const char* view_uri, void* user_data)
 }
 
 
-void OnCalendarTodoChanged(const char* view_uri, void* user_data)
-{
+void OnCalendarTodoChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Calendar TODO Changed");
 
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
@@ -61,8 +58,7 @@ void OnCalendarTodoChanged(const char* view_uri, void* user_data)
 }
 
 
-void OnContactsDataChanged(const char* view_uri, void* user_data)
-{
+void OnContactsDataChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Contacts Data Changed");
 
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
@@ -71,8 +67,7 @@ void OnContactsDataChanged(const char* view_uri, void* user_data)
 #endif
 
 
-void OnMediaContentDataChanged(media_content_error_e error, int pid, media_content_db_update_item_type_e update_item, media_content_db_update_type_e update_type, media_content_type_e media_type, char *uuid, char *path, char *mime_type, void *user_data)
-{
+void OnMediaContentDataChanged(media_content_error_e error, int pid, media_content_db_update_item_type_e update_item, media_content_db_update_type_e update_type, media_content_type_e media_type, char *uuid, char *path, char *mime_type, void *user_data) {
 	LOG_LOGD("On Media Content Data Changed");
 
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
@@ -109,8 +104,7 @@ void OnMediaContentDataChanged(media_content_error_e error, int pid, media_conte
 /* LCOV_EXCL_STOP */
 
 
-DataChangeSyncScheduler::DataChangeSyncScheduler(void)
-{
+DataChangeSyncScheduler::DataChangeSyncScheduler(void) {
 	calendar_subscription_started = false;
 	contacts_subscription_started = false;
 	media_content_subscription_started = false;
@@ -118,16 +112,14 @@ DataChangeSyncScheduler::DataChangeSyncScheduler(void)
 
 
 /* LCOV_EXCL_START */
-DataChangeSyncScheduler::~DataChangeSyncScheduler(void)
-{
+DataChangeSyncScheduler::~DataChangeSyncScheduler(void) {
 }
 /* LCOV_EXCL_STOP */
 
 
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int
-DataChangeSyncScheduler::SubscribeCalendarCallback(void)
-{
+DataChangeSyncScheduler::SubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(!calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already Subscribed");
 	int err = VALUE_UNDEFINED;
 
@@ -181,8 +173,7 @@ DataChangeSyncScheduler::SubscribeCalendarCallback(void)
 
 
 int
-DataChangeSyncScheduler::SubscribeContactsCallback(void)
-{
+DataChangeSyncScheduler::SubscribeContactsCallback(void) {
 	SYNC_LOGE_RET_RES(!contacts_subscription_started, SYNC_ERROR_NONE, "Contacts Callback Already Subscribed");
 	int err = VALUE_UNDEFINED;
 
@@ -208,8 +199,7 @@ DataChangeSyncScheduler::SubscribeContactsCallback(void)
 
 
 int
-DataChangeSyncScheduler::SubscribeMediaContentCallback(void)
-{
+DataChangeSyncScheduler::SubscribeMediaContentCallback(void) {
 	SYNC_LOGE_RET_RES(!media_content_subscription_started, SYNC_ERROR_NONE, "Media Content Callback Already Subscribed");
 	int err = VALUE_UNDEFINED;
 
@@ -238,8 +228,7 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void)
 /* LCOV_EXCL_START */
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
 int
-DataChangeSyncScheduler::UnSubscribeCalendarCallback(void)
-{
+DataChangeSyncScheduler::UnSubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already UnSubscribed");
 
 	calendar_db_remove_changed_cb(_calendar_book._uri, OnCalendarBookChanged, NULL);
@@ -254,8 +243,7 @@ DataChangeSyncScheduler::UnSubscribeCalendarCallback(void)
 
 
 int
-DataChangeSyncScheduler::UnSubscribeContactsCallback(void)
-{
+DataChangeSyncScheduler::UnSubscribeContactsCallback(void) {
 	SYNC_LOGE_RET_RES(contacts_subscription_started, SYNC_ERROR_NONE, "Contacts Callback Already UnSubscribed");
 
 	contacts_db_remove_changed_cb(_contacts_contact._uri, OnContactsDataChanged, NULL);
@@ -269,8 +257,7 @@ DataChangeSyncScheduler::UnSubscribeContactsCallback(void)
 
 
 int
-DataChangeSyncScheduler::UnSubscribeMediaContentCallback(void)
-{
+DataChangeSyncScheduler::UnSubscribeMediaContentCallback(void) {
 	SYNC_LOGE_RET_RES(media_content_subscription_started, SYNC_ERROR_NONE, "Media Content Callback Already UnSubscribed");
 
 	media_content_unset_db_updated_cb();
@@ -284,8 +271,7 @@ DataChangeSyncScheduler::UnSubscribeMediaContentCallback(void)
 
 
 int
-DataChangeSyncScheduler::RegisterDataChangeListeners(void)
-{
+DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 	int err = SYNC_ERROR_NONE;
 
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
@@ -322,8 +308,7 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void)
 
 /* LCOV_EXCL_START */
 int
-DataChangeSyncScheduler::DeRegisterDataChangeListeners(void)
-{
+DataChangeSyncScheduler::DeRegisterDataChangeListeners(void) {
 	int err = VALUE_UNDEFINED;
 
 #if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
@@ -353,8 +338,7 @@ DataChangeSyncScheduler::DeRegisterDataChangeListeners(void)
 
 
 void
-DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability)
-{
+DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability) {
 	LOG_LOGD("DataChangeSyncScheduler::HandleDataChangeEvent() Starts");
 
 	pair<std::multimap<string, DataSyncJob*>::iterator, std::multimap<string, DataSyncJob*>::iterator> ret;
@@ -374,8 +358,7 @@ DataChangeSyncScheduler::HandleDataChangeEvent(const char* pSyncCapability)
 
 /* capability can be called as syncJobName in SyncManager */
 int
-DataChangeSyncScheduler::AddDataSyncJob(string capability, DataSyncJob* dataSyncJob)
-{
+DataChangeSyncScheduler::AddDataSyncJob(string capability, DataSyncJob* dataSyncJob) {
 	__dataChangeSyncJobs.insert(make_pair(capability, dataSyncJob));
 
 	return SYNC_ERROR_NONE;
@@ -383,8 +366,7 @@ DataChangeSyncScheduler::AddDataSyncJob(string capability, DataSyncJob* dataSync
 
 
 void
-DataChangeSyncScheduler::RemoveDataSyncJob(DataSyncJob* dataSyncJob)
-{
+DataChangeSyncScheduler::RemoveDataSyncJob(DataSyncJob* dataSyncJob) {
 	typedef multimap<string, DataSyncJob*>::iterator iterator;
 	std::pair<iterator, iterator> iterpair = __dataChangeSyncJobs.equal_range(dataSyncJob->__capability);
 

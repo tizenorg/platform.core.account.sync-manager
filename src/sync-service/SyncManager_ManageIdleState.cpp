@@ -32,15 +32,13 @@
 {*/
 
 
-ManageIdleState::ManageIdleState(void)
-{
+ManageIdleState::ManageIdleState(void) {
 	__termTimerId = -1;
 }
 
 
 /* LCOV_EXCL_START */
-ManageIdleState::~ManageIdleState(void)
-{
+ManageIdleState::~ManageIdleState(void) {
 }
 /* LCOV_EXCL_STOP */
 
@@ -48,8 +46,7 @@ ManageIdleState::~ManageIdleState(void)
 void terminate_service(void);
 
 int
-ManageIdleState::OnTermTimerExpired(gpointer)
-{
+ManageIdleState::OnTermTimerExpired(gpointer) {
 	LOG_LOGD("Sync service auto-termination timer is expired");
 	terminate_service();
 
@@ -58,34 +55,31 @@ ManageIdleState::OnTermTimerExpired(gpointer)
 
 
 void
-ManageIdleState::SetTermTimerId(long timerId)
-{
+ManageIdleState::SetTermTimerId(long timerId) {
 	__termTimerId = timerId;
 }
 
 
 long
-ManageIdleState::GetTermTimerId() const
-{
+ManageIdleState::GetTermTimerId() const {
 	return __termTimerId;
 }
 
 
 void
-ManageIdleState::SetTermTimer()
-{
+ManageIdleState::SetTermTimer() {
 	if (GetTermTimerId() == -1) {
 		guint termTimer = SYNC_TERM_SEC * 1000;
 		SetTermTimerId(g_timeout_add(termTimer, ManageIdleState::OnTermTimerExpired, NULL));
 		LOG_LOGD("Sync service auto-termination timer is Set as [%d] sec", SYNC_TERM_SEC);
-	} else
+	} else {
 		ResetTermTimer();
+	}
 }
 
 
 void
-ManageIdleState::UnsetTermTimer()
-{
+ManageIdleState::UnsetTermTimer() {
 	if (GetTermTimerId() != -1) {
 		LOG_LOGD("Sync service auto-termination timer is Unset");
 		g_source_remove((guint)GetTermTimerId());
@@ -95,8 +89,7 @@ ManageIdleState::UnsetTermTimer()
 
 
 void
-ManageIdleState::ResetTermTimer()
-{
+ManageIdleState::ResetTermTimer() {
 	if (GetTermTimerId() != -1) {
 		LOG_LOGD("Sync service auto-termination timer is Reset");
 		g_source_remove((guint)GetTermTimerId());

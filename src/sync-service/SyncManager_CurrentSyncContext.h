@@ -31,8 +31,7 @@
 {
 */
 
-class CurrentSyncContext
-{
+class CurrentSyncContext {
 public:
 	CurrentSyncContext(SyncJob *pSyncJob);
 	CurrentSyncContext(const CurrentSyncContext &job);

@@ -23,8 +23,7 @@
 {
 */
 
-class ISyncWorkerResultListener
-{
+class ISyncWorkerResultListener {
 public:
 	virtual ~ISyncWorkerResultListener() {};	/* LCOV_EXCL_LINE */
 

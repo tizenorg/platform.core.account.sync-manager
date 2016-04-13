@@ -31,20 +31,17 @@
 #include "SyncManager_SyncManager.h"
 
 
-PeriodicSyncScheduler::PeriodicSyncScheduler(void)
-{
+PeriodicSyncScheduler::PeriodicSyncScheduler(void) {
 }
 
 
 /* LCOV_EXCL_START */
-PeriodicSyncScheduler::~PeriodicSyncScheduler(void)
-{
+PeriodicSyncScheduler::~PeriodicSyncScheduler(void) {
 }
 
 
 int
-PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
-{
+PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param) {
 	LOG_LOGD("Alarm id %d", alarm_id);
 
 	PeriodicSyncScheduler* pPeriodicSyncScheduler = (PeriodicSyncScheduler*) user_param;
@@ -71,8 +68,7 @@ PeriodicSyncScheduler::OnAlarmExpired(alarm_id_t alarm_id, void *user_param)
 
 
 int
-PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
-{
+PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob) {
 	LOG_LOGD("Removing alarm for periodic sync job");
 
 	string jobKey = pSyncJob->__key;
@@ -86,8 +82,7 @@ PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
 		__activeAlarmList.erase(iter);
 		__activePeriodicSyncJobs.erase(alarm);
 		LOG_LOGD("Removed alarm for [%s], [%d]", jobKey.c_str(), alarm);
-	}
-	else {
+	} else {
 		LOG_LOGD("No active alarm found for [%s]", jobKey.c_str());
 	}
 
@@ -96,8 +91,7 @@ PeriodicSyncScheduler::RemoveAlarmForPeriodicSyncJob(PeriodicSyncJob* pSyncJob)
 
 
 int
-PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
-{
+PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob) {
 	string jobKey = periodicSyncJob->__key;
 
 	//Remove previous alarms, if set already
@@ -112,8 +106,7 @@ PeriodicSyncScheduler::SchedulePeriodicSyncJob(PeriodicSyncJob* periodicSyncJob)
 
 		__activePeriodicSyncJobs.insert(make_pair<int, PeriodicSyncJob*> (alarm_id, periodicSyncJob));
 		__activeAlarmList.insert(make_pair(jobKey, alarm_id));
-	}
-	else {
+	} else {
 		LOG_LOGD("Failed to add Alarm for %ld min, ret %d", periodicSyncJob->__period, ret);	/* LCOV_EXCL_LINE */
 		return SYNC_ERROR_SYSTEM;
 	}

@@ -36,8 +36,7 @@
 class CurrentSyncContext;
 
 class SyncJobDispatcher
-			:public ISyncWorkerResultListener
-{
+			:public ISyncWorkerResultListener {
 public:
 	SyncJobDispatcher(void);
 

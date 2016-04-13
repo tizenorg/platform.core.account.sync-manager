@@ -43,8 +43,7 @@ extern "C" {
 using namespace std;
 
 class SyncJob
-		: public ISyncJob
-{
+		: public ISyncJob {
 public:
 	~SyncJob(void);
 

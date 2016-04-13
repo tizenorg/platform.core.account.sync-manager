@@ -26,14 +26,12 @@
 #endif
 
 
-API int sync_service_initialise(void)
-{
+API int sync_service_initialise(void) {
 	return SyncService::GetInstance()->StartService();
 }
 
 
-API int sync_service_finalise(void)
-{
+API int sync_service_finalise(void) {
 	SyncService::GetInstance()->HandleShutdown();
 	SyncManager::Destroy();
 	SyncService::Destroy();

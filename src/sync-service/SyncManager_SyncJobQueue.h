@@ -45,8 +45,7 @@ using namespace std;
 
 class SyncJob;
 
-class SyncJobQueue
-{
+class SyncJobQueue {
 public:
 	SyncJobQueue(void);
 

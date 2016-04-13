@@ -32,16 +32,14 @@
 
 
 /* LCOV_EXCL_START */
-CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob)
-{
+CurrentSyncContext::CurrentSyncContext(SyncJob* pSyncJob) {
 	__pCurrentSyncJob = pSyncJob;
 	__startTime = 0;
 	__timerId = -1;
 }
 
 
-CurrentSyncContext::CurrentSyncContext(const CurrentSyncContext& currContext)
-{
+CurrentSyncContext::CurrentSyncContext(const CurrentSyncContext& currContext) {
 	__startTime = currContext.GetStartTime();
 	__timerId = currContext.GetTimerId();
 	__pCurrentSyncJob = currContext.GetSyncJob();
@@ -49,35 +47,30 @@ CurrentSyncContext::CurrentSyncContext(const CurrentSyncContext& currContext)
 }
 
 
-CurrentSyncContext::~CurrentSyncContext(void)
-{
+CurrentSyncContext::~CurrentSyncContext(void) {
 }
 
 
 SyncJob*
-CurrentSyncContext::GetSyncJob() const
-{
+CurrentSyncContext::GetSyncJob() const {
 	return __pCurrentSyncJob;
 }
 
 
 long
-CurrentSyncContext::GetStartTime() const
-{
+CurrentSyncContext::GetStartTime() const {
 	return __startTime;
 }
 
 
 long
-CurrentSyncContext::GetTimerId() const
-{
+CurrentSyncContext::GetTimerId() const {
 	return __timerId;
 }
 
 
 void
-CurrentSyncContext::SetTimerId(long id)
-{
+CurrentSyncContext::SetTimerId(long id) {
 	__timerId  = id;
 }
 /* LCOV_EXCL_STOP */

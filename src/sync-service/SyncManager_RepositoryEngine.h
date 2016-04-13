@@ -49,8 +49,7 @@ using namespace std;
 class SyncJobQueue;
 class SyncJob;
 
-class RepositoryEngine
-{
+class RepositoryEngine {
 	friend class CapabilityInfo;
 
 public:

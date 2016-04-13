@@ -30,14 +30,12 @@
 
 
 /* LCOV_EXCL_START */
-SyncStatusInfo::SyncStatusInfo(int capabilityId)
-{
+SyncStatusInfo::SyncStatusInfo(int capabilityId) {
 	this->capabilityId = capabilityId;
 }
 
 
-SyncStatusInfo::SyncStatusInfo(SyncStatusInfo &other)
-{
+SyncStatusInfo::SyncStatusInfo(SyncStatusInfo &other) {
 	this->capabilityId = other.capabilityId;
 
 	vector<long long> ::iterator it;
@@ -49,8 +47,7 @@ SyncStatusInfo::SyncStatusInfo(SyncStatusInfo &other)
 
 
 SyncStatusInfo&
-SyncStatusInfo::operator =(SyncStatusInfo& other)
-{
+SyncStatusInfo::operator =(SyncStatusInfo& other) {
 	this->capabilityId = other.capabilityId;
 
 	vector<long long> ::iterator it;
@@ -63,8 +60,7 @@ SyncStatusInfo::operator =(SyncStatusInfo& other)
 
 
 SyncStatusInfo::SyncStatusInfo(string statusInfo)
-				: capabilityId(-1)
-{
+				: capabilityId(-1) {
 	if (statusInfo.empty()) {
 		LOG_LOGD("statusInfo string empty");
 		return;
@@ -94,8 +90,7 @@ SyncStatusInfo::SyncStatusInfo(string statusInfo)
 
 
 void
-SyncStatusInfo::SetPeriodicSyncTime(unsigned int index, long long when)
-{
+SyncStatusInfo::SetPeriodicSyncTime(unsigned int index, long long when) {
 	// The list is initialized lazily when scheduling occurs so we need to make sure
 	// we initialize elements < index to zero (zero is ignore for scheduling purposes)
 	EnsurePeriodicSyncTimeSize(index);
@@ -104,20 +99,17 @@ SyncStatusInfo::SetPeriodicSyncTime(unsigned int index, long long when)
 
 
 long long
-SyncStatusInfo::GetPeriodicSyncTime(unsigned int index)
-{
+SyncStatusInfo::GetPeriodicSyncTime(unsigned int index) {
 	if (index < __periodicSyncTimes.size()) {
 		return __periodicSyncTimes[index];
-	}
-	else {
+	} else {
 		return 0;
 	}
 }
 
 
 void
-SyncStatusInfo::RemovePeriodicSyncTime(unsigned int index)
-{
+SyncStatusInfo::RemovePeriodicSyncTime(unsigned int index) {
 	if (index < __periodicSyncTimes.size()) {
 		__periodicSyncTimes.erase(__periodicSyncTimes.begin()+index);
 	}
@@ -125,8 +117,7 @@ SyncStatusInfo::RemovePeriodicSyncTime(unsigned int index)
 
 
 void
-SyncStatusInfo::EnsurePeriodicSyncTimeSize(unsigned int index)
-{
+SyncStatusInfo::EnsurePeriodicSyncTimeSize(unsigned int index) {
 	unsigned int requiredSize = index + 1;
 	if (__periodicSyncTimes.size() < requiredSize) {
 		for (unsigned int i = __periodicSyncTimes.size(); i < requiredSize; i++) {
@@ -137,8 +128,7 @@ SyncStatusInfo::EnsurePeriodicSyncTimeSize(unsigned int index)
 
 
 string
-SyncStatusInfo::GetStatusInfoString(void)
-{
+SyncStatusInfo::GetStatusInfoString(void) {
 	stringstream ss;
 	string buff;
 

@@ -36,8 +36,7 @@
 using namespace std;
 
 class PeriodicSyncJob
-			: public SyncJob
-{
+			: public SyncJob {
 public:
 	~PeriodicSyncJob(void);
 

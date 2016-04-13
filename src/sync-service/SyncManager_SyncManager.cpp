@@ -53,8 +53,7 @@ int DELAY_RETRY_SYNC_IN_PROGRESS_IN_SECONDS = 10;
 
 
 void
-SyncManager::SetSyncSetting(bool enable)
-{
+SyncManager::SetSyncSetting(bool enable) {
 	bool wasSuspended = (__isSyncPermitted == false);
 	__isSyncPermitted = enable;
 	if (wasSuspended && __isSyncPermitted) {
@@ -65,16 +64,14 @@ SyncManager::SetSyncSetting(bool enable)
 
 /* LCOV_EXCL_START */
 bool
-SyncManager::GetSyncSetting()
-{
+SyncManager::GetSyncSetting() {
 	return __isSyncPermitted;
 }
 /* LCOV_EXCL_STOP */
 
 
 int
-SyncManager::AddOnDemandSync(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId)
-{
+SyncManager::AddOnDemandSync(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId) {
 	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
 	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
 
@@ -97,8 +94,7 @@ SyncManager::AddOnDemandSync(string pPackageId, const char* syncJobName, int acc
 
 
 int
-SyncManager::CancelSync(SyncJob* pSyncJob)
-{
+SyncManager::CancelSync(SyncJob* pSyncJob) {
 	LOG_LOGD("SyncManager::CancelSync Starts");
 
 	ClearScheduledSyncJobs(pSyncJob);
@@ -111,8 +107,7 @@ SyncManager::CancelSync(SyncJob* pSyncJob)
 
 
 int
-SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, long period)
-{
+SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, long period) {
 	if (period < 1800) {
 		/* LCOV_EXCL_START */
 		LOG_LOGD("Requested period %d is less than minimum, rounding up to 30 mins", period);
@@ -148,8 +143,7 @@ SyncManager::AddPeriodicSyncJob(string pPackageId, const char* syncJobName, int 
 
 
 int
-SyncManager::AddDataSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, const char* pCapability)
-{
+SyncManager::AddDataSyncJob(string pPackageId, const char* syncJobName, int accountId, bundle* pExtras, int syncOption, int syncJobId, const char* pCapability) {
 	const char* pSyncAdapterApp = __pSyncAdapterAggregator->GetSyncAdapter(pPackageId.c_str());
 	SYNC_LOGE_RET_RES(pSyncAdapterApp != NULL, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND, "Sync adapter cannot be found for package %s", pPackageId.c_str());
 	LOG_LOGD("Found sync adapter [%s]", pSyncAdapterApp);
@@ -175,8 +169,7 @@ SyncManager::AddDataSyncJob(string pPackageId, const char* syncJobName, int acco
 
 
 int
-SyncManager::RemoveSyncJob(string packageId, int syncJobId)
-{
+SyncManager::RemoveSyncJob(string packageId, int syncJobId) {
 	LOG_LOGD("Starts");
 	int ret = SYNC_ERROR_NONE;
 
@@ -189,8 +182,7 @@ SyncManager::RemoveSyncJob(string packageId, int syncJobId)
 		SYNC_LOGE_RET_RES(dataSyncJob != NULL, SYNC_ERROR_SYSTEM, "Failed to cast %d", syncJobId);
 
 		__pDataChangeSyncScheduler->RemoveDataSyncJob(dataSyncJob);
-	}
-	else if (syncType == SYNC_TYPE_PERIODIC) {
+	} else if (syncType == SYNC_TYPE_PERIODIC) {
 		PeriodicSyncJob* periodicSyncJob = dynamic_cast< PeriodicSyncJob* > (pSyncJob);
 		SYNC_LOGE_RET_RES(periodicSyncJob != NULL, SYNC_ERROR_SYSTEM, "Failed to cast %d", syncJobId);
 
@@ -211,15 +203,13 @@ SyncManager::RemoveSyncJob(string packageId, int syncJobId)
 
 /* LCOV_EXCL_START */
 SyncJobQueue*
-SyncManager::GetSyncJobQueue(void) const
-{
+SyncManager::GetSyncJobQueue(void) const {
 	return __pSyncJobQueue;
 }
 
 
 int
-SyncManager::AddToSyncQueue(SyncJob* pJob)
-{
+SyncManager::AddToSyncQueue(SyncJob* pJob) {
 	//No need to add mutex here, will be called during startup only
 	return __pSyncJobQueue->AddSyncJob(pJob);
 }
@@ -227,16 +217,14 @@ SyncManager::AddToSyncQueue(SyncJob* pJob)
 
 
 void
-SyncManager::AddRunningAccount(int account_id, int pid)
-{
+SyncManager::AddRunningAccount(int account_id, int pid) {
 	__runningAccounts.insert(make_pair(account_id, pid));
 }
 
 
 /* LCOV_EXCL_START */
 int
-SyncManager::GetAccountPid(int account_id)
-{
+SyncManager::GetAccountPid(int account_id) {
 	map<int, int>::iterator it = __runningAccounts.find(account_id);
 	if (it != __runningAccounts.end()) {
 		return it->second;
@@ -246,8 +234,7 @@ SyncManager::GetAccountPid(int account_id)
 }
 
 
-bool accountCb(account_h account, void* pUserData)
-{
+bool accountCb(account_h account, void* pUserData) {
 	int account_id = -1;
 	int ret = account_get_account_id(account, &account_id);
 	if (ret == ACCOUNT_ERROR_NONE) {
@@ -259,8 +246,7 @@ bool accountCb(account_h account, void* pUserData)
 
 
 void
-SyncManager::UpdateRunningAccounts(void)
-{
+SyncManager::UpdateRunningAccounts(void) {
 #if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
 	__runningAccounts.clear();
 	if (account_foreach_account_from_db(accountCb, this) < 0) {
@@ -271,8 +257,7 @@ SyncManager::UpdateRunningAccounts(void)
 
 
 #if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
-bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData)
-{
+bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData) {
 	//TODO: will go in enhancements
 	SyncManager* pSyncManager = (SyncManager*)pUserData;
 	pSyncManager->UpdateRunningAccounts();
@@ -285,8 +270,7 @@ bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData)
 
 
 void
-SyncManager::OnDNetStatusChanged(bool connected)
-{
+SyncManager::OnDNetStatusChanged(bool connected) {
 	LOG_LOGD("Data network change detected %d", connected);
 
 	//bool wasConnected = __isSimDataConnectionPresent;
@@ -298,8 +282,7 @@ SyncManager::OnDNetStatusChanged(bool connected)
 
 
 void
-SyncManager::OnWifiStatusChanged(bool connected)
-{
+SyncManager::OnWifiStatusChanged(bool connected) {
 	LOG_LOGD("Wifi network change detected %d", connected);
 
 	//bool wasConnected = __isWifiConnectionPresent;
@@ -311,15 +294,13 @@ SyncManager::OnWifiStatusChanged(bool connected)
 
 
 void
-SyncManager::OnBluetoothStatusChanged(bool connected)
-{
+SyncManager::OnBluetoothStatusChanged(bool connected) {
 	LOG_LOGD("Bluetooth status %d", connected);
 }
 
 
 void
-SyncManager::OnStorageStatusChanged(int value)
-{
+SyncManager::OnStorageStatusChanged(int value) {
 	LOG_LOGD("Storage status changed %d", value);
 	switch (value) {
 	case LOW_MEMORY_NORMAL:
@@ -336,15 +317,13 @@ SyncManager::OnStorageStatusChanged(int value)
 
 
 void
-SyncManager::OnUPSModeChanged(bool enable)
-{
+SyncManager::OnUPSModeChanged(bool enable) {
 	__isUPSModeEnabled = enable;
 }
 
 
 void
-SyncManager::OnBatteryStatusChanged(int value)
-{
+SyncManager::OnBatteryStatusChanged(int value) {
 	LOG_LOGD("SyncManager::OnBatteryStatusChanged Starts");
 
 	switch (value) {
@@ -366,8 +345,7 @@ SyncManager::OnBatteryStatusChanged(int value)
 }
 
 
-static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,	const char* pVal, const void* pMsg, void* pData)
-{
+static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,	const char* pVal, const void* pMsg, void* pData) {
 	LOG_LOGD("OnPackageUninstalled [type %s] type [pkdId:%s]", pPkgType, pPkgId);
 	if (!strcmp("end", pKey) && !strcmp("ok", pVal)) {
 		SyncManager::GetInstance()->GetSyncAdapterAggregator()->HandlePackageUninstalled(pPkgId);
@@ -380,8 +358,7 @@ static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkg
 
 
 string
-SyncManager::GetPkgIdByAppId(const char* pAppId)
-{
+SyncManager::GetPkgIdByAppId(const char* pAppId) {
 	pkgmgrinfo_appinfo_h handle;
 	string pkgId;
 
@@ -392,13 +369,11 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 		result = pkgmgrinfo_appinfo_get_pkgid(handle, &pPkgId);
 		if (result == PMINFO_R_OK) {
 			pkgId.append(pPkgId);
-		}
-		else {
+		} else {
 			LOG_LOGD("Failed to get Pkg ID from App Id [%s]", pAppId);	/* LCOV_EXCL_LINE */
 		}
 		pkgmgrinfo_appinfo_destroy_appinfo(handle);
-	}
-	else {
+	} else {
 		LOG_LOGD("Failed to get pkgmgr AppInfoHandle from App Id [%s]", pAppId);	/* LCOV_EXCL_LINE */
 	}
 
@@ -408,8 +383,7 @@ SyncManager::GetPkgIdByAppId(const char* pAppId)
 
 /* LCOV_EXCL_START */
 string
-SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
-{
+SyncManager::GetPkgIdByCommandline(const char* pCommandLine) {
 	string pkgId;
 	if (pCommandLine != NULL) {
 		char cmd[100];
@@ -439,13 +413,11 @@ SyncManager::GetPkgIdByCommandline(const char* pCommandLine)
 
 
 void
-SyncManager::RegisterForNetworkChange(void)
-{
+SyncManager::RegisterForNetworkChange(void) {
 	if (__pNetworkChangeListener) {
 		if(!__pNetworkChangeListener->RegisterNetworkChangeListener()) {
 			LOG_LOGD("Network listener : Success");
-		}
-		else {
+		} else {
 			LOG_LOGD("Network listener : Failed");	/* LCOV_EXCL_LINE */
 		}
 	}
@@ -454,8 +426,7 @@ SyncManager::RegisterForNetworkChange(void)
 
 /* LCOV_EXCL_START */
 int
-SyncManager::DeRegisterForNetworkChange(void)
-{
+SyncManager::DeRegisterForNetworkChange(void) {
 	if (__pNetworkChangeListener) {
 		return(__pNetworkChangeListener->DeRegisterNetworkChangeListener());
 	}
@@ -463,8 +434,7 @@ SyncManager::DeRegisterForNetworkChange(void)
 }
 
 
-void OnUPSModeChangedCb(keynode_t* pKey, void* pData)
-{
+void OnUPSModeChangedCb(keynode_t* pKey, void* pData) {
 	int value = vconf_keynode_get_int(pKey);
 	bool enabled = (value == SETTING_PSMODE_EMERGENCY);
 	LOG_LOGD("UPS mode status %d , value %d", enabled, value);
@@ -475,12 +445,10 @@ void OnUPSModeChangedCb(keynode_t* pKey, void* pData)
 
 
 void
-SyncManager::RegisterForUPSModeChange(void)
-{
+SyncManager::RegisterForUPSModeChange(void) {
 	if(vconf_notify_key_changed(VCONFKEY_SETAPPL_PSMODE, OnUPSModeChangedCb, NULL) == 0) {
 		LOG_LOGD("UPS mode listener : Success");
-	}
-	else {
+	} else {
 		LOG_LOGD("UPS mode listener : Failed");	/* LCOV_EXCL_LINE */
 	}
 }
@@ -488,8 +456,7 @@ SyncManager::RegisterForUPSModeChange(void)
 
 /* LCOV_EXCL_START */
 int
-SyncManager::DeRegisterForUPSModeChange(void)
-{
+SyncManager::DeRegisterForUPSModeChange(void) {
 	LOG_LOGD("De Registering UPS mode listener");
 
 	return vconf_ignore_key_changed(VCONFKEY_SETAPPL_PSMODE, OnUPSModeChangedCb);
@@ -498,13 +465,11 @@ SyncManager::DeRegisterForUPSModeChange(void)
 
 
 void
-SyncManager::RegisterForStorageChange(void)
-{
+SyncManager::RegisterForStorageChange(void) {
 	if (__pStorageListener) {
 		if (__pStorageListener->RegisterStorageChangeListener() == 0) {
 			LOG_LOGD("Storage listener : Success");
-		}
-		else {
+		} else {
 			LOG_LOGD("Storage listener : Failed");	/* LCOV_EXCL_LINE */
 		}
 	}
@@ -513,8 +478,7 @@ SyncManager::RegisterForStorageChange(void)
 
 /* LCOV_EXCL_START */
 int
-SyncManager::DeRegisterForStorageChange(void)
-{
+SyncManager::DeRegisterForStorageChange(void) {
 	if (__pStorageListener) {
 		return(__pStorageListener->DeRegisterStorageChangeListener());
 	}
@@ -524,13 +488,11 @@ SyncManager::DeRegisterForStorageChange(void)
 
 
 void
-SyncManager::RegisterForBatteryStatus(void)
-{
+SyncManager::RegisterForBatteryStatus(void) {
 	if (__pBatteryStatusListener) {
 		if(__pBatteryStatusListener->RegisterBatteryStatusListener() == 0) {
 			LOG_LOGD("Battery listener : Success");
-		}
-		else {
+		} else {
 			LOG_LOGD("Battery listener : Failed");	/* LCOV_EXCL_LINE */
 		}
 	}
@@ -539,8 +501,7 @@ SyncManager::RegisterForBatteryStatus(void)
 
 /* LCOV_EXCL_START */
 int
-SyncManager::DeRegisterForBatteryStatus(void)
-{
+SyncManager::DeRegisterForBatteryStatus(void) {
 	if (__pBatteryStatusListener) {
 		return(__pBatteryStatusListener->DeRegisterBatteryStatusListener());
 	}
@@ -549,13 +510,11 @@ SyncManager::DeRegisterForBatteryStatus(void)
 /* LCOV_EXCL_STOP */
 
 
-void SyncManager::RegisterForDataChange(void)
-{
+void SyncManager::RegisterForDataChange(void) {
 	if (__pDataChangeSyncScheduler) {
 		if(!__pDataChangeSyncScheduler->RegisterDataChangeListeners()) {
 			LOG_LOGD("Data listener : Success");
-		}
-		else {
+		} else {
 			LOG_LOGD("Data listener : Failed");	/* LCOV_EXCL_LINE */
 		}
 	}
@@ -563,8 +522,7 @@ void SyncManager::RegisterForDataChange(void)
 
 
 /* LCOV_EXCL_START */
-int SyncManager::DeRegisterForDataChange(void)
-{
+int SyncManager::DeRegisterForDataChange(void) {
 	if (__pDataChangeSyncScheduler) {
 		return (__pDataChangeSyncScheduler->DeRegisterDataChangeListeners());
 	}
@@ -575,8 +533,7 @@ int SyncManager::DeRegisterForDataChange(void)
 
 
 int
-SyncManager::SetPkgMgrClientStatusChangedListener(void)
-{
+SyncManager::SetPkgMgrClientStatusChangedListener(void) {
 	int eventType = PKGMGR_CLIENT_STATUS_UNINSTALL;
 
 	if (pkgmgr_client_set_status_type(__pPkgmgrClient, eventType) != PKGMGR_R_OK) {
@@ -603,16 +560,14 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void)
 
 /* LCOV_EXCL_START */
 RepositoryEngine*
-SyncManager::GetSyncRepositoryEngine(void)
-{
+SyncManager::GetSyncRepositoryEngine(void) {
 	return __pSyncRepositoryEngine;
 }
 /* LCOV_EXCL_STOP */
 
 
 void
-SyncManager::ClearScheduledSyncJobs(SyncJob* pSyncJob)
-{
+SyncManager::ClearScheduledSyncJobs(SyncJob* pSyncJob) {
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	__pSyncJobQueue->RemoveSyncJob(pSyncJob);
 	pthread_mutex_unlock(&__syncJobQueueMutex);
@@ -620,8 +575,7 @@ SyncManager::ClearScheduledSyncJobs(SyncJob* pSyncJob)
 
 
 void
-SyncManager::CancelActiveSyncJob(SyncJob* pSyncJob)
-{
+SyncManager::CancelActiveSyncJob(SyncJob* pSyncJob) {
 	pthread_mutex_lock(&__currJobQueueMutex);
 	CurrentSyncContext *pCurrSyncContext = __pCurrentSyncJobQueue->GetCurrJobfromKey(pSyncJob->__key);
 	pthread_mutex_unlock(&__currJobQueueMutex);
@@ -652,14 +606,12 @@ SyncManager::SyncManager(void)
 	, __pSyncJobDispatcher(NULL)
 	, __pSyncAdapterAggregator(NULL)
 	, __pCurrentSyncJobQueue(NULL)
-	, __accountSubscriptionHandle(NULL)
-{
+	, __accountSubscriptionHandle(NULL) {
 }
 
 
 bool
-SyncManager::Construct(void)
-{
+SyncManager::Construct(void) {
 	//interface=org.freedesktop.systemd1.Manager Signal=StartupFinished - bootcomplete dbus signal
 	LOG_LOGD("Sync manager initialization begins");
 
@@ -757,8 +709,7 @@ SyncManager::Construct(void)
 
 
 /* LCOV_EXCL_START */
-SyncManager::~SyncManager(void)
-{
+SyncManager::~SyncManager(void) {
 	LOG_LOGD("SyncManager::~SyncManager() Starts");
 
 	pthread_mutex_destroy(&__syncJobQueueMutex);
@@ -796,8 +747,7 @@ SyncManager::~SyncManager(void)
 
 
 bool
-SyncManager::AreAccountsEqual(account_h account1, account_h account2)
-{
+SyncManager::AreAccountsEqual(account_h account1, account_h account2) {
 	bool isEqual = false;
 	int id1, id2;
 	if (account_get_account_id(account1, &id1) < 0) {
@@ -825,8 +775,7 @@ SyncManager::AreAccountsEqual(account_h account1, account_h account2)
 
 
 bool
-SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
-{
+SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account) {
  return true;
  //TODO: uncomment while implementing __running accounts logic
 /*
@@ -845,29 +794,25 @@ SyncManager::IsActiveAccount(vector<account_h> accounts, account_h account)
 
 
 SyncAdapterAggregator*
-SyncManager::GetSyncAdapterAggregator()
-{
+SyncManager::GetSyncAdapterAggregator() {
 	return __pSyncAdapterAggregator;
 }
 
 
 SyncJobsAggregator*
-SyncManager::GetSyncJobsAggregator()
-{
+SyncManager::GetSyncJobsAggregator() {
 	return __pSyncJobsAggregator;
 }
 
 
 ManageIdleState*
-SyncManager::GetManageIdleState()
-{
+SyncManager::GetManageIdleState() {
 	return __pManageIdleState;
 }
 
 
 void
-SyncManager::HandleShutdown(void)
-{
+SyncManager::HandleShutdown(void) {
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	__pSyncRepositoryEngine->SaveCurrentState();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
@@ -876,8 +821,7 @@ SyncManager::HandleShutdown(void)
 
 /* LCOV_EXCL_START */
 void
-SyncManager::RecordSyncAdapter(void)
-{
+SyncManager::RecordSyncAdapter(void) {
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	__pSyncRepositoryEngine->SaveCurrentSyncAdapter();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
@@ -885,8 +829,7 @@ SyncManager::RecordSyncAdapter(void)
 
 
 void
-SyncManager::RecordSyncJob(void)
-{
+SyncManager::RecordSyncJob(void) {
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	__pSyncRepositoryEngine->SaveCurrentSyncJob();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
@@ -895,8 +838,7 @@ SyncManager::RecordSyncJob(void)
 
 
 bool
-SyncManager::GetSyncSupport(int accountId)
-{
+SyncManager::GetSyncSupport(int accountId) {
 	account_h accountHandle = NULL;
 	int ret = account_create(&accountHandle);
 	LOG_LOGE_BOOL(ret == ACCOUNT_ERROR_NONE, "account access failed [%d]", ret);
@@ -923,8 +865,7 @@ SyncManager::GetSyncSupport(int accountId)
 
 /* LCOV_EXCL_START */
 void
-SyncManager::SendCancelSyncsMessage(SyncJob* pJob)
-{
+SyncManager::SendCancelSyncsMessage(SyncJob* pJob) {
 	LOG_LOGD("SyncManager::SendCancelSyncsMessage :sending MESSAGE_CANCEL");
 	Message msg;
 	msg.type = SYNC_CANCEL;
@@ -934,8 +875,7 @@ SyncManager::SendCancelSyncsMessage(SyncJob* pJob)
 
 
 void
-SyncManager::OnResultReceived(SyncStatus res, string appId, string packageId, const char* syncJobName)
-{
+SyncManager::OnResultReceived(SyncStatus res, string appId, string packageId, const char* syncJobName) {
 	string key;
 	key.append("id:").append(appId).append(syncJobName);
 
@@ -946,8 +886,7 @@ SyncManager::OnResultReceived(SyncStatus res, string appId, string packageId, co
 	pthread_mutex_unlock(&__currJobQueueMutex);
 	if (pCurrSyncContext == NULL) {
 		LOG_LOGD("Sync context cant be found for %s", key.c_str());
-	}
-	else {
+	} else {
 		g_source_remove(pCurrSyncContext->GetTimerId());
 		SyncJob* pJob = pCurrSyncContext->GetSyncJob();
 		SendSyncCompletedOrCancelledMessage(pJob, res);
@@ -962,8 +901,7 @@ SyncManager::OnResultReceived(SyncStatus res, string appId, string packageId, co
 
 
 void
-SyncManager::CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext)
-{
+SyncManager::CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext) {
 	if (activeSyncContext == NULL) {
 		LOG_LOGD("Invalid Parameter");
 		return;
@@ -975,8 +913,7 @@ SyncManager::CloseCurrentSyncContext(CurrentSyncContext *activeSyncContext)
 
 
 void
-SyncManager::SendSyncCompletedOrCancelledMessage(SyncJob *pJob, int result)
-{
+SyncManager::SendSyncCompletedOrCancelledMessage(SyncJob *pJob, int result) {
 	LOG_LOGD("SyncManager::SendSyncCompletedOrCancelledMessage");
 	Message msg;
 	msg.res = (SyncStatus)result;
@@ -987,15 +924,13 @@ SyncManager::SendSyncCompletedOrCancelledMessage(SyncJob *pJob, int result)
 
 
 void
-SyncManager::AlertForChange()
-{
+SyncManager::AlertForChange() {
 	SendSyncCheckAlarmMessage();
 }
 
 
 void
-SyncManager::SendSyncAlarmMessage()
-{
+SyncManager::SendSyncAlarmMessage() {
 	LOG_LOGD("Fire SYNC_ALARM");
 	Message msg;
 	msg.type = SYNC_ALARM;
@@ -1005,8 +940,7 @@ SyncManager::SendSyncAlarmMessage()
 
 
 void
-SyncManager::SendSyncCheckAlarmMessage()
-{
+SyncManager::SendSyncCheckAlarmMessage() {
 	LOG_LOGD("Fire SYNC_CHECK_ALARM");
 	Message msg;
 	msg.type = SYNC_CHECK_ALARM;
@@ -1017,8 +951,7 @@ SyncManager::SendSyncCheckAlarmMessage()
 
 /* LCOV_EXCL_START */
 bool
-SyncManager::GetBundleVal(const char* pVal)
-{
+SyncManager::GetBundleVal(const char* pVal) {
 	if (pVal == NULL) {
 		return false;
 	}
@@ -1027,8 +960,7 @@ SyncManager::GetBundleVal(const char* pVal)
 }
 
 
-bool get_capability_all_cb(const char* capability_type, account_capability_state_e capability_state, void *user_data)
-{
+bool get_capability_all_cb(const char* capability_type, account_capability_state_e capability_state, void *user_data) {
 	set<string>* pSsncableCapabilities = (set<string>*)user_data;
 
 	if (capability_state == ACCOUNT_CAPABILITY_ENABLED) {
@@ -1041,8 +973,7 @@ bool get_capability_all_cb(const char* capability_type, account_capability_state
 
 
 void
-SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
-{
+SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm) {
 	int err;
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	err = __pSyncJobQueue->AddSyncJob(pJob);
@@ -1053,12 +984,9 @@ SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 			LOG_LOGD("Added sync job [%s] to Main queue, Initiating dispatch sequence", pJob->__key.c_str());
 			SendSyncCheckAlarmMessage();
 		}
-	}
-	/* LCOV_EXCL_START */
-	else if (err == SYNC_ERROR_ALREADY_IN_PROGRESS) {
+	} /* LCOV_EXCL_START */ else if (err == SYNC_ERROR_ALREADY_IN_PROGRESS) {
 		LOG_LOGD("Duplicate sync job [%s], No need to enqueue", pJob->__key.c_str());
-	}
-	else {
+	} else {
 		LOG_LOGD("Failed to add into sync job list");
 	}
 	/* LCOV_EXCL_STOP */
@@ -1067,8 +995,7 @@ SyncManager::ScheduleSyncJob(SyncJob* pJob, bool fireCheckAlarm)
 
 /* LCOV_EXCL_START */
 void
-SyncManager::TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob)
-{
+SyncManager::TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob) {
 	if (pJob == NULL) {
 		LOG_LOGD("Invalid parameter");
 		return;
@@ -1084,8 +1011,7 @@ SyncManager::TryToRescheduleJob(SyncStatus syncResult, SyncJob* pJob)
 
 
 bool
-SyncManager::IsJobActive(CurrentSyncContext *pCurrSync)
-{
+SyncManager::IsJobActive(CurrentSyncContext *pCurrSync) {
 	if (pCurrSync == NULL) {
 		LOG_LOGD("Invalid parameter");
 		return false;

@@ -37,8 +37,7 @@
 using namespace std;
 
 
-class SyncWorker
-{
+class SyncWorker {
 public:
 	SyncWorker(void);
 

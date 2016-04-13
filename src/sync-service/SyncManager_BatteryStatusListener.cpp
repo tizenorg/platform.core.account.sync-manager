@@ -33,8 +33,7 @@
 
 
 /* LCOV_EXCL_START */
-void OnBatteryStatusChanged(keynode_t* pKey, void* pData)
-{
+void OnBatteryStatusChanged(keynode_t* pKey, void* pData) {
 	LOG_LOGD("OnBatteryStatusChanged Starts");
 
 	BatteryStatus value =  static_cast<BatteryStatus> (vconf_keynode_get_int(pKey));
@@ -46,29 +45,25 @@ void OnBatteryStatusChanged(keynode_t* pKey, void* pData)
 /* LCOV_EXCL_STOP */
 
 
-BatteryStatusListener::BatteryStatusListener(void)
-{
+BatteryStatusListener::BatteryStatusListener(void) {
 }
 
 
 /* LCOV_EXCL_START */
-BatteryStatusListener::~BatteryStatusListener(void)
-{
+BatteryStatusListener::~BatteryStatusListener(void) {
 }
 /* LCOV_EXCL_STOP */
 
 
 int
-BatteryStatusListener::RegisterBatteryStatusListener(void)
-{
+BatteryStatusListener::RegisterBatteryStatusListener(void) {
 	return(vconf_notify_key_changed(VCONFKEY_SYSMAN_BATTERY_STATUS_LOW, OnBatteryStatusChanged, NULL));
 }
 
 
 /* LCOV_EXCL_START */
 int
-BatteryStatusListener::DeRegisterBatteryStatusListener(void)
-{
+BatteryStatusListener::DeRegisterBatteryStatusListener(void) {
 	LOG_LOGD("DeRegisterBatteryStatusListener");
 
 	return(vconf_ignore_key_changed(VCONFKEY_SYSMAN_BATTERY_STATUS_LOW, OnBatteryStatusChanged));

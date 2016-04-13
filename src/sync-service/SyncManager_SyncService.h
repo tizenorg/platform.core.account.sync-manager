@@ -38,8 +38,7 @@
 class SyncManager;
 
 class SyncService
-		: public Singleton < SyncService >
-{
+		: public Singleton < SyncService > {
 public:
 	int StartService(void);
 

@@ -39,21 +39,18 @@
 using namespace std;
 
 
-SyncAdapterAggregator::SyncAdapterAggregator(void)
-{
+SyncAdapterAggregator::SyncAdapterAggregator(void) {
 }
 
 
 /* LCOV_EXCL_START */
-SyncAdapterAggregator::~SyncAdapterAggregator(void)
-{
+SyncAdapterAggregator::~SyncAdapterAggregator(void) {
 }
 /* LCOV_EXCL_STOP */
 
 
 void
-SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServiceAppId)
-{
+SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServiceAppId) {
 	if (HasSyncAdapter(pPackageId)) {
 		LOG_LOGD("Sync adapter already registered for package [%s]", pPackageId);	/* LCOV_EXCL_LINE */
 	} else {
@@ -64,8 +61,7 @@ SyncAdapterAggregator::AddSyncAdapter(const char* pPackageId, const char* pServi
 
 
 void
-SyncAdapterAggregator::dumpSyncAdapters()
-{
+SyncAdapterAggregator::dumpSyncAdapters() {
 /*
 	for (multimap<string, SyncAdapter*>::iterator it = __syncAdapterList.begin(); it != __syncAdapterList.end(); ++it)
 	{
@@ -77,8 +73,7 @@ SyncAdapterAggregator::dumpSyncAdapters()
 
 
 const char*
-SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
-{
+SyncAdapterAggregator::GetSyncAdapter(const char* pAppId) {
 	string PkgId(pAppId);
 	if (PkgId.empty()) {
 		//PkgId = SyncManager::GetInstance()->GetPkgIdByCommandline(pAppId);
@@ -99,8 +94,7 @@ SyncAdapterAggregator::GetSyncAdapter(const char* pAppId)
 
 /* LCOV_EXCL_START */
 bool
-SyncAdapterAggregator::HasServiceAppId(const char* pAccountProviderId)
-{
+SyncAdapterAggregator::HasServiceAppId(const char* pAccountProviderId) {
 	bool result = false;
 /*
 	pair<multimap<string, SyncAdapter*>::iterator, multimap<string, SyncAdapter*>::iterator> ret;
@@ -119,8 +113,7 @@ SyncAdapterAggregator::HasServiceAppId(const char* pAccountProviderId)
 
 
 bool
-SyncAdapterAggregator::HasSyncAdapter(const char* pPackageId)
-{
+SyncAdapterAggregator::HasSyncAdapter(const char* pPackageId) {
 	map<string, string>::iterator it = __syncAdapterList.find(pPackageId);
 	return it != __syncAdapterList.end();
 }
@@ -128,8 +121,7 @@ SyncAdapterAggregator::HasSyncAdapter(const char* pPackageId)
 
 /* LCOV_EXCL_START */
 void
-SyncAdapterAggregator::HandlePackageUninstalled(const char* pPackageId)
-{
+SyncAdapterAggregator::HandlePackageUninstalled(const char* pPackageId) {
 	LOG_LOGD("Removing sync adapter for package [%s]", pPackageId);
 	__syncAdapterList.erase(pPackageId);
 }
@@ -137,8 +129,7 @@ SyncAdapterAggregator::HandlePackageUninstalled(const char* pPackageId)
 
 
 void
-SyncAdapterAggregator::RemoveSyncAdapter(const char* pPackageId)
-{
+SyncAdapterAggregator::RemoveSyncAdapter(const char* pPackageId) {
 	__syncAdapterList.erase(pPackageId);
 }
 

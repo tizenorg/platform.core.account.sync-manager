@@ -27,8 +27,7 @@
 {
 */
 
-class StorageChangeListener
-{
+class StorageChangeListener {
 public:
 	StorageChangeListener(void);
 

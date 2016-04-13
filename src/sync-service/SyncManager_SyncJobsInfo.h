@@ -28,13 +28,15 @@
 #include "SyncManager_ISyncJob.h"
 #include "SyncManager_SyncDefines.h"
 
+
 /*namespace _SyncManager
 {
 */
+
 using namespace std;
 
-class SyncJobsInfo
-{
+
+class SyncJobsInfo {
 public:
 	~SyncJobsInfo(void);
 

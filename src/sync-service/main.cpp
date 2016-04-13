@@ -29,16 +29,14 @@
 extern bool ShutdownInitiated;
 
 static Eina_Bool
-OnIdle(void* pUserData)
-{
+OnIdle(void* pUserData) {
 	LOG_LOGD("MainLoop OnIdle");
 	return  ECORE_CALLBACK_CANCEL;
 }
 
 
 void
-terminate_service(void)
-{
+terminate_service(void) {
 	LOG_LOGD("Sync service will be terminated");
 
 	if (ShutdownInitiated == false) {
@@ -51,8 +49,7 @@ terminate_service(void)
 
 
 Eina_Bool
-OnTerminate(void *data, int ev_type, void *ev)
-{
+OnTerminate(void *data, int ev_type, void *ev) {
 	LOG_LOGD("MainLoop OnTerminate");
 	terminate_service();
 
@@ -61,8 +58,7 @@ OnTerminate(void *data, int ev_type, void *ev)
 
 
 int
-main(int argc, char **argv)
-{
+main(int argc, char **argv) {
 	if (!ecore_init()) {
 		return -1;
 	}

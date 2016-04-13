@@ -31,10 +31,11 @@
 /*namespace _SyncManager
 {
 */
+
 using namespace std;
 
-class SyncStatusInfo
-{
+
+class SyncStatusInfo {
 public:
 	SyncStatusInfo(int capabilityId);
 

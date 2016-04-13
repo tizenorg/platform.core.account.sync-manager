@@ -26,8 +26,7 @@
 #include <map>
 #include "SyncManager_PeriodicSyncJob.h"
 
-class PeriodicSyncScheduler
-{
+class PeriodicSyncScheduler {
 public:
 	PeriodicSyncScheduler(void);
 

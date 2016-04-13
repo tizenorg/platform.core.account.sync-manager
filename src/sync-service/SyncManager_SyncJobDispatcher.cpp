@@ -55,20 +55,17 @@ using namespace std;
 {*/
 
 
-SyncJobDispatcher::SyncJobDispatcher(void)
-{
+SyncJobDispatcher::SyncJobDispatcher(void) {
 }
 
 
 /* LCOV_EXCL_START */
-SyncJobDispatcher::~SyncJobDispatcher(void)
-{
+SyncJobDispatcher::~SyncJobDispatcher(void) {
 }
 
 
 int
-SyncJobDispatcher::DispatchSyncJob(SyncJob* syncJob)
-{
+SyncJobDispatcher::DispatchSyncJob(SyncJob* syncJob) {
 	int ret = SYNC_ERROR_NONE;
 	LOG_LOGD("Dispatching sync job [%s], [%s]", syncJob->__appId.c_str(), syncJob->__syncJobName.c_str());
 
@@ -89,8 +86,7 @@ SyncJobDispatcher::DispatchSyncJob(SyncJob* syncJob)
 
 
 void
-SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *pJob)
-{
+SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *pJob) {
 	LOG_LOGD("Starts");
 
 	switch (res) {
@@ -122,8 +118,7 @@ SyncJobDispatcher::HandleJobCompletedOrCancelledLocked(SyncStatus res, SyncJob *
 
 
 void
-SyncJobDispatcher::OnEventReceived(Message msg)
-{
+SyncJobDispatcher::OnEventReceived(Message msg) {
 	LOG_LOGD("0. Sync Job dispatcher starts");
 
 	if (!SyncManager::GetInstance()->__isSyncPermitted) {
@@ -176,15 +171,13 @@ SyncJobDispatcher::OnEventReceived(Message msg)
 
 /* LCOV_EXCL_START */
 bool
-sortFunc(const SyncJob* pJob1, const SyncJob* pJob2)
-{
+sortFunc(const SyncJob* pJob1, const SyncJob* pJob2) {
 	return false;
 }
 
 
 void
-SyncJobDispatcher::TryStartingNextJobLocked()
-{
+SyncJobDispatcher::TryStartingNextJobLocked() {
 	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false) {
 		LOG_LOGD("No network available: Skipping sync");
 		return;

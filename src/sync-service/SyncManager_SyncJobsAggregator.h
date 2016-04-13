@@ -42,8 +42,7 @@ class SyncJobsInfo;
 
 using namespace std;
 
-class SyncJobsAggregator
-{
+class SyncJobsAggregator {
 public:
 	void AddSyncJob(const char* pPackageId, const char* pSyncJobName, ISyncJob* pSyncJob);
 

@@ -61,8 +61,7 @@ class SyncJobsAggregator;
 using namespace std;
 
 class SyncManager
-		: public SyncWorker, public Singleton < SyncManager >
-{
+		: public SyncWorker, public Singleton < SyncManager > {
 public:
 	void SetSyncSetting(bool enable);
 

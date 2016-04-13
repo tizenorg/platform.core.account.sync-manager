@@ -49,8 +49,7 @@ class SyncAdapter;
 
 using namespace std;
 
-class SyncAdapterAggregator
-{
+class SyncAdapterAggregator {
 public:
 	void AddSyncAdapter(const char* pPackageId, const char* pServiceAppId);
 

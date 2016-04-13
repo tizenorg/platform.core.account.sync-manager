@@ -30,8 +30,7 @@
 {
 */
 
-class NetworkChangeListener
-{
+class NetworkChangeListener {
 public:
 	NetworkChangeListener(void);
 

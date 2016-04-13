@@ -26,8 +26,7 @@
 */
 
 template < typename TYPE >
-class Singleton
-{
+class Singleton {
 public:
 	static TYPE* GetInstance(void) {
 		if (__pInstance == NULL) {

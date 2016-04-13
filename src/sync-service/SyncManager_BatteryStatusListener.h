@@ -28,8 +28,7 @@
 {
 */
 
-class BatteryStatusListener
-{
+class BatteryStatusListener {
 public:
 	BatteryStatusListener(void);
 

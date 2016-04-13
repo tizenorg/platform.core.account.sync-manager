@@ -26,22 +26,19 @@
 {*/
 
 
-DataSyncJob::~DataSyncJob(void)
-{
+DataSyncJob::~DataSyncJob(void) {
 }
 
 
 DataSyncJob::DataSyncJob(const string appId, const string syncJobName, int accountId, bundle* pUserData, int syncOption, int syncJobId, SyncType type, string capability)
-	: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
-	, __capability(capability)
-{
+						: SyncJob(appId, syncJobName, accountId, pUserData, syncOption, syncJobId, type)
+						, __capability(capability) {
 }
 
 
 /* LCOV_EXCL_START */
 DataSyncJob::DataSyncJob(const DataSyncJob& other)
-	: SyncJob(other)
-{
+						: SyncJob(other) {
 /*
 	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
@@ -53,8 +50,7 @@ DataSyncJob::DataSyncJob(const DataSyncJob& other)
 
 
 DataSyncJob&
-DataSyncJob::operator= (const DataSyncJob& other)
-{
+DataSyncJob::operator= (const DataSyncJob& other) {
 /*
 	this->__accountHandle = other.__accountHandle;
 	this->__capability = other.__capability;
@@ -68,8 +64,7 @@ DataSyncJob::operator= (const DataSyncJob& other)
 
 
 void
-DataSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, string capability)
-{
+DataSyncJob::Reset(int accountId, bundle* pUserData, int syncOption, string capability) {
 	SyncJob::Reset(accountId, pUserData, syncOption);
 	__capability = capability;
 }

@@ -36,8 +36,7 @@
 
 extern "C" {
 
-SyncJob::~SyncJob(void)
-{
+SyncJob::~SyncJob(void) {
 	if (__pExtras) {
 		bundle_free(__pExtras);
 	}
@@ -47,8 +46,7 @@ SyncJob::~SyncJob(void)
 
 
 /* LCOV_EXCL_START */
-SyncJob::SyncJob(const SyncJob& job)
-{
+SyncJob::SyncJob(const SyncJob& job) {
 	__appId = job.__appId;
 	__accountId = job.__accountId;
 	__syncJobName = job.__syncJobName;
@@ -61,8 +59,7 @@ SyncJob::SyncJob(const SyncJob& job)
 
 
 SyncJob&
-SyncJob::operator = (const SyncJob& job)
-{
+SyncJob::operator = (const SyncJob& job) {
 	__appId = job.__appId;
 	__accountId = job.__accountId;
 	__syncJobName = job.__syncJobName;
@@ -77,21 +74,19 @@ SyncJob::operator = (const SyncJob& job)
 
 
 void
-SyncJob::CleanBundle(bundle* pData)
-{
+SyncJob::CleanBundle(bundle* pData) {
 }
 /* LCOV_EXCL_STOP */
 
 
 SyncJob::SyncJob(const string appId, const string syncJobName, int account, bundle* pExtras, int syncOption, int syncJobId, SyncType syncType)
-		: ISyncJob(syncJobId, syncType)
-		, __appId(appId)
-		, __syncJobName(syncJobName)
-		, __accountId(account)
-		, __pExtras(NULL)
-		, __isExpedited(syncOption & SYNC_OPTION_EXPEDITED)
-		, __noRetry(syncOption & SYNC_OPTION_NO_RETRY)
-{
+					: ISyncJob(syncJobId, syncType)
+					, __appId(appId)
+					, __syncJobName(syncJobName)
+					, __accountId(account)
+					, __pExtras(NULL)
+					, __isExpedited(syncOption & SYNC_OPTION_EXPEDITED)
+					, __noRetry(syncOption & SYNC_OPTION_NO_RETRY) {
 		LOG_LOGD("syncOption: %d", syncOption);
 		LOG_LOGD("__isExpedited: %d", __isExpedited);
 
@@ -103,31 +98,27 @@ SyncJob::SyncJob(const string appId, const string syncJobName, int account, bund
 
 
 bool
-SyncJob::IsExpedited(void)
-{
+SyncJob::IsExpedited(void) {
 	return __isExpedited;
 }
 
 
 /* LCOV_EXCL_START */
 bool
-SyncJob::IsNoRetry(void)
-{
+SyncJob::IsNoRetry(void) {
 	return __noRetry;
 }
 
 
 void
-SyncJob::IncrementWaitCounter()
-{
+SyncJob::IncrementWaitCounter() {
 	__waitCounter++;
 }
 /* LCOV_EXCL_STOP */
 
 
 string
-SyncJob::ToKey(void)
-{
+SyncJob::ToKey(void) {
 	LOG_LOGD("Generating key");
 
 	string key;
@@ -141,16 +132,14 @@ SyncJob::ToKey(void)
 
 /* LCOV_EXCL_START */
 static void
-bndl_iterator(const char* pKey, const char* pVal, void* pData)
-{
+bndl_iterator(const char* pKey, const char* pVal, void* pData) {
 	string str = *((string*)pData);
 	str.append(pKey).append("=").append(pVal).append(" ");
 }
 
 
 string
-SyncJob::GetExtrasInfo(bundle* pData)
-{
+SyncJob::GetExtrasInfo(bundle* pData) {
 	string str;
 
 	if (pData == NULL) {
@@ -167,8 +156,7 @@ SyncJob::GetExtrasInfo(bundle* pData)
 
 
 void
-SyncJob::Reset(int accountId, bundle* pUserData, int syncOption)
-{
+SyncJob::Reset(int accountId, bundle* pUserData, int syncOption) {
 	__accountId = accountId;
 	__noRetry = syncOption & SYNC_OPTION_NO_RETRY;
 	__isExpedited = syncOption & SYNC_OPTION_EXPEDITED;

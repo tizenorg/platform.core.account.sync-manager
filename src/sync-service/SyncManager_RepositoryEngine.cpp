@@ -120,8 +120,7 @@ RepositoryEngine* RepositoryEngine::__pInstance = NULL;
 
 
 RepositoryEngine*
-RepositoryEngine::GetInstance(void)
-{
+RepositoryEngine::GetInstance(void) {
 	if (!__pInstance) {
 		__pInstance = new (std::nothrow) RepositoryEngine();
 		if (__pInstance == NULL) {
@@ -137,15 +136,13 @@ RepositoryEngine::GetInstance(void)
 
 
 /* LCOV_EXCL_START */
-RepositoryEngine::~RepositoryEngine(void)
-{
+RepositoryEngine::~RepositoryEngine(void) {
 	pthread_mutex_destroy(&__capabilityInfoMutex);
 }
 /* LCOV_EXCL_STOP */
 
 
-RepositoryEngine::RepositoryEngine(void)
-{
+RepositoryEngine::RepositoryEngine(void) {
 	if (pthread_mutex_init(&__capabilityInfoMutex, NULL) != 0) {
 		LOG_LOGD("\n __syncJobQueueMutex init failed\n");	/* LCOV_EXCL_LINE */
 		return;
@@ -154,8 +151,7 @@ RepositoryEngine::RepositoryEngine(void)
 
 
 void
-RepositoryEngine::OnBooting()
-{
+RepositoryEngine::OnBooting() {
 	ReadSyncAdapters();
 	ReadSyncJobsData();
 }
@@ -172,8 +168,7 @@ bndl_iterator_test(const char* pKey, const char* pVal, void* pData)
 
 
 void
-RepositoryEngine::ReadSyncJobsData(void)
-{
+RepositoryEngine::ReadSyncJobsData(void) {
 	LOG_LOGD("Reading Sync jobs");
 
 	//Parse the Xml file
@@ -208,8 +203,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 		xmlFreeDoc(doc);
 		return;
 		/* LCOV_EXCL_STOP */
-	}
-	else {
+	} else {
 		xmlChar* pTotalJobsCount = xmlGetProp(cur, XML_ATTR_JOBS_COUNT);
 		int totalcount = (pTotalJobsCount == NULL) ? 0 : atoi((char*)pTotalJobsCount);
 		LOG_LOGD("Total Sync jobs [%d]", totalcount);
@@ -273,8 +267,7 @@ RepositoryEngine::ReadSyncJobsData(void)
 
 
 void
-RepositoryEngine::ReadSyncAdapters(void)
-{
+RepositoryEngine::ReadSyncAdapters(void) {
 	LOG_LOGD("Reading sync adapters");
 
 	//Parse the Xml file
@@ -309,8 +302,7 @@ RepositoryEngine::ReadSyncAdapters(void)
 		xmlFreeDoc(doc);
 		return;
 		/* LCOV_EXCL_STOP */
-	}
-	else {
+	} else {
 		xmlChar* pSACount;
 
 		pSACount = xmlGetProp(cur, XML_ATTR_COUNT);
@@ -341,8 +333,7 @@ RepositoryEngine::ReadSyncAdapters(void)
 
 /* LCOV_EXCL_START */
 static void
-bndl_iterator(const char* pKey, const char* pVal, void* pData)
-{
+bndl_iterator(const char* pKey, const char* pVal, void* pData) {
 	xmlNodePtr parentNode = *((xmlNodePtr*)pData);
 
 	xmlNodePtr extraNode = xmlNewChild(parentNode, NULL, XML_NODE_SYNC_EXTRA, NULL);
@@ -353,8 +344,7 @@ bndl_iterator(const char* pKey, const char* pVal, void* pData)
 
 
 void
-RepositoryEngine::WriteSyncJobsData(void)
-{
+RepositoryEngine::WriteSyncJobsData(void) {
 	LOG_LOGD("Writing sync jobs");
 
 	xmlDocPtr doc;
@@ -454,8 +444,7 @@ RepositoryEngine::WriteSyncJobsData(void)
 
 
 void
-RepositoryEngine::WriteSyncAdapters(void)
-{
+RepositoryEngine::WriteSyncAdapters(void) {
 	LOG_LOGD("Writing sync adapters");
 
 	xmlDocPtr doc;
@@ -502,8 +491,7 @@ RepositoryEngine::WriteSyncAdapters(void)
 
 /* LCOV_EXCL_START */
 void
-RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra)
-{
+RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra) {
 	xmlChar* pKey = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_KEY);
 	xmlChar* pVal = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_VALUE);
 
@@ -516,8 +504,7 @@ RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra)
 
 
 void
-RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
-{
+RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage) {
 	//xmlChar* pAppId = xmlGetProp(cur, XML_ATTR_JOB_APP_ID);
 	xmlChar* pAccId = xmlGetProp(cur, XML_ATTR_JOB_ACCOUNT_ID);
 	xmlChar* pJobId = xmlGetProp(cur, XML_ATTR_JOB_ID);
@@ -569,8 +556,7 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage)
 
 
 void
-RepositoryEngine::SaveCurrentState(void)
-{
+RepositoryEngine::SaveCurrentState(void) {
 	LOG_LOGD("saving states during shutdown");
 	pthread_mutex_lock(&__capabilityInfoMutex);
 	WriteSyncJobsData();
@@ -581,8 +567,7 @@ RepositoryEngine::SaveCurrentState(void)
 
 /* LCOV_EXCL_START */
 void
-RepositoryEngine::SaveCurrentSyncAdapter(void)
-{
+RepositoryEngine::SaveCurrentSyncAdapter(void) {
 	LOG_LOGD("saving states after adding sync adapter");
 	pthread_mutex_lock(&__capabilityInfoMutex);
 	WriteSyncAdapters();
@@ -591,8 +576,7 @@ RepositoryEngine::SaveCurrentSyncAdapter(void)
 
 
 void
-RepositoryEngine::SaveCurrentSyncJob(void)
-{
+RepositoryEngine::SaveCurrentSyncJob(void) {
 	LOG_LOGD("saving states after adding sync job");
 	pthread_mutex_lock(&__capabilityInfoMutex);
 	WriteSyncJobsData();

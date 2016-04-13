@@ -30,8 +30,7 @@
 
 using namespace std;
 
-class ManageIdleState
-{
+class ManageIdleState {
 public:
 	ManageIdleState(void);
 

@@ -29,29 +29,25 @@
 {*/
 
 
-SyncWorker::SyncWorker(void)
-{
+SyncWorker::SyncWorker(void) {
 }
 
 
 /* LCOV_EXCL_START */
-SyncWorker::~SyncWorker(void)
-{
+SyncWorker::~SyncWorker(void) {
 	Finalize();
 }
 /* LCOV_EXCL_STOP */
 
 
 int
-SyncWorker::FireEvent(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg)
-{
+SyncWorker::FireEvent(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg) {
 	return AddRequestN(pSyncWorkerResultListener, msg);
 }
 
 
 void
-SyncWorker::Initialize(void)
-{
+SyncWorker::Initialize(void) {
 	LOG_LOGD("Initializing sync worker thread");
 
 	GError* pGError = NULL;
@@ -63,8 +59,7 @@ SyncWorker::Initialize(void)
 		LOG_ERRORD("__pendingRequestsMutex Initialise Failed %d", ret);
 		return;
 		/* LCOV_EXCL_STOP */
-	}
-	else {
+	} else {
 		__pContext = g_main_context_new();
 		ASSERT(__pContext);
 
@@ -95,8 +90,7 @@ SyncWorker::Initialize(void)
 
 /* LCOV_EXCL_START */
 void
-SyncWorker::Finalize(void)
-{
+SyncWorker::Finalize(void) {
 	LOG_LOGD("Finalizing sync worker");
 
 	for (std::list<RequestData*>::iterator it = __pendingRequests.begin(); it != __pendingRequests.end();) {
@@ -130,8 +124,7 @@ SyncWorker::Finalize(void)
 
 
 int
-SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg)
-{
+SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Message msg) {
 	SYNC_LOGE_RET_RES(__pChannel != NULL, SYNC_ERROR_SYSTEM, "IO channel is not setup");
 
 	LOG_LOGD("Adding a request to sync worker");
@@ -168,8 +161,7 @@ SyncWorker::AddRequestN(ISyncWorkerResultListener* pSyncWorkerResultListener, Me
 
 
 gboolean
-SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpointer data)
-{
+SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpointer data) {
 	LOG_LOGD("GIO event received");
 	SyncWorker* pSyncWorker = static_cast<SyncWorker*>(data);
 	SYNC_LOGE_RET_RES(pSyncWorker != NULL, FALSE, "Data is NULL");
@@ -200,8 +192,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 
 			delete pData;
 			pData = NULL;
-		}
-		else {
+		} else {
 			pthread_mutex_unlock(&pSyncWorker->__pendingRequestsMutex);	/* LCOV_EXCL_LINE */
 		}
 
@@ -218,8 +209,7 @@ SyncWorker::OnEventReceived(GIOChannel* pChannel, GIOCondition condition, gpoint
 
 
 gpointer
-SyncWorker::ThreadLoop(gpointer data)
-{
+SyncWorker::ThreadLoop(gpointer data) {
 	LOG_LOGD("Sync worker thread entered");
 
 	GMainLoop* pLoop = static_cast<GMainLoop*>(data);

@@ -29,8 +29,7 @@
 
 
 /* LCOV_EXCL_START */
-void OnConnectionChanged(connection_type_e type, void *user_data)
-{
+void OnConnectionChanged(connection_type_e type, void *user_data) {
 	LOG_LOGD("Network connection changed %d", type);
 
 	switch (type) {
@@ -60,8 +59,7 @@ void OnConnectionChanged(connection_type_e type, void *user_data)
 
 
 NetworkChangeListener::NetworkChangeListener(void)
-	: connection(NULL)
-{
+											: connection(NULL) {
 	int ret = connection_create(&connection);
 	if (ret != CONNECTION_ERROR_NONE) {
 		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
@@ -70,8 +68,7 @@ NetworkChangeListener::NetworkChangeListener(void)
 
 
 /* LCOV_EXCL_START */
-NetworkChangeListener::~NetworkChangeListener(void)
-{
+NetworkChangeListener::~NetworkChangeListener(void) {
 	if (connection) {
 		connection_destroy(connection);
 	}
@@ -80,8 +77,7 @@ NetworkChangeListener::~NetworkChangeListener(void)
 
 
 bool
-NetworkChangeListener::IsWifiConnected()
-{
+NetworkChangeListener::IsWifiConnected() {
 	int ret;
 	connection_wifi_state_e state = CONNECTION_WIFI_STATE_DEACTIVATED;
 	ret = connection_get_wifi_state(connection, &state);
@@ -94,8 +90,7 @@ NetworkChangeListener::IsWifiConnected()
 
 
 bool
-NetworkChangeListener::IsDataConnectionPresent()
-{
+NetworkChangeListener::IsDataConnectionPresent() {
 	int ret;
 	connection_cellular_state_e state = CONNECTION_CELLULAR_STATE_OUT_OF_SERVICE;
 	ret = connection_get_cellular_state(connection, &state);
@@ -110,8 +105,7 @@ NetworkChangeListener::IsDataConnectionPresent()
 
 
 int
-NetworkChangeListener::RegisterNetworkChangeListener(void)
-{
+NetworkChangeListener::RegisterNetworkChangeListener(void) {
 	int ret = CONNECTION_ERROR_NONE;
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
 	if (ret != CONNECTION_ERROR_NONE) {
@@ -124,8 +118,7 @@ NetworkChangeListener::RegisterNetworkChangeListener(void)
 
 /* LCOV_EXCL_START */
 int
-NetworkChangeListener::DeRegisterNetworkChangeListener(void)
-{
+NetworkChangeListener::DeRegisterNetworkChangeListener(void) {
 	LOG_LOGD("Removing network change listener");
 
 	int ret;

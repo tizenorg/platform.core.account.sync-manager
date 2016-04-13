@@ -31,13 +31,11 @@
 
 
 /* LCOV_EXCL_START */
-CapabilityInfo::CapabilityInfo(void)
-{
+CapabilityInfo::CapabilityInfo(void) {
 }
 
 
-CapabilityInfo::~CapabilityInfo(void)
-{
+CapabilityInfo::~CapabilityInfo(void) {
 /*
 	for (unsigned int i=0; i<periodicSyncList.size(); i++) {
 		delete periodicSyncList[i];
@@ -47,21 +45,18 @@ CapabilityInfo::~CapabilityInfo(void)
 
 
 CapabilityInfo::CapabilityInfo(string capability)
-			: __capability(capability)
-{
+							: __capability(capability) {
 }
 
 
 void
-CapabilityInfo::AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob)
-{
+CapabilityInfo::AddPeriodicSyncJob(int account_id, PeriodicSyncJob* pJob) {
 	__periodicSyncList.insert(pair<int, PeriodicSyncJob*> (account_id, pJob));
 }
 
 
 void
-CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob)
-{
+CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob) {
 /*
 	int acc_id;
 	int ret = account_get_account_id(pJob->accountHandle, &acc_id);
@@ -73,23 +68,20 @@ CapabilityInfo::RemovePeriodicSyncJob(PeriodicSyncJob* pJob)
 
 
 bool
-CapabilityInfo::RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob)
-{
+CapabilityInfo::RequestAlreadyExists(int account_id, PeriodicSyncJob* pJob) {
 	map<int, PeriodicSyncJob*>::iterator it = __periodicSyncList.find(account_id);
-	if (it == __periodicSyncList.end()) {
+	if (it == __periodicSyncList.end())
 		return false;
-	}
+
 	PeriodicSyncJob* pSyncJob = it->second;
-	if (*pSyncJob == *pJob) {
+	if (*pSyncJob == *pJob)
 		return true;
-	}
 	else
 		return false;
 }
 
 
-CapabilityInfo::CapabilityInfo(const CapabilityInfo& capabilityInfo)
-{
+CapabilityInfo::CapabilityInfo(const CapabilityInfo& capabilityInfo) {
 	this->__capability = capabilityInfo.__capability;
 
 	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
@@ -103,8 +95,7 @@ CapabilityInfo::CapabilityInfo(const CapabilityInfo& capabilityInfo)
 }
 
 
-CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo)
-{
+CapabilityInfo& CapabilityInfo::operator =(const CapabilityInfo& capabilityInfo) {
 	this->__capability = capabilityInfo.__capability;
 
 	map<int, PeriodicSyncJob*>::const_iterator endItr = capabilityInfo.__periodicSyncList.end();
