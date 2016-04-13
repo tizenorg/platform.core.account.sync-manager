@@ -63,6 +63,11 @@ extern "C" {
  * @see sync_manager_add_periodic_sync_job()
  * @see sync_manager_add_data_change_sync_job()
  */
+ 
+ #ifndef EXPORT_API
+ #define EXPORT_API
+ #endif // EXPORT_API
+ 
 typedef bool (*sync_adapter_start_sync_cb)(account_h account, const char *sync_job_name, const char *sync_capability, bundle *sync_job_user_data);
 
 
@@ -109,7 +114,7 @@ typedef void (*sync_adapter_cancel_sync_cb)(account_h account, const char *sync_
  * @see sync_adapter_cancel_sync_cb()
  * @see sync_adapter_unset_callbacks()
  */
-int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adapter_cancel_sync_cb on_cancel_cb);
+EXPORT_API int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adapter_cancel_sync_cb on_cancel_cb);
 
 
 /**
@@ -129,7 +134,7 @@ int sync_adapter_set_callbacks(sync_adapter_start_sync_cb on_start_cb, sync_adap
  * @see sync_adapter_cancel_sync_cb()
  * @see sync_adapter_set_callbacks()
  */
-int sync_adapter_unset_callbacks(void);
+EXPORT_API int sync_adapter_unset_callbacks(void);
 
 
 /* End of Sync Adapter APIs */

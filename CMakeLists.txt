@@ -16,6 +16,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT("sync-manager")
 ADD_DEFINITIONS("-flto")
+ADD_DEFINITIONS("-fvisibility=hidden")
+ADD_DEFINITIONS("-DEXPORT_API=__attribute__((visibility(\"default\")))")
 IF(NOT DEFINED PACKAGE_NAME)
 	SET(PACKAGE_NAME "sync-manager")
 ENDIF(NOT DEFINED PACKAGE_NAME)

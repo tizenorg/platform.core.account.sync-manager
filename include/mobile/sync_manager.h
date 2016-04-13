@@ -95,6 +95,10 @@ extern "C"
 #define SYNC_SUPPORTS_CAPABILITY_MUSIC	"http://tizen.org/sync/capability/music"
 
 
+#ifndef EXPORT_API
+#define EXPORT_API
+#endif // EXPORT_API
+
 /**
  *  @brief   Enumerations for sync options of sync job request APIs.
  *  @since_tizen 2.4
@@ -169,7 +173,7 @@ typedef bool (*sync_manager_sync_job_cb)(account_h account, const char *sync_job
  * @see sync_manager_remove_sync_job()
  * @see sync_option_e
  */
-int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
+EXPORT_API int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
 
 
 /**
@@ -204,7 +208,7 @@ int sync_manager_on_demand_sync_job(account_h account, const char *sync_job_name
  * @see sync_option_e
  * @see sync_period_e
  */
-int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_name, sync_period_e sync_period, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
+EXPORT_API int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_name, sync_period_e sync_period, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
 
 
 /**
@@ -239,7 +243,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
  * @see sync_manager_remove_sync_job()
  * @see sync_option_e
  */
-int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
+EXPORT_API int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id);
 
 
 /**
@@ -266,7 +270,7 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
  * @see sync_manager_add_periodic_sync_job()
  * @see sync_manager_add_data_change_sync_job()
  */
-int sync_manager_remove_sync_job(int sync_job_id);
+EXPORT_API int sync_manager_remove_sync_job(int sync_job_id);
 
 
 /**
@@ -293,7 +297,7 @@ int sync_manager_remove_sync_job(int sync_job_id);
  * @see sync_manager_add_periodic_sync_job()
  * @see sync_manager_add_data_change_sync_job()
  */
-int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *user_data);
+EXPORT_API int sync_manager_foreach_sync_job(sync_manager_sync_job_cb sync_job_cb, void *user_data);
 
 
 /* End of Sync Manager APIs */
