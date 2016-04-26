@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2013 Samsung Electronics Co., Ltd All Rights Reserved
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the License);
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an AS IS BASIS,
+ * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -29,8 +29,10 @@
 #include "sync-error.h"
 
 
+#ifdef MOBILE
 const char *capability_calendar = SYNC_SUPPORTS_CAPABILITY_CALENDAR;
 const char *capability_contact = SYNC_SUPPORTS_CAPABILITY_CONTACT;
+#endif
 const char *capability_image = SYNC_SUPPORTS_CAPABILITY_IMAGE;
 const char *capability_video = SYNC_SUPPORTS_CAPABILITY_VIDEO;
 const char *capability_sound = SYNC_SUPPORTS_CAPABILITY_SOUND;
@@ -52,15 +54,53 @@ static int account_id = -1;
 
 bundle *user_data = NULL;
 
+static GMainLoop *g_mainloop = NULL;
+static bool is_finished = false;
+
+
+static void timeout_func()
+{
+	g_main_loop_quit(g_mainloop);
+	g_mainloop = NULL;
+}
+
+
+static void wait_for_async()
+{
+	g_mainloop = g_main_loop_new(NULL, FALSE);
+	g_main_loop_run(g_mainloop);
+}
+
+
+static int is_callback_finished()
+{
+	if (is_finished == true)
+		return 0;
+
+	return 1;
+}
+
 
 static bool on_start_cb(account_h account, const char *sync_job_name, const char *sync_capability, bundle *sync_job_user_data)
 {
+	if (!is_finished)
+		is_finished = true;
+
+	if (g_mainloop)
+		timeout_func(g_mainloop);
+
 	return true;
 }
 
 
 static void on_cancel_cb(account_h account, const char *sync_job_name, const char *sync_capability, bundle *sync_job_user_data)
 {
+	if (!is_finished)
+		is_finished = true;
+
+	if (g_mainloop)
+		timeout_func(g_mainloop);
+
 	return;
 }
 
@@ -254,55 +294,23 @@ int utc_sync_manager_on_demand_sync_job_p(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	return 0;
-}
+	wait_for_async();
 
-
-/**
- * @testcase		utc_sync_manager_on_demand_sync_job_p2
- * @since_tizen		2.4
- * @description		Positive test case of adding on-demand sync jobs with @c NULL parameters
- */
-int utc_sync_manager_on_demand_sync_job_p2(void)
-{
-	int ret = SYNC_ERROR_NONE;
-
-	sync_manager_setup_adapter();
-	assert(set_cb);
-
-	sync_manager_setup_account();
-	assert(using_acc);
-	assert(created_acc);
-	assert(existed_acc);
-
-	user_data = bundle_create();
-	bundle_add_str(user_data, "str", "String user_data sample.");
-
-	int sync_job_id = 0;
-
-	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	return 0;
 }
@@ -379,6 +387,56 @@ int utc_sync_manager_on_demand_sync_job_n2(void)
 
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+
+	return 0;
+}
+
+
+/**
+ * @testcase		utc_sync_manager_on_demand_sync_job_p2
+ * @since_tizen		2.4
+ * @description		Positive test case of adding on-demand sync jobs with @c NULL parameters
+ */
+int utc_sync_manager_on_demand_sync_job_p2(void)
+{
+	int ret = SYNC_ERROR_NONE;
+
+	sync_manager_setup_adapter();
+	assert(set_cb);
+
+	sync_manager_setup_account();
+	assert(using_acc);
+	assert(created_acc);
+	assert(existed_acc);
+
+	user_data = bundle_create();
+	bundle_add_str(user_data, "str", "String user_data sample.");
+
+	int sync_job_id = 0;
+
+	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	return 0;
 }
@@ -496,6 +554,12 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -503,6 +567,12 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -528,85 +598,11 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	return 0;
-}
-
-
-/**
- * @testcase		utc_sync_manager_add_periodic_sync_job_p2
- * @since_tizen		2.4
- * @description		Positive test case of adding periodic sync jobs with @c NULL parameters
- */
-int utc_sync_manager_add_periodic_sync_job_p2(void)
-{
-	int ret = SYNC_ERROR_NONE;
-
-	sync_manager_setup_adapter();
-	assert(set_cb);
-
-	sync_manager_setup_account();
-	assert(using_acc);
-	assert(created_acc);
-	assert(existed_acc);
-
-	user_data = bundle_create();
-	bundle_add_str(user_data, "str", "String user_data sample.");
-
-	int sync_job_id = 0;
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_NONE, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_12H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -730,6 +726,104 @@ int utc_sync_manager_add_periodic_sync_job_n3(void)
 
 
 /**
+ * @testcase		utc_sync_manager_add_periodic_sync_job_p2
+ * @since_tizen		2.4
+ * @description		Positive test case of adding periodic sync jobs with @c NULL parameters
+ */
+int utc_sync_manager_add_periodic_sync_job_p2(void)
+{
+	int ret = SYNC_ERROR_NONE;
+
+	sync_manager_setup_adapter();
+	assert(set_cb);
+
+	sync_manager_setup_account();
+	assert(using_acc);
+	assert(created_acc);
+	assert(existed_acc);
+
+	user_data = bundle_create();
+	bundle_add_str(user_data, "str", "String user_data sample.");
+
+	int sync_job_id = 0;
+
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_NONE, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_12H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	sync_manager_setup_interval();
+
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	return 0;
+}
+
+
+/**
  * @testcase		utc_sync_manager_add_periodic_sync_job_n4
  * @since_tizen		2.4
  * @description		Negative test case of adding periodic sync jobs without sync job id as mandatory parameter
@@ -831,6 +925,7 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 
 	int sync_job_id = 0;
 
+#ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -842,15 +937,28 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_video, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -862,68 +970,6 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_music, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	return 0;
-}
-
-
-/**
- * @testcase		utc_sync_manager_add_data_change_sync_job_p2
- * @since_tizen		2.4
- * @description		Positive test case of adding data change sync jobs with @c NULL parameters
- */
-int utc_sync_manager_add_data_change_sync_job_p2(void)
-{
-	int ret = SYNC_ERROR_NONE;
-
-	sync_manager_setup_adapter();
-	assert(set_cb);
-
-	sync_manager_setup_account();
-	assert(using_acc);
-	assert(created_acc);
-	assert(existed_acc);
-
-	user_data = bundle_create();
-	bundle_add_str(user_data, "str", "String user_data sample.");
-
-	int sync_job_id = 0;
-
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(account, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_music, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
@@ -1005,17 +1051,107 @@ int utc_sync_manager_add_data_change_sync_job_n2(void)
 
 	int sync_job_id = 0;
 
+#ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, -1, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_contact, -1, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_image, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+
+	return 0;
+}
+
+
+/**
+ * @testcase		utc_sync_manager_add_data_change_sync_job_p2
+ * @since_tizen		2.4
+ * @description		Positive test case of adding data change sync jobs with @c NULL parameters
+ */
+int utc_sync_manager_add_data_change_sync_job_p2(void)
+{
+	int ret = SYNC_ERROR_NONE;
+
+	sync_manager_setup_adapter();
+	assert(set_cb);
+
+	sync_manager_setup_account();
+	assert(using_acc);
+	assert(created_acc);
+	assert(existed_acc);
+
+	user_data = bundle_create();
+	bundle_add_str(user_data, "str", "String user_data sample.");
+
+	int sync_job_id = 0;
+
+#ifdef MOBILE
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_add_data_change_sync_job(account, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
+
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_music, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
 
 	return 0;
 }
@@ -1047,11 +1183,13 @@ int utc_sync_manager_add_data_change_sync_job_n3(void)
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_music, SYNC_OPTION_NO_RETRY, user_data, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+#ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_EXPEDITED, NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+#endif
 
 	return 0;
 }
@@ -1079,11 +1217,13 @@ int utc_sync_manager_add_data_change_sync_job_n4(void)
 	ret = sync_manager_add_data_change_sync_job(account, capability_music, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
 
+#ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
@@ -1141,11 +1281,23 @@ int utc_sync_manager_remove_sync_job_p(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	return 0;
 }
@@ -1192,6 +1344,12 @@ int utc_sync_manager_remove_sync_job_p2(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
+
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -1199,6 +1357,12 @@ int utc_sync_manager_remove_sync_job_p2(void)
 
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -1229,6 +1393,7 @@ int utc_sync_manager_remove_sync_job_p3(void)
 
 	int sync_job_id = 0;
 
+#ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -1240,15 +1405,28 @@ int utc_sync_manager_remove_sync_job_p3(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	wait_for_async();
+
+	ret = is_callback_finished();
+	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -1279,15 +1457,6 @@ int utc_sync_manager_remove_sync_job_n(void)
 
 	int sync_job_id = 0;
 
-	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(-1);
-	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -1297,7 +1466,7 @@ int utc_sync_manager_remove_sync_job_n(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id);
+	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(-1);
@@ -1332,15 +1501,11 @@ int utc_sync_manager_foreach_sync_job_p(void)
 
 	int sync_job_id1 = 0;
 	int sync_job_id2 = 0;
-	int sync_job_id3 = 0;
 
-	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id1);
+	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id1);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id2);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id3);
+	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_NONE, user_data, &sync_job_id2);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_foreach_sync_job(sync_job_cb, NULL);
@@ -1350,9 +1515,6 @@ int utc_sync_manager_foreach_sync_job_p(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id2);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id3);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	return 0;
@@ -1381,15 +1543,11 @@ int utc_sync_manager_foreach_sync_job_n(void)
 
 	int sync_job_id1 = 0;
 	int sync_job_id2 = 0;
-	int sync_job_id3 = 0;
 
-	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id1);
+	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id1);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id2);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id3);
+	ret = sync_manager_add_data_change_sync_job(account, capability_music, SYNC_OPTION_NONE, user_data, &sync_job_id2);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_foreach_sync_job(NULL, NULL);
@@ -1399,9 +1557,6 @@ int utc_sync_manager_foreach_sync_job_n(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id2);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id3);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	return 0;

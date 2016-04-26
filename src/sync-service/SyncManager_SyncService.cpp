@@ -416,14 +416,14 @@ void
 SyncService::TriggerStopSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras) {
 	LOG_LOGD("Trigger stop sync %s", appId);
 
-	//int id = -1;
-
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
-	if (pSyncAdapter == NULL) {
+	if (!pSyncAdapter) {
 		LOG_LOGD("Failed to lookup syncadapter");
 		return;
 	}
+
 	GVariant* pBundle = marshal_bundle(pExtras);
+
 	tizen_sync_adapter_emit_cancel_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
 }
 /* LCOV_EXCL_STOP */
