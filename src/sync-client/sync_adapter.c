@@ -71,11 +71,15 @@ __sync_adapter_on_start_sync(TizenSyncAdapter *pObject,
 	LOG_LOGD("Received start sync request in sync adapter: params account[%d] jobname [%s] Data sync [%s]", accountId, pSyncJobName, is_data_sync ? "YES" : "NO");
 
 	char *command_line = proc_get_cmdline_self();
+
+	if (!g_sync_adapter) {
+		LOG_LOGD("Sync adapter is already released");
+		return false;
+	}
+
 	if (g_sync_adapter->__syncRunning) {
 		LOG_LOGD("Sync already running");
-
 		tizen_sync_adapter_call_send_result_sync(pObject, command_line, (int)SYNC_STATUS_SYNC_ALREADY_IN_PROGRESS, pSyncJobName, NULL, NULL);
-
 		return true;
 	}
 
