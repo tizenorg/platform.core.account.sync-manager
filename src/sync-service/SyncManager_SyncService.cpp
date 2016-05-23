@@ -78,6 +78,7 @@ static TizenSyncManager* sync_ipc_obj = NULL;
 GHashTable* g_hash_table = NULL;
 string sa_app_id;
 static guint signal_id = -1;
+static guint g_bus_owner_id;
 
 
 void convert_to_path(char app_id[]) {
@@ -540,6 +541,8 @@ SyncService::HandleShutdown(void) {
 	LOG_LOGD("Shutdown Starts");
 
 	cynara_finish(pCynara);
+
+	FinalizeDbus();
 
 	SyncManager::GetInstance()->HandleShutdown();
 
@@ -1397,7 +1400,7 @@ OnNameLost(GDBusConnection* pConnection, const gchar* pName, gpointer userData) 
 
 static bool
 __initialize_dbus() {
-	static guint ownerId = g_bus_own_name(G_BUS_TYPE_SESSION,
+	guint ownerId = g_bus_own_name(G_BUS_TYPE_SESSION,
 			"org.tizen.sync",
 			G_BUS_NAME_OWNER_FLAGS_NONE,
 			OnBusAcquired,
@@ -1412,6 +1415,8 @@ __initialize_dbus() {
 		return false;
 		/* LCOV_EXCL_STOP */
 	}
+
+	g_bus_owner_id = ownerId;
 
 	return true;
 }
@@ -1440,6 +1445,13 @@ SyncService::SyncService(void)
 	LOG_LOGD("Sync service initialization starts");
 
 	InitializeDbus();
+}
+
+
+void
+SyncService::FinalizeDbus(void) {
+	LOG_LOGD("Dbus finalization starts");
+	g_bus_unown_name(g_bus_owner_id);
 }
 
 
