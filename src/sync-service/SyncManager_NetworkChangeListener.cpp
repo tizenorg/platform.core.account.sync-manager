@@ -69,9 +69,8 @@ NetworkChangeListener::NetworkChangeListener(void)
 
 /* LCOV_EXCL_START */
 NetworkChangeListener::~NetworkChangeListener(void) {
-	if (connection) {
+	if (connection)
 		connection_destroy(connection);
-	}
 }
 /* LCOV_EXCL_STOP */
 

@@ -142,11 +142,13 @@ protected:
 	friend class Singleton < SyncManager > ;
 
 private:
-	bool Construct();
+	bool Construct(void);
 
-	void RegisterForUPSModeChange();
+	void Destruct(void);
 
-	int DeRegisterForUPSModeChange();
+	void RegisterForUPSModeChange(void);
+
+	int DeRegisterForUPSModeChange(void);
 
 	void RegisterForNetworkChange(void);
 

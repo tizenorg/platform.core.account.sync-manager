@@ -66,7 +66,9 @@ private:
 
 	const SyncService &operator = (const SyncService&);
 
-	void InitializeDbus();
+	void InitializeDbus(void);
+
+	void FinalizeDbus(void);
 
 private:
 	SyncManager* __pSyncManagerInstance;

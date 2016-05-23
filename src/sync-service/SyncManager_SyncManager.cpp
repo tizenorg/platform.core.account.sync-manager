@@ -523,10 +523,8 @@ void SyncManager::RegisterForDataChange(void) {
 
 /* LCOV_EXCL_START */
 int SyncManager::DeRegisterForDataChange(void) {
-	if (__pDataChangeSyncScheduler) {
+	if (__pDataChangeSyncScheduler)
 		return (__pDataChangeSyncScheduler->DeRegisterDataChangeListeners());
-	}
-
 	return -1;
 }
 /* LCOV_EXCL_STOP */
@@ -710,7 +708,12 @@ SyncManager::Construct(void) {
 
 /* LCOV_EXCL_START */
 SyncManager::~SyncManager(void) {
-	LOG_LOGD("SyncManager::~SyncManager() Starts");
+}
+
+
+void
+SyncManager::Destruct(void) {
+	LOG_LOGD("Sync manager finalization begins");
 
 	pthread_mutex_destroy(&__syncJobQueueMutex);
 	pthread_mutex_destroy(&__currJobQueueMutex);
@@ -742,7 +745,7 @@ SyncManager::~SyncManager(void) {
 	{
 		LOG_LOGD("SyncManager::SyncManager failed to deregister callback for account updation");
 	}*/
-	LOG_LOGD("SyncManager::~SyncManager() Ends");
+	LOG_LOGD("Sync manager finalization ends");
 }
 
 
@@ -815,6 +818,7 @@ void
 SyncManager::HandleShutdown(void) {
 	pthread_mutex_lock(&__syncJobQueueMutex);
 	__pSyncRepositoryEngine->SaveCurrentState();
+	SyncManager::GetInstance()->Destruct();
 	pthread_mutex_unlock(&__syncJobQueueMutex);
 }
 
