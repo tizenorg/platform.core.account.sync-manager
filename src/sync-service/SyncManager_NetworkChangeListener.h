@@ -38,9 +38,11 @@ public:
 
 	int RegisterNetworkChangeListener(void);
 
-	bool IsWifiConnected();
+	bool IsWifiConnected(void);
 
-	bool IsDataConnectionPresent();
+	bool IsEthernetConnected(void);
+
+	bool IsDataConnectionPresent(void);
 
 	int DeRegisterNetworkChangeListener(void);
 

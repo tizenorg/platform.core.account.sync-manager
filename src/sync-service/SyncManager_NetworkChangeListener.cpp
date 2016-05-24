@@ -37,6 +37,10 @@ void OnConnectionChanged(connection_type_e type, void *user_data) {
 			SyncManager::GetInstance()->OnWifiStatusChanged(true);
 			break;
 		}
+		case CONNECTION_TYPE_ETHERNET: {
+			SyncManager::GetInstance()->OnEthernetStatusChanged(true);
+			break;
+		}
 		case CONNECTION_TYPE_CELLULAR: {
 			SyncManager::GetInstance()->OnDNetStatusChanged(true);
 			break;
@@ -47,6 +51,7 @@ void OnConnectionChanged(connection_type_e type, void *user_data) {
 		}
 		case CONNECTION_TYPE_DISCONNECTED: {
 			SyncManager::GetInstance()->OnWifiStatusChanged(false);
+			SyncManager::GetInstance()->OnEthernetStatusChanged(false);
 			SyncManager::GetInstance()->OnDNetStatusChanged(false);
 			SyncManager::GetInstance()->OnBluetoothStatusChanged(false);
 			break;
@@ -61,9 +66,8 @@ void OnConnectionChanged(connection_type_e type, void *user_data) {
 NetworkChangeListener::NetworkChangeListener(void)
 											: connection(NULL) {
 	int ret = connection_create(&connection);
-	if (ret != CONNECTION_ERROR_NONE) {
+	if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Create connection failed %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
-	}
 }
 
 
@@ -80,11 +84,22 @@ NetworkChangeListener::IsWifiConnected() {
 	int ret;
 	connection_wifi_state_e state = CONNECTION_WIFI_STATE_DEACTIVATED;
 	ret = connection_get_wifi_state(connection, &state);
-	if (ret != CONNECTION_ERROR_NONE) {
+	if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Connection wifi failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
-	}
 
 	return (state == CONNECTION_WIFI_STATE_CONNECTED);
+}
+
+
+bool
+NetworkChangeListener::IsEthernetConnected() {
+	int ret;
+	connection_ethernet_state_e state = CONNECTION_ETHERNET_STATE_DEACTIVATED;
+	ret = connection_get_ethernet_state(connection, &state);
+	if (ret != CONNECTION_ERROR_NONE)
+		LOG_LOGD("Connection ethernet failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
+
+	return (state == CONNECTION_ETHERNET_STATE_CONNECTED);
 }
 
 
@@ -93,11 +108,10 @@ NetworkChangeListener::IsDataConnectionPresent() {
 	int ret;
 	connection_cellular_state_e state = CONNECTION_CELLULAR_STATE_OUT_OF_SERVICE;
 	ret = connection_get_cellular_state(connection, &state);
-	if (ret == CONNECTION_ERROR_NOT_SUPPORTED) {
+	if (ret == CONNECTION_ERROR_NOT_SUPPORTED)
 		LOG_LOGD("Telephony does not be supported on this target");	/* LCOV_EXCL_LINE */
-	} else if (ret != CONNECTION_ERROR_NONE) {
+	else if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Connection cellular failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
-	}
 
 	return (state == CONNECTION_CELLULAR_STATE_CONNECTED);
 }
@@ -107,9 +121,8 @@ int
 NetworkChangeListener::RegisterNetworkChangeListener(void) {
 	int ret = CONNECTION_ERROR_NONE;
 	ret =  connection_set_type_changed_cb(connection, OnConnectionChanged, NULL);
-	if (ret != CONNECTION_ERROR_NONE) {
+	if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Registration of network change listener failed %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
-	}
 
 	return ret;
 }
@@ -122,9 +135,8 @@ NetworkChangeListener::DeRegisterNetworkChangeListener(void) {
 
 	int ret;
 	ret = connection_unset_type_changed_cb(connection);
-	if (ret != CONNECTION_ERROR_NONE) {
+	if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Removal of network change listener failed");
-	}
 
 	return ret;
 }

@@ -81,10 +81,12 @@ public:
 
 	int AddToSyncQueue(SyncJob* pJob);
 
-	/* Callback on wifi, cellular, bt and wifidirect status change */
+	/* Callback on wifi, ethernet, cellular, bt and wifidirect status change */
 	void OnDNetStatusChanged(bool connected);
 
 	void OnWifiStatusChanged(bool connected);
+
+	void OnEthernetStatusChanged(bool connected);
 
 	void OnBluetoothStatusChanged(bool connected);
 
@@ -194,6 +196,7 @@ private:
 private:
 	bool __isStorageLow;
 	bool __isWifiConnectionPresent;
+	bool __isEthernetConnectionPresent;
 	bool __isSimDataConnectionPresent;
 	bool __isUPSModeEnabled;
 	bool __isSyncPermitted;

@@ -294,6 +294,17 @@ SyncManager::OnWifiStatusChanged(bool connected) {
 
 
 void
+SyncManager::OnEthernetStatusChanged(bool connected) {
+	LOG_LOGD("Ethernet change detected %d", connected);
+
+	__isEthernetConnectionPresent = connected;
+	if (__isEthernetConnectionPresent) {
+		SendSyncCheckAlarmMessage();
+	}
+}
+
+
+void
 SyncManager::OnBluetoothStatusChanged(bool connected) {
 	LOG_LOGD("Bluetooth status %d", connected);
 }
@@ -590,6 +601,7 @@ SyncManager::CancelActiveSyncJob(SyncJob* pSyncJob) {
 SyncManager::SyncManager(void)
 	: __isStorageLow(false)
 	, __isWifiConnectionPresent(false)
+	, __isEthernetConnectionPresent(false)
 	, __isSimDataConnectionPresent(false)
 	, __isUPSModeEnabled(false)
 	, __isSyncPermitted(true)
@@ -665,9 +677,10 @@ SyncManager::Construct(void) {
 	LOG_LOGE_BOOL(__pSyncJobDispatcher, "Failed to construct SyncJobDispatcher");
 
 	__isWifiConnectionPresent = __pNetworkChangeListener->IsWifiConnected();
+	__isEthernetConnectionPresent = __pNetworkChangeListener->IsEthernetConnected();
 	__isSimDataConnectionPresent = __pNetworkChangeListener->IsDataConnectionPresent();
 
-	LOG_LOGD("wifi %d, sim %d storage %d", __isWifiConnectionPresent, __isSimDataConnectionPresent, __isStorageLow);
+	LOG_LOGD("wifi %d, ethernet %d, sim %d, storage %d", __isWifiConnectionPresent, __isEthernetConnectionPresent, __isSimDataConnectionPresent, __isStorageLow);
 
 	LOG_LOGD("Register event listeners");
 	RegisterForNetworkChange();

@@ -178,7 +178,7 @@ sortFunc(const SyncJob* pJob1, const SyncJob* pJob2) {
 
 void
 SyncJobDispatcher::TryStartingNextJobLocked() {
-	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false) {
+	if (SyncManager::GetInstance()->__isWifiConnectionPresent == false && SyncManager::GetInstance()->__isEthernetConnectionPresent == false && SyncManager::GetInstance()->__isSimDataConnectionPresent == false) {
 		LOG_LOGD("No network available: Skipping sync");
 		return;
 	}
