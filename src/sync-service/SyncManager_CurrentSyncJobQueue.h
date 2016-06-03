@@ -28,6 +28,7 @@
 #include <map>
 #include <queue>
 #include "SyncManager_CurrentSyncContext.h"
+#include "SyncManager_SyncJobsAggregator.h"
 
 /*namespace _SyncManager
 {

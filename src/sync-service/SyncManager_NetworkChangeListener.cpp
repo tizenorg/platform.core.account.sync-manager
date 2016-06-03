@@ -96,7 +96,9 @@ NetworkChangeListener::IsEthernetConnected() {
 	int ret;
 	connection_ethernet_state_e state = CONNECTION_ETHERNET_STATE_DEACTIVATED;
 	ret = connection_get_ethernet_state(connection, &state);
-	if (ret != CONNECTION_ERROR_NONE)
+	if (ret == CONNECTION_ERROR_NOT_SUPPORTED)
+		LOG_LOGD("Ethernet connection does not be supported on this target");	/* LCOV_EXCL_LINE */
+	else if (ret != CONNECTION_ERROR_NONE)
 		LOG_LOGD("Connection ethernet failure %d, %s", ret, get_error_message(ret));	/* LCOV_EXCL_LINE */
 
 	return (state == CONNECTION_ETHERNET_STATE_CONNECTED);

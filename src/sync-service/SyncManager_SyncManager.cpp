@@ -356,7 +356,8 @@ SyncManager::OnBatteryStatusChanged(int value) {
 }
 
 
-static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey,	const char* pVal, const void* pMsg, void* pData) {
+static int
+OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkgType, const char* pPkgId, const char* pKey, const char* pVal, const void* pMsg, void* pData) {
 	LOG_LOGD("OnPackageUninstalled [type %s] type [pkdId:%s]", pPkgType, pPkgId);
 	if (!strcmp("end", pKey) && !strcmp("ok", pVal)) {
 		SyncManager::GetInstance()->GetSyncAdapterAggregator()->HandlePackageUninstalled(pPkgId);
@@ -366,6 +367,41 @@ static int OnPackageUninstalled(unsigned int userId, int reqId, const char* pPkg
 	return 0;
 }
 /* LCOV_EXCL_STOP */
+
+
+static int
+OnAppStatusChanged(int pid, int status, void *data) {
+	LOG_LOGD("App Status Callback is invoked");
+	char* pAppId = NULL;
+
+	int ret = app_manager_get_app_id((pid_t)pid, &pAppId);
+	if (ret == APP_MANAGER_ERROR_NONE) {
+		string pkgIdStr = SyncManager::GetInstance()->GetPkgIdByAppId((const char *)pAppId);
+		LOG_LOGD("pAppId is [%s]", pAppId);
+		if (SyncManager::GetInstance()->GetSyncAdapterAggregator()->HasSyncAdapter(pkgIdStr.c_str())) {
+			/*
+			 * switch (status) {
+			 * case 0: //STATUS_LAUNCHING
+			 * case 3: //STATUS_VISIBLE
+			 * case 5: //STATUS_FOCUS
+			 * case 4: //STATUS_BACKGROUND
+			 * default: // STATUS_UNKNOWN
+			 */
+			LOG_LOGD("[%s] status is changed, so its current sync will be written", pkgIdStr.c_str());
+			SyncManager::GetInstance()->GetSyncRepositoryEngine()->SaveCurrentState();
+			/*
+			 * }
+			 */
+		} else {
+			LOG_LOGD("[%s] doesn't use sync-manager", pkgIdStr.c_str());
+		}
+		free(pAppId);
+	} else {
+		LOG_LOGD("getting app id by pid is failed [%d : %s]", ret, get_error_message(ret));
+		return -1;
+	}
+	return 0;
+}
 
 
 string
@@ -567,6 +603,17 @@ SyncManager::SetPkgMgrClientStatusChangedListener(void) {
 }
 
 
+int
+SyncManager::SetAulAppStatusChangedListener(void) {
+	int ret = aul_listen_app_status_signal(OnAppStatusChanged, NULL);
+	if (ret != AUL_R_OK) {
+		printf("Failed to register AppStatusHandler");
+		return -1;
+	}
+	return 0;
+}
+
+
 /* LCOV_EXCL_START */
 RepositoryEngine*
 SyncManager::GetSyncRepositoryEngine(void) {
@@ -696,6 +743,7 @@ SyncManager::Construct(void) {
 	LOG_LOGE_BOOL(__pPkgmgrClient != NULL, "__pPkgmgrClient is null");
 
 	LOG_LOGE_BOOL(SetPkgMgrClientStatusChangedListener() == 0, "Failed to register for uninstall callback.");
+	LOG_LOGE_BOOL(SetAulAppStatusChangedListener() == 0, "Failed to register for watching app status changed callback.");
 
 /*
 #if !defined(_SEC_FEATURE_CONTAINER_ENABLE)

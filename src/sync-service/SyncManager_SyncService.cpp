@@ -318,6 +318,9 @@ int _check_privilege_contact_read(GDBusMethodInvocation *invocation) {
 #endif
 
 
+gboolean sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine, gint sync_result, const gchar* sync_job_name);
+
+
 /* LCOV_EXCL_START */
 int
 SyncService::TriggerStartSync(const char* appId, int accountId, const char* syncJobName, bool isDataSync, bundle* pExtras) {
@@ -325,88 +328,66 @@ SyncService::TriggerStartSync(const char* appId, int accountId, const char* sync
 
 	app_control_h app_control;
 	int ret = SYNC_ERROR_NONE;
-	GError *error = NULL;
-	guint pid = -1;
 
-	app_context_h app_context = NULL;
-	ret = app_manager_get_app_context(appId, &app_context);
-	if (ret == APP_MANAGER_ERROR_NO_SUCH_APP) {
-		gboolean alreadyRunning = FALSE;
-		GVariant *result = g_dbus_connection_call_sync(gdbusConnection,	"org.freedesktop.DBus",
-														"/org/freedesktop/DBus",
-														"org.freedesktop.DBus",
-														"NameHasOwner",
-														g_variant_new("(s)", appId),
-														NULL,
-														G_DBUS_CALL_FLAGS_NONE,
-														-1,
-														NULL,
-														&error);
-		if (result == NULL) {
-			LOG_LOGD("g_dbus_connection_call_sync() is failed");
-			if (error) {
-				LOG_LOGD("dbus error message: %s", error->message);
-				g_error_free(error);
-			}
-		} else {
-			g_variant_get(result, "(b)", &alreadyRunning);
+	bool isRunning = false;
+	app_manager_is_running(appId, &isRunning);
+	if (!isRunning) {
+		LOG_LOGD("app is not running, launch the app and wait for signal");
+		ret = app_control_create(&app_control);
+		SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control create failed %d", ret);
+
+		ret = app_control_set_app_id(app_control, appId);
+		if (ret != APP_CONTROL_ERROR_NONE) {
+			app_control_destroy(app_control);
+			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control error [%d : %s]", ret, get_error_message(ret));
 		}
 
-		if (!alreadyRunning) {
-			LOG_LOGD("Service not running. Start the service ");
-			GVariant *ret = g_dbus_connection_call_sync(gdbusConnection,	"org.freedesktop.DBus",
-														"/org/freedesktop/DBus",
-														"org.freedesktop.DBus",
-														"StartServiceByName",
-														g_variant_new("(su)", appId),
-														NULL,
-														G_DBUS_CALL_FLAGS_NONE,
-														-1,
-														NULL,
-														&error);
-			if (ret != NULL) {
-				g_variant_get(ret, "(u)", &pid);
-				g_variant_unref(ret);
-			}
+		sa_app_id.clear();
+		ret = app_control_send_launch_request(app_control, NULL, NULL);
+		SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control launch request failed %d", ret);
 
-			if (error) {
-				LOG_LOGD("g_dbus_connection_call_sync gdbus error [%s]", error->message);
-				g_clear_error(&error);
-			}
-			return SYNC_ERROR_SYSTEM;
-		}
+		return SYNC_ERROR_SYSTEM;
 	} else {
-		bool isRunning = false;
-		app_manager_is_running(appId, &isRunning);
-		if (!isRunning) {
-			LOG_LOGD("app is not running, launch the app and wait for signal");
-			ret = app_control_create(&app_control);
-			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control create failed %d", ret);
+		LOG_LOGD("app is already running");
+		TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
 
-			ret = app_control_set_app_id(app_control, appId);
-			if (ret != APP_CONTROL_ERROR_NONE) {
-				LOG_LOGD("app control error %d", ret);
-				app_control_destroy(app_control);
+		if (!pSyncAdapter) {
+			LOG_LOGD("Sync adapter entry not found. Preparing sync adapter object");
+
+			app_context_h app_context = NULL;
+			pid_t pid;
+
+			int ret = app_manager_get_app_context(appId, &app_context);
+			SYNC_LOGE_RET_RES(ret == APP_MANAGER_ERROR_NONE, SYNC_ERROR_SYSTEM, "getting app_context is failed");
+
+			ret = app_context_get_pid(app_context, &pid);
+			SYNC_LOGE_RET_RES(ret == APP_MANAGER_ERROR_NONE, SYNC_ERROR_SYSTEM, "getting pid from app_context is failed");
+
+			GError* error = NULL;
+			char obj_path[50];
+			snprintf(obj_path, 50, "%s%d", SYNC_ADAPTER_DBUS_PATH, pid);
+
+			GDBusInterfaceSkeleton* interface = NULL;
+			pSyncAdapter = tizen_sync_adapter_skeleton_new();
+
+			if (pSyncAdapter != NULL) {
+				interface = G_DBUS_INTERFACE_SKELETON(pSyncAdapter);
+				if (g_dbus_interface_skeleton_export(interface, gdbusConnection, obj_path, &error)) {
+					g_signal_connect(pSyncAdapter, "handle-send-result", G_CALLBACK(sync_adapter_handle_send_result), NULL);
+
+					LOG_LOGD("inserting sync adapter ipc %s %x", appId, pSyncAdapter);
+					g_hash_table_insert(g_hash_table, strdup(appId), pSyncAdapter);
+				} else {
+					SYNC_LOGE_RET_RES(!(error->message), SYNC_ERROR_SYSTEM, "export failed [%s]", error->message);
+					return SYNC_ERROR_SYSTEM;
+				}
+			} else {
+				LOG_LOGD("Remote object creation failed");
 				return SYNC_ERROR_SYSTEM;
 			}
-
-			sa_app_id.clear();
-			ret = app_control_send_launch_request(app_control, NULL, NULL);
-			SYNC_LOGE_RET_RES(ret == APP_CONTROL_ERROR_NONE, SYNC_ERROR_SYSTEM, "app control launch request failed %d", ret);
-		} else {
-			LOG_LOGD("app is already running");
 		}
-
-		app_context_destroy(app_context);
-	}
-
-	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, appId);
-	if (pSyncAdapter) {
 		GVariant* pBundle = marshal_bundle(pExtras);
 		tizen_sync_adapter_emit_start_sync(pSyncAdapter, accountId, syncJobName, isDataSync, pBundle);
-	} else {
-		LOG_LOGD("Sync adapter entry not found");
-		return SYNC_ERROR_SYSTEM;
 	}
 
 	return SYNC_ERROR_NONE;
@@ -466,8 +447,12 @@ SyncService::RequestOnDemandSync(const char* pPackageId, const char* pSyncJobNam
 int
 SyncService::RequestPeriodicSync(const char* pPackageId, const char* pSyncJobName, int accountId, bundle* pExtras, int syncOption, unsigned long pollFrequency, int* pSyncJobId) {
 	int ret = SYNC_ERROR_NONE;
-	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
 	int syncJobId = -1;
+
+	SyncJobsAggregator* pSyncJobsAggregator = __pSyncManagerInstance->GetSyncJobsAggregator();
+
+	pSyncJobsAggregator->SetMinPeriod((int)pollFrequency / 60);
+	pSyncJobsAggregator->SetLimitTime(pSyncJobsAggregator->GetMinPeriod());
 
 	ISyncJob* pSyncJob = pSyncJobsAggregator->GetSyncJob(pPackageId, pSyncJobName);
 	if (pSyncJob) {

@@ -68,6 +68,14 @@ public:
 
 	map < string, SyncJobsInfo * > &GetAllSyncJobs();
 
+	void SetMinPeriod(int min_period);
+
+	void SetLimitTime(int min_period);
+
+	int GetMinPeriod(void);
+
+	int GetLimitTime(void);
+
 protected:
 	SyncJobsAggregator(void);
 
@@ -99,6 +107,9 @@ private:
 
 private:
 	map < string, SyncJobsInfo * > __syncJobsContainer;
+
+	int min_period;
+	int limit_time;
 
 	friend class SyncManager;
 	friend class RepositoryEngine;

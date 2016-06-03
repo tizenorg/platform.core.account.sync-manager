@@ -95,6 +95,7 @@ SET(PACKAGES
 		vconf
 		vconf-internal-keys
 		accounts-svc
+		aul
 		libxml-2.0
 		gio-unix-2.0
 		alarm-service

@@ -414,9 +414,11 @@ RepositoryEngine::WriteSyncJobsData(void) {
 			xmlNewProp(jobNode, XML_ATTR_JOB_NAME, (const xmlChar*)pJob->__syncJobName.c_str());
 			ss.str(string());
 
-			if (pJob->__pExtras) {
+			if (pJob->__pExtras)
 				bundle_iterate(pJob->__pExtras, bndl_iterator, &jobNode);
-			}
+			else
+				LOG_LOGD("There is no user bundle data which will be written in XML");
+
 			if (pJob->GetSyncType() == SYNC_TYPE_PERIODIC) {
 				PeriodicSyncJob* pPeriodJob = dynamic_cast<PeriodicSyncJob*> (pJob);
 				if (pPeriodJob == NULL) {
@@ -495,11 +497,10 @@ RepositoryEngine::ParseExtras(xmlNodePtr cur, bundle* pExtra) {
 	xmlChar* pKey = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_KEY);
 	xmlChar* pVal = xmlGetProp(cur, XML_ATTR_SYNC_EXTRA_VALUE);
 
-	if (!pKey || !pVal) {
+	if (!pKey || !pVal)
 		return;
-	}
 
-	bundle_add(pExtra, (char*)pKey, (char*)pVal);
+	bundle_add_str(pExtra, (const char*)pKey, (const char*)pVal);
 }
 
 
@@ -512,6 +513,8 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage) {
 	xmlChar* pJobNoRetry = xmlGetProp(cur, XML_ATTR_JOB_OPTION_NORETRY);
 	xmlChar* pJobExpedit = xmlGetProp(cur, XML_ATTR_JOB_OPTION_EXPEDIT);
 	xmlChar* pJobType = xmlGetProp(cur, XML_ATTR_JOB_TYPE);
+	xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PERIOD);
+	long period = (pPeriod == NULL)? 1800 : ((atoi((char*)pPeriod) > 1440)? 1440 * 60 : atoi((char*)pPeriod) * 60);
 
 	SyncType type = (pJobType == NULL) ? SYNC_TYPE_UNKNOWN : (SyncType)atoi((char*)pJobType);
 	bool noretry = (pJobNoRetry == NULL) ? false : atoi((char*)pJobNoRetry);
@@ -522,9 +525,10 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage) {
 	syncOption |= (expedit) ? 0x01 : 0x00;
 
 	bundle* pExtra = NULL;
+	pExtra = bundle_create();
+
 	cur = cur->xmlChildrenNode;
 	while (cur != NULL) {
-		pExtra = bundle_create();
 		ParseExtras(cur, pExtra);
 		cur = cur->next;
 	}
@@ -539,8 +543,9 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage) {
 			break;
 		}
 		case SYNC_TYPE_PERIODIC: {
-			xmlChar* pPeriod = xmlGetProp(cur, XML_ATTR_PERIODIC_SYNC_PERIOD);
-			int period = (pPeriod == NULL)? 1800 : atoi((char*)pPeriod);
+			SyncJobsAggregator* pSyncJobsAggregator = SyncManager::GetInstance()->GetSyncJobsAggregator();
+			pSyncJobsAggregator->SetMinPeriod(period / 60);
+			pSyncJobsAggregator->SetLimitTime(pSyncJobsAggregator->GetMinPeriod());
 
 			SyncManager::GetInstance()->AddPeriodicSyncJob((char*)pPackage, (char*)pJobName, acountId, pExtra, syncOption, jobId, period);
 			break;
@@ -551,6 +556,7 @@ RepositoryEngine::ParseSyncJobsN(xmlNodePtr cur, xmlChar* pPackage) {
 			break;
 		}
 	}
+	bundle_free(pExtra);
 }
 /* LCOV_EXCL_STOP */
 
