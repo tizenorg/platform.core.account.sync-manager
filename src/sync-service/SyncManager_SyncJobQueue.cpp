@@ -75,7 +75,7 @@ SyncJobQueue::AddSyncJob(SyncJob* pSyncJob) {
 	SyncJob* pSyncJobEntry = dynamic_cast< SyncJob* > (pSyncJob);
 	SYNC_LOGE_RET_RES(pSyncJobEntry != NULL, SYNC_ERROR_SYSTEM, "Failed to get sync job");
 
-	if (pSyncJobEntry ->IsExpedited()) {
+	if (pSyncJobEntry->IsExpedited()) {
 		LOG_LOGD("Priority SyncJob Queue size, before = [%d]", __prioritySyncJobsQueue.size());
 		__prioritySyncJobsQueue.push_back(pSyncJob);
 		LOG_LOGD("Priority SyncJob Queue size, after = [%d]", __prioritySyncJobsQueue.size());

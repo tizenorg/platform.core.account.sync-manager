@@ -300,8 +300,6 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 		/* LCOV_EXCL_STOP */
 	}
 
-	LOG_LOGD("Registration of DataChangeListener Successfully Ends");
-
 	return SYNC_ERROR_NONE;
 }
 

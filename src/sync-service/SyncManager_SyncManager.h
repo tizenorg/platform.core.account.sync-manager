@@ -28,6 +28,8 @@
 #include <bundle_internal.h>
 #include <stdio.h>
 #include <account.h>
+#include <aul.h>
+#include <aul_svc.h>
 #include <package-manager.h>
 #include <media_content_type.h>
 #include "sync_manager.h"
@@ -169,6 +171,8 @@ private:
 	int DeRegisterForDataChange(void);
 
 	int SetPkgMgrClientStatusChangedListener(void);
+
+	int SetAulAppStatusChangedListener(void);
 
 	void ClearScheduledSyncJobs(SyncJob* pSyncJob);
 

@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.4
+Version:   0.1.5
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
@@ -24,6 +24,7 @@ BuildRequires: pkgconfig(glib-2.0) >= 2.26
 BuildRequires: pkgconfig(gio-unix-2.0)
 BuildRequires: pkgconfig(accounts-svc)
 BuildRequires: pkgconfig(alarm-service)
+BuildRequires: pkgconfig(aul)
 BuildRequires: pkgconfig(bundle)
 BuildRequires: pkgconfig(cynara-client)
 BuildRequires: pkgconfig(cynara-session)
