@@ -110,12 +110,29 @@ SyncService::StartService() {
 		/* LCOV_EXCL_STOP */
 	}
 
-	int cynara_result = cynara_initialize(&pCynara, NULL);
-	if (cynara_result != CYNARA_API_SUCCESS) {
+	cynara_configuration *p_conf;
+
+	if (CYNARA_API_SUCCESS != cynara_configuration_create(&p_conf)) {
 		/* LCOV_EXCL_START */
-		LOG_LOGD("Cynara Initialization is failed");
+		LOG_LOGD("cynara_configuration_create() is failed");
 		return -1;
 		/* LCOV_EXCL_STOP */
+	} else {
+		size_t cache_size = 100;
+		if (CYNARA_API_SUCCESS != cynara_configuration_set_cache_size(p_conf, cache_size)) {
+			/* LCOV_EXCL_START */
+			LOG_LOGD("cynara_configuration_set_cache_size() is failed");
+			cynara_configuration_destroy(p_conf);
+			return -1;
+			/* LCOV_EXCL_STOP */
+		}
+		if (CYNARA_API_SUCCESS != cynara_initialize(&pCynara, NULL)) {
+			/* LCOV_EXCL_START */
+			LOG_LOGD("Cynara Initialization is failed");
+			cynara_configuration_destroy(p_conf);
+			return -1;
+			/* LCOV_EXCL_STOP */
+		}
 	}
 
 	return 0;
