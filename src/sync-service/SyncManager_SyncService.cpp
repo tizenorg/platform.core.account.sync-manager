@@ -92,6 +92,26 @@ void convert_to_path(char app_id[]) {
 }
 
 
+static int
+cynara_init(cynara_configuration *p_conf) {
+	LOG_LOGD("Cynara configuration start");
+	size_t cache_size = 100;
+
+	if (CYNARA_API_SUCCESS != cynara_configuration_create(&p_conf)) {
+		LOG_LOGD("cynara_configuration_create() is failed");
+		return -1;
+	} else {
+		if (CYNARA_API_SUCCESS != cynara_configuration_set_cache_size(p_conf, cache_size)) {
+			LOG_LOGD("cynara_configuration_set_cache_size() is failed");
+			cynara_configuration_destroy(p_conf);
+			return -1;
+		}
+	}
+
+	return cynara_initialize(&pCynara, NULL);
+}
+
+
 int
 SyncService::StartService() {
 	__pSyncManagerInstance = SyncManager::GetInstance();
@@ -110,10 +130,11 @@ SyncService::StartService() {
 		/* LCOV_EXCL_STOP */
 	}
 
-	int cynara_result = cynara_initialize(&pCynara, NULL);
-	if (cynara_result != CYNARA_API_SUCCESS) {
+	cynara_configuration *p_conf;
+	if (CYNARA_API_SUCCESS != cynara_init(p_conf)) {
 		/* LCOV_EXCL_START */
 		LOG_LOGD("Cynara Initialization is failed");
+		cynara_configuration_destroy(p_conf);
 		return -1;
 		/* LCOV_EXCL_STOP */
 	}
