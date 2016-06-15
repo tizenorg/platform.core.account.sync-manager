@@ -141,6 +141,8 @@ __sync_adapter_on_stop_sync(
 	else
 		g_sync_adapter->cancel_sync_cb(account, pSyncJobName, NULL, sync_job_user_data);
 
+	bundle_free(sync_job_user_data);
+
 	return true;
 }
 /* LCOV_EXCL_STOP */
