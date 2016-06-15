@@ -45,9 +45,7 @@ const char *app_id = "core.sync-manager-tests";
 const char *name = "test_name";
 const char *email_address = "test_email@samsung.com";
 
-static bool using_acc = false;
 static bool created_acc = false;
-static bool existed_acc = false;
 static bool set_cb = false;
 static account_h account = NULL;
 static int account_id = -1;
@@ -115,7 +113,6 @@ void sync_manager_setup_account(void)
 {
 	int ret = ACCOUNT_ERROR_NONE;
 
-	using_acc = true;
 	ret = account_create(&account);
 	if (ret == ACCOUNT_ERROR_NONE)
 		created_acc = true;
@@ -125,9 +122,6 @@ void sync_manager_setup_account(void)
 	account_set_package_name(account, app_id);
 	account_set_sync_support(account, ACCOUNT_SUPPORTS_SYNC);
 	account_insert_to_db(account, &account_id);
-
-	if (account_type_query_app_id_exist(app_id) == ACCOUNT_ERROR_NONE)
-		existed_acc = true;
 }
 
 
@@ -136,14 +130,11 @@ void sync_manager_cleanup_account(void)
 	int ret = ACCOUNT_ERROR_NONE;
 
 	ret = account_delete_from_db_by_package_name(app_id);
-	if (ret == ACCOUNT_ERROR_NONE)
-		existed_acc = false;
-
-	ret = account_destroy(account);
-	if (ret == ACCOUNT_ERROR_NONE)
-		created_acc = false;
-
-	using_acc = false;
+	if (ret == ACCOUNT_ERROR_NONE) {
+		ret = account_destroy(account);
+		if (ret == ACCOUNT_ERROR_NONE)
+			created_acc = false;
+	}
 }
 
 
@@ -230,7 +221,7 @@ void utc_sync_manager_startup(void)
  */
 void utc_sync_manager_cleanup(void)
 {
-	if (existed_acc)
+	if (created_acc)
 		sync_manager_cleanup_account();
 
 	int ret = SYNC_ERROR_NONE;
@@ -242,15 +233,6 @@ void utc_sync_manager_cleanup(void)
 	}
 
 	return;
-}
-
-
-void sync_manager_setup_interval(void)
-{
-	utc_sync_manager_cleanup();
-
-	sync_manager_setup_adapter();
-	sync_manager_setup_account();
 }
 
 
@@ -267,9 +249,7 @@ int utc_sync_manager_on_demand_sync_job_p(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -279,23 +259,23 @@ int utc_sync_manager_on_demand_sync_job_p(void)
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
@@ -303,14 +283,12 @@ int utc_sync_manager_on_demand_sync_job_p(void)
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -329,9 +307,7 @@ int utc_sync_manager_on_demand_sync_job_n(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -350,6 +326,8 @@ int utc_sync_manager_on_demand_sync_job_n(void)
 	ret = sync_manager_on_demand_sync_job(NULL, NULL, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -367,9 +345,7 @@ int utc_sync_manager_on_demand_sync_job_n2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -388,6 +364,8 @@ int utc_sync_manager_on_demand_sync_job_n2(void)
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -405,9 +383,7 @@ int utc_sync_manager_on_demand_sync_job_p2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -417,14 +393,15 @@ int utc_sync_manager_on_demand_sync_job_p2(void)
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
@@ -433,10 +410,11 @@ int utc_sync_manager_on_demand_sync_job_p2(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -455,9 +433,7 @@ int utc_sync_manager_on_demand_sync_job_n3(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -474,6 +450,8 @@ int utc_sync_manager_on_demand_sync_job_n3(void)
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -488,9 +466,7 @@ int utc_sync_manager_on_demand_sync_job_n4(void)
 	int ret = SYNC_ERROR_NONE;
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -509,6 +485,8 @@ int utc_sync_manager_on_demand_sync_job_n4(void)
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -526,9 +504,7 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -538,74 +514,43 @@ int utc_sync_manager_add_periodic_sync_job_p(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1H, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_12H, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -624,9 +569,7 @@ int utc_sync_manager_add_periodic_sync_job_n(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -645,6 +588,8 @@ int utc_sync_manager_add_periodic_sync_job_n(void)
 	ret = sync_manager_add_periodic_sync_job(NULL, NULL, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -662,9 +607,7 @@ int utc_sync_manager_add_periodic_sync_job_n2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -683,6 +626,8 @@ int utc_sync_manager_add_periodic_sync_job_n2(void)
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, -1, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -700,9 +645,7 @@ int utc_sync_manager_add_periodic_sync_job_n3(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -721,6 +664,8 @@ int utc_sync_manager_add_periodic_sync_job_n3(void)
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -738,9 +683,7 @@ int utc_sync_manager_add_periodic_sync_job_p2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -750,74 +693,43 @@ int utc_sync_manager_add_periodic_sync_job_p2(void)
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_12H, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
 
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -836,9 +748,7 @@ int utc_sync_manager_add_periodic_sync_job_n4(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -855,6 +765,8 @@ int utc_sync_manager_add_periodic_sync_job_n4(void)
 	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_6H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -869,9 +781,7 @@ int utc_sync_manager_add_periodic_sync_job_n5(void)
 	int ret = SYNC_ERROR_NONE;
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -899,6 +809,8 @@ int utc_sync_manager_add_periodic_sync_job_n5(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -916,9 +828,7 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -939,30 +849,6 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 #endif
 
-	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(account, capability_video, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
@@ -974,6 +860,8 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -992,9 +880,7 @@ int utc_sync_manager_add_data_change_sync_job_n(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1025,6 +911,8 @@ int utc_sync_manager_add_data_change_sync_job_n(void)
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_invalid, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1042,9 +930,7 @@ int utc_sync_manager_add_data_change_sync_job_n2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1065,6 +951,8 @@ int utc_sync_manager_add_data_change_sync_job_n2(void)
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1082,9 +970,7 @@ int utc_sync_manager_add_data_change_sync_job_p2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1092,26 +978,14 @@ int utc_sync_manager_add_data_change_sync_job_p2(void)
 	int sync_job_id = 0;
 
 #ifdef MOBILE
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_data_change_sync_job(account, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	ret = sync_manager_add_data_change_sync_job(account, capability_contact, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -1129,29 +1003,7 @@ int utc_sync_manager_add_data_change_sync_job_p2(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_music, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -1170,9 +1022,7 @@ int utc_sync_manager_add_data_change_sync_job_n3(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1191,6 +1041,8 @@ int utc_sync_manager_add_data_change_sync_job_n3(void)
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
 #endif
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1205,9 +1057,7 @@ int utc_sync_manager_add_data_change_sync_job_n4(void)
 	int ret = SYNC_ERROR_NONE;
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1237,6 +1087,8 @@ int utc_sync_manager_add_data_change_sync_job_n4(void)
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_music, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1254,9 +1106,7 @@ int utc_sync_manager_remove_sync_job_p(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1266,23 +1116,23 @@ int utc_sync_manager_remove_sync_job_p(void)
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	wait_for_async();
+	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
+	is_finished = false;
 
 	ret = sync_manager_on_demand_sync_job(account, name_on_demand, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
@@ -1290,14 +1140,18 @@ int utc_sync_manager_remove_sync_job_p(void)
 	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
+
+	ret = sync_manager_on_demand_sync_job(NULL, name_on_demand, SYNC_OPTION_NONE, user_data, &sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	ret = sync_manager_remove_sync_job(sync_job_id);
+	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -1316,9 +1170,7 @@ int utc_sync_manager_remove_sync_job_p2(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1328,24 +1180,13 @@ int utc_sync_manager_remove_sync_job_p2(void)
 	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_30MIN, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_remove_sync_job(sync_job_id);
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1H, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	ret = sync_manager_remove_sync_job(sync_job_id);
-	assert_eq(ret, SYNC_ERROR_NONE);
-
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_6H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
+	ret = sync_manager_add_periodic_sync_job(account, name_periodic, SYNC_PERIOD_INTERVAL_2H, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
@@ -1353,19 +1194,18 @@ int utc_sync_manager_remove_sync_job_p2(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	sync_manager_setup_interval();
-
-	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_1DAY, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	ret = sync_manager_add_periodic_sync_job(NULL, name_periodic, SYNC_PERIOD_INTERVAL_3H, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	wait_for_async();
-
 	ret = is_callback_finished();
 	assert_eq(ret, SYNC_ERROR_NONE);
 	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -1384,9 +1224,7 @@ int utc_sync_manager_remove_sync_job_p3(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1407,29 +1245,19 @@ int utc_sync_manager_remove_sync_job_p3(void)
 	assert_eq(ret, SYNC_ERROR_NONE);
 #endif
 
-	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_EXPEDITED, NULL, &sync_job_id);
+	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
-	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
+	ret = sync_manager_add_data_change_sync_job(NULL, capability_video, SYNC_OPTION_NO_RETRY, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-
-	wait_for_async();
-
-	ret = is_callback_finished();
-	assert_eq(ret, SYNC_ERROR_NONE);
-	is_finished = false;
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
@@ -1448,9 +1276,7 @@ int utc_sync_manager_remove_sync_job_n(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1475,6 +1301,8 @@ int utc_sync_manager_remove_sync_job_n(void)
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1492,9 +1320,7 @@ int utc_sync_manager_foreach_sync_job_p(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1517,6 +1343,8 @@ int utc_sync_manager_foreach_sync_job_p(void)
 	ret = sync_manager_remove_sync_job(sync_job_id2);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
+	bundle_free(user_data);
+
 	return 0;
 }
 
@@ -1534,9 +1362,7 @@ int utc_sync_manager_foreach_sync_job_n(void)
 	assert(set_cb);
 
 	sync_manager_setup_account();
-	assert(using_acc);
 	assert(created_acc);
-	assert(existed_acc);
 
 	user_data = bundle_create();
 	bundle_add_str(user_data, "str", "String user_data sample.");
@@ -1558,6 +1384,8 @@ int utc_sync_manager_foreach_sync_job_n(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id2);
 	assert_eq(ret, SYNC_ERROR_NONE);
+
+	bundle_free(user_data);
 
 	return 0;
 }
