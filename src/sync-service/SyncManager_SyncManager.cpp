@@ -1017,9 +1017,8 @@ SyncManager::SendSyncCheckAlarmMessage() {
 /* LCOV_EXCL_START */
 bool
 SyncManager::GetBundleVal(const char* pVal) {
-	if (pVal == NULL) {
+	if (pVal == NULL)
 		return false;
-	}
 	else
 		return strcmp(pVal, "true")? true: false;
 }

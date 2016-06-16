@@ -662,9 +662,9 @@ sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation
 
 		SyncManager::GetInstance()->OnResultReceived((SyncStatus)sync_result, pAppId, pkgIdStr, sync_job_name);
 		free(pAppId);
-	}
-	else
+	} else {
 		LOG_LOGD("sync service: Get package Id fail %d", ret);
+	}
 
 	tizen_sync_adapter_complete_send_result(pObject, pInvocation);
 
@@ -738,9 +738,9 @@ sync_manager_add_on_demand_job(TizenSyncManager* pObject, GDBusMethodInvocation*
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_add_on_demand_job(pObject, pInvocation, sync_job_id);
+	}
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -775,9 +775,9 @@ sync_manager_remove_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvoc
 	if (!pkgIdStr.empty()) {
 		LOG_LOGD("package id [%s]", pkgIdStr.c_str());
 		ret = SyncManager::GetInstance()->RemoveSyncJob(pkgIdStr, sync_job_id);
-	}
-	else
+	} else {
 		LOG_LOGD("sync service: Get package Id fail %d", ret);	/* LCOV_EXCL_LINE */
+	}
 
 	if (ret != SYNC_ERROR_NONE) {
 		/* LCOV_EXCL_START */
@@ -785,9 +785,9 @@ sync_manager_remove_job(TizenSyncManager* pObject, GDBusMethodInvocation* pInvoc
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 		/* LCOV_EXCL_STOP */
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_remove_job(pObject, pInvocation);
+	}
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -843,17 +843,17 @@ sync_manager_add_periodic_job(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		SyncManager::GetInstance()->AddRunningAccount(accountId, pid);
 		ret = SyncService::GetInstance()->RequestPeriodicSync(pkgIdStr.c_str(), pSyncJobName, accountId, pBundle, sync_option, sync_interval, &sync_job_id);
 		bundle_free(pBundle);
-	}
-	else
+	} else {
 		LOG_LOGD("sync service: Get package Id fail %d", ret);	/* LCOV_EXCL_LINE */
+	}
 
 	if (ret != SYNC_ERROR_NONE) {
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_add_periodic_job(pObject, pInvocation, sync_job_id);
+	}
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -928,17 +928,17 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 		ret = SyncService::GetInstance()->RequestDataSync(pkgIdStr.c_str(), pCapabilityArg, accountId, pBundle, sync_option, pCapabilityArg, &sync_job_id);
 
 		bundle_free(pBundle);
-	}
-	else
+	} else {
 		LOG_LOGD("sync service: Get package Id fail %d", ret);	/* LCOV_EXCL_LINE */
+	}
 
 	if (ret != SYNC_ERROR_NONE) {
 		GError* error = g_error_new(_sync_error_quark(), ret, "system error");
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_add_data_change_job(pObject, pInvocation, sync_job_id);
+	}
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
@@ -1020,9 +1020,9 @@ static inline int __read_proc(const char *path, char *buf, int size) {
 	if (ret <= 0) {
 		close(fd);
 		return -1;
-	}
-	else
+	} else {
 		buf[ret] = 0;
+	}
 
 	close(fd);
 
@@ -1116,9 +1116,9 @@ sync_manager_add_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocation* 
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 		/* LCOV_EXCL_STOP */
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_add_sync_adapter(pObject, pInvocation);
+	}
 
 	if (check_jobs) {
 		SyncManager::GetInstance()->AlertForChange();	/* LCOV_EXCL_LINE */
@@ -1163,9 +1163,9 @@ sync_manager_remove_sync_adapter(TizenSyncManager* pObject, GDBusMethodInvocatio
 	if (!pkgIdStr.empty()) {
 		pAggregator->RemoveSyncAdapter(pkgIdStr.c_str());
 		LOG_LOGD("Sync adapter removed for package [%s]", pkgIdStr.c_str());
-	}
-	else
+	} else {
 		LOG_LOGD("sync service: Get package Id fail %d", ret);	/* LCOV_EXCL_LINE */
+	}
 
 	TizenSyncAdapter* pSyncAdapter = (TizenSyncAdapter*) g_hash_table_lookup(g_hash_table, pAppId);
 	if (pSyncAdapter == NULL) {
@@ -1287,9 +1287,9 @@ sync_manager_get_all_sync_jobs(TizenSyncManager* pObject, GDBusMethodInvocation*
 		g_dbus_method_invocation_return_gerror(pInvocation, error);
 		g_clear_error(&error);
 		/* LCOV_EXCL_STOP */
-	}
-	else
+	} else {
 		tizen_sync_manager_complete_get_all_sync_jobs(pObject, pInvocation, outSyncJobList);
+	}
 
 	ManageIdleState* pManageIdleState = SyncManager::GetInstance()->GetManageIdleState();
 
