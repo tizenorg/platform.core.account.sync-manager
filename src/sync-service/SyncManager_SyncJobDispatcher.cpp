@@ -203,6 +203,7 @@ SyncJobDispatcher::TryStartingNextJobLocked() {
 	SyncJobQueue* pSyncJobQueue = SyncManager::GetInstance()->GetSyncJobQueue();
 	if (pSyncJobQueue == NULL) {
 		LOG_LOGD("pSyncJobQueue is null");
+		pthread_mutex_unlock(&(SyncManager::GetInstance()->__syncJobQueueMutex));
 		return;
 	}
 
