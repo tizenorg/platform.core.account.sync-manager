@@ -19,11 +19,11 @@
  * @brief   This is the implementation file for the PeriodicSyncScheduler class.
  */
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 #include <calendar.h>
-#include <contacts.h>
 #endif
 
+#include <contacts.h>
 #include <media_content.h>
 #include "sync-error.h"
 #include "SyncManager_PeriodicSyncScheduler.h"

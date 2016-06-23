@@ -318,10 +318,10 @@ int sync_manager_add_data_change_sync_job(account_h account, const char *sync_ca
 {
 	if (sync_capability != NULL) {
 		if (
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/calendar")) ||
-			!(strcmp(sync_capability, "http://tizen.org/sync/capability/contact")) ||
 #endif
+			!(strcmp(sync_capability, "http://tizen.org/sync/capability/contact")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/image")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/video")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/sound")) ||

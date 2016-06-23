@@ -87,7 +87,7 @@ typedef void (*sync_adapter_cancel_sync_cb)(account_h account, const char *sync_
 
 
 /**
- * @brief Sets client (Sync Aadapter) callback functions
+ * @brief Sets client (Sync Adapter) callback functions
  *
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  * @remarks	This API only can be called by a service application. And it can be set by only one service application per a package.

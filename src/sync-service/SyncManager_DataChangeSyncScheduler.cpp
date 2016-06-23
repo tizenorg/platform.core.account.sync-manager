@@ -19,11 +19,11 @@
  * @brief   This is the implementation file for the DataChangeListener class.
  */
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 #include <calendar.h>
-#include <contacts.h>
 #endif
 
+#include <contacts.h>
 #include <media_content.h>
 #include "sync-error.h"
 #include "sync_manager.h"
@@ -33,7 +33,7 @@
 
 
 /* LCOV_EXCL_START */
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 void OnCalendarBookChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Calendar Book Changed");
 
@@ -56,6 +56,7 @@ void OnCalendarTodoChanged(const char* view_uri, void* user_data) {
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
 	pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_CALENDAR);
 }
+#endif
 
 
 void OnContactsDataChanged(const char* view_uri, void* user_data) {
@@ -64,7 +65,6 @@ void OnContactsDataChanged(const char* view_uri, void* user_data) {
 	DataChangeSyncScheduler* pDCScheduler = (DataChangeSyncScheduler*) (user_data);
 	pDCScheduler->HandleDataChangeEvent(SYNC_SUPPORTS_CAPABILITY_CONTACT);
 }
-#endif
 
 
 void OnMediaContentDataChanged(media_content_error_e error, int pid, media_content_db_update_item_type_e update_item, media_content_db_update_type_e update_type, media_content_type_e media_type, char *uuid, char *path, char *mime_type, void *user_data) {
@@ -117,7 +117,7 @@ DataChangeSyncScheduler::~DataChangeSyncScheduler(void) {
 /* LCOV_EXCL_STOP */
 
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 int
 DataChangeSyncScheduler::SubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(!calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already Subscribed");
@@ -170,6 +170,7 @@ DataChangeSyncScheduler::SubscribeCalendarCallback(void) {
 
 	return SYNC_ERROR_NONE;
 }
+#endif
 
 
 int
@@ -195,7 +196,6 @@ DataChangeSyncScheduler::SubscribeContactsCallback(void) {
 
 	return SYNC_ERROR_NONE;
 }
-#endif
 
 
 int
@@ -226,7 +226,7 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void) {
 
 
 /* LCOV_EXCL_START */
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 int
 DataChangeSyncScheduler::UnSubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already UnSubscribed");
@@ -240,6 +240,7 @@ DataChangeSyncScheduler::UnSubscribeCalendarCallback(void) {
 
 	return SYNC_ERROR_NONE;
 }
+#endif
 
 
 int
@@ -253,7 +254,6 @@ DataChangeSyncScheduler::UnSubscribeContactsCallback(void) {
 
 	return SYNC_ERROR_NONE;
 }
-#endif
 
 
 int
@@ -274,7 +274,7 @@ int
 DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 	int err = SYNC_ERROR_NONE;
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 	err = SubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		/* LCOV_EXCL_START */
@@ -282,6 +282,7 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 		return SYNC_ERROR_INVALID_OPERATION;
 		/* LCOV_EXCL_STOP */
 	}
+#endif
 
 	err = SubscribeContactsCallback();
 	if (err != SYNC_ERROR_NONE) {
@@ -290,7 +291,6 @@ DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 		return SYNC_ERROR_INVALID_OPERATION;
 		/* LCOV_EXCL_STOP */
 	}
-#endif
 
 	err = SubscribeMediaContentCallback();
 	if (err != SYNC_ERROR_NONE) {
@@ -309,19 +309,19 @@ int
 DataChangeSyncScheduler::DeRegisterDataChangeListeners(void) {
 	int err = VALUE_UNDEFINED;
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 	err = UnSubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		LOG_LOGD("DeRegistration of Calendar DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
 	}
+#endif
 
 	err = UnSubscribeContactsCallback();
 	if (err != SYNC_ERROR_NONE) {
 		LOG_LOGD("DeRegistration of Contacts DataChangeListener Failed");
 		return SYNC_ERROR_INVALID_OPERATION;
 	}
-#endif
 
 	err = UnSubscribeMediaContentCallback();
 	if (err != SYNC_ERROR_NONE) {
