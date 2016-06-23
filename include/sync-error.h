@@ -55,7 +55,7 @@ typedef enum {
 	SYNC_ERROR_QUOTA_EXCEEDED			= TIZEN_ERROR_QUOTA_EXCEEDED,		/**< Quota exceeded */
 	SYNC_ERROR_UNKNOWN					= TIZEN_ERROR_UNKNOWN,				/**< Unknown Error */
 	SYNC_ERROR_SYSTEM					= TIZEN_ERROR_SYNC_MANAGER | 0x01,	/**< System error */
-	SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND	= TIZEN_ERROR_SYNC_MANAGER | 0x02	/**< Sync adater is not registered */
+	SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND	= TIZEN_ERROR_SYNC_MANAGER | 0x02	/**< Sync adapter is not registered */
 } sync_error_e;
 
 

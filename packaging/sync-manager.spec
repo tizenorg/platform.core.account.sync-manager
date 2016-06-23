@@ -1,5 +1,5 @@
 Name:      sync-service
-Version:   0.1.5
+Version:   0.1.6
 Release:   1
 License:   Apache-2.0
 Summary:   Sync manager daemon
@@ -31,8 +31,8 @@ BuildRequires: pkgconfig(cynara-session)
 BuildRequires: pkgconfig(cynara-creds-gdbus)
 %if "%{?profile}" == "mobile"
 BuildRequires: pkgconfig(calendar-service2)
-BuildRequires: pkgconfig(contacts-service2)
 %endif
+BuildRequires: pkgconfig(contacts-service2)
 BuildRequires: pkgconfig(capi-content-media-content)
 BuildRequires: pkgconfig(libtzplatform-config)
 
@@ -73,10 +73,10 @@ cp %{SOURCE2} .
 _CONTAINER_ENABLE=OFF
 
 %if "%{?profile}" == "mobile"
-_CALENDAR_CONTACTS_ENABLE=ON
+_CALENDAR_ENABLE=ON
 _FEATURE_MOBILE_PROFILE=ON
 %else
-_CALENDAR_CONTACTS_ENABLE=OFF
+_CALENDAR_ENABLE=OFF
 _FEATURE_MOBILE_PROFILE=OFF
 %endif
 
@@ -87,7 +87,7 @@ cmake \
 	-DLIBDIR=%{_libdir} \
 	-DINCLUDEDIR=%{_includedir} \
 	-D_SEC_FEATURE_CONTAINER_ENABLE:BOOL=${_CONTAINER_ENABLE} \
-	-D_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE:BOOL=${_CALENDAR_CONTACTS_ENABLE} \
+	-D_SEC_FEATURE_CALENDAR_ENABLE:BOOL=${_CALENDAR_ENABLE} \
 	-D_SEC_FEATURE_MOBILE_PROFILE:BOOL=${_FEATURE_MOBILE_PROFILE} \
 	-DVERSION=%{version}
 

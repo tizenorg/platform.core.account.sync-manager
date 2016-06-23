@@ -44,7 +44,9 @@ extern "C" {
  * @brief Callback function for Sync Adapter's start sync request.
  *
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
- * @remarks	This API only can be called at a service application.
+ * @remarks	This API only can be called at a service application.\n\n
+ * Release account with account_destroy() after using it.\n\n
+ * Release sync_job_user_data with bundle_free() after using it.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
@@ -70,7 +72,9 @@ typedef bool (*sync_adapter_start_sync_cb)(account_h account, const char *sync_j
  * @brief Callback function for Sync Adapter's cancel sync request.
  *
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
- * @remarks	This API only can be called at a service application after calling sync_manager_remove_sync_job().
+ * @remarks	This API only can be called at a service application after calling sync_manager_remove_sync_job().\n\n
+ * Release account with account_destroy() after using it.\n\n
+ * Release sync_job_user_data with bundle_free() after using it.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
@@ -87,7 +91,7 @@ typedef void (*sync_adapter_cancel_sync_cb)(account_h account, const char *sync_
 
 
 /**
- * @brief Sets client (Sync Aadapter) callback functions
+ * @brief Sets client (Sync Adapter) callback functions
  *
  * @since_tizen @if MOBILE 2.4 @elseif WEARABLE 3.0 @endif
  * @remarks	This API only can be called by a service application. And it can be set by only one service application per a package.

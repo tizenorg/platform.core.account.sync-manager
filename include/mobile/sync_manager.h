@@ -53,7 +53,7 @@ extern "C"
 /**
  *  @brief		This is contact capability string.
  *  @since_tizen 2.4
- *  @remarks	This capability is supported on Mobile profile only. If you want to receive notification about contact DB change, add it through sync_manager_add_data_change_sync_job().
+ *  @remarks	If you want to receive notification about contact DB change, add it through sync_manager_add_data_change_sync_job().
  *  @see		sync_manager_add_data_change_sync_job()
   */
 #define SYNC_SUPPORTS_CAPABILITY_CONTACT	"http://tizen.org/sync/capability/contact"
@@ -126,6 +126,9 @@ typedef enum {
  * @brief Called to get the information once for each sync job.
  *
  * @since_tizen 2.4
+ *
+ * @remarks Release account with account_destroy() after using it.\n\n
+ * Release sync_job_user_data with bundle_free() after using it.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
@@ -217,7 +220,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
  *
  * @remarks Data change sync job can be added by using its capability. In the case of adding a sync job with same capability, it will replace previous setting with new one. \n\n
  * %http://tizen.org/privilege/calendar.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CALENDAR. This capability is supported on Mobile profile only. \n\n
- * %http://tizen.org/privilege/contact.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CONTACT. This capability is supported on Mobile profile only.
+ * %http://tizen.org/privilege/contact.read is needed to add data change sync job for receiving notification with @ref SYNC_SUPPORTS_CAPABILITY_CONTACT.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_capability		A string representing a sync job which will be operated whenever data change of this capability

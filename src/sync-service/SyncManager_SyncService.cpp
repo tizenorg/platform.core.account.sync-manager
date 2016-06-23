@@ -60,10 +60,11 @@ static bool check_jobs = false;
 #define SYNC_ERROR_PREFIX "org.tizen.sync.Error"
 #define PRIV_ALARM_SET "http://tizen.org/privilege/alarm.set"
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 #define PRIV_CALENDAR_READ "http://tizen.org/privilege/calendar.read"
-#define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
 #endif
+
+#define PRIV_CONTACT_READ "http://tizen.org/privilege/contact.read"
 
 #define SYS_DBUS_INTERFACE				"org.tizen.system.deviced.PowerOff"
 #define SYS_DBUS_MATCH_RULE				"type='signal',interface='org.tizen.system.deviced.PowerOff'"
@@ -323,16 +324,16 @@ int _check_privilege_alarm_set(GDBusMethodInvocation *invocation) {
 }
 
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 int _check_privilege_calendar_read(GDBusMethodInvocation *invocation) {
 	return _check_privilege(invocation, PRIV_CALENDAR_READ);
 }
+#endif
 
 
 int _check_privilege_contact_read(GDBusMethodInvocation *invocation) {
 	return _check_privilege(invocation, PRIV_CONTACT_READ);
 }
-#endif
 
 
 gboolean sync_adapter_handle_send_result(TizenSyncAdapter* pObject, GDBusMethodInvocation* pInvocation, const gchar* pCommandLine, gint sync_result, const gchar* sync_job_name);
@@ -880,7 +881,7 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 	int ret = SYNC_ERROR_NONE;
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
+#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
 	const char *capability = (char *)pCapabilityArg;
 	if (!strcmp(capability, "http://tizen.org/sync/capability/calendar") ||
 		!strcmp(capability, "http://tizen.org/sync/capability/contact")) {
@@ -896,6 +897,22 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 				error = g_error_new(_sync_error_quark(), ret, "sync service: calendar.read permission denied");
 			else
 				error = g_error_new(_sync_error_quark(), ret, "sync service: contact.read permission denied");
+
+			g_dbus_method_invocation_return_gerror(pInvocation, error);
+			g_clear_error(&error);
+			/* LCOV_EXCL_STOP */
+			return true;
+		}
+	}
+#else
+	const char *capability = (char *)pCapabilityArg;
+	if (!strcmp(capability, "http://tizen.org/sync/capability/contact")) {
+		ret = _check_privilege_contact_read(pInvocation);
+
+		if (ret != SYNC_ERROR_NONE) {
+			/* LCOV_EXCL_START */
+			GError* error = NULL;
+			error = g_error_new(_sync_error_quark(), ret, "sync service: contact.read permission denied");
 
 			g_dbus_method_invocation_return_gerror(pInvocation, error);
 			g_clear_error(&error);

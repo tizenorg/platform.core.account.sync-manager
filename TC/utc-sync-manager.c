@@ -31,8 +31,8 @@
 
 #ifdef MOBILE
 const char *capability_calendar = SYNC_SUPPORTS_CAPABILITY_CALENDAR;
-const char *capability_contact = SYNC_SUPPORTS_CAPABILITY_CONTACT;
 #endif
+const char *capability_contact = SYNC_SUPPORTS_CAPABILITY_CONTACT;
 const char *capability_image = SYNC_SUPPORTS_CAPABILITY_IMAGE;
 const char *capability_video = SYNC_SUPPORTS_CAPABILITY_VIDEO;
 const char *capability_sound = SYNC_SUPPORTS_CAPABILITY_SOUND;
@@ -841,13 +841,13 @@ int utc_sync_manager_add_data_change_sync_job_p(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_contact, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_sound, SYNC_OPTION_NONE, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -940,10 +940,10 @@ int utc_sync_manager_add_data_change_sync_job_n2(void)
 #ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, -1, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_contact, -1, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
-#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_image, -1, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
@@ -983,13 +983,13 @@ int utc_sync_manager_add_data_change_sync_job_p2(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_contact, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
@@ -1036,10 +1036,10 @@ int utc_sync_manager_add_data_change_sync_job_n3(void)
 #ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(account, capability_calendar, SYNC_OPTION_EXPEDITED, NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, NULL);
 	assert_eq(ret, SYNC_ERROR_INVALID_PARAMETER);
-#endif
 
 	bundle_free(user_data);
 
@@ -1070,10 +1070,10 @@ int utc_sync_manager_add_data_change_sync_job_n4(void)
 #ifdef MOBILE
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_calendar, SYNC_OPTION_EXPEDITED, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_contact, (SYNC_OPTION_NO_RETRY | SYNC_OPTION_EXPEDITED), NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
-#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_SYNC_ADAPTER_NOT_FOUND);
@@ -1237,13 +1237,13 @@ int utc_sync_manager_remove_sync_job_p3(void)
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
+#endif
 
 	ret = sync_manager_add_data_change_sync_job(NULL, capability_contact, SYNC_OPTION_NO_RETRY, user_data, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
 
 	ret = sync_manager_remove_sync_job(sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);
-#endif
 
 	ret = sync_manager_add_data_change_sync_job(account, capability_image, SYNC_OPTION_NONE, NULL, &sync_job_id);
 	assert_eq(ret, SYNC_ERROR_NONE);

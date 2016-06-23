@@ -121,20 +121,6 @@ enum BatteryStatus {
 };
 
 
-#if defined(_SEC_FEATURE_CALENDAR_CONTACTS_ENABLE)
-enum DataChangeStatus {
-	/** Calendar Book */
-	CALENDAR_BOOK_CHANGED = 0,
-	/** Calendar Event */
-	CALENDAR_EVENT_CHANGED,
-	/** Calendar Todo */
-	CALENDAR_TODO_CHANGED,
-	/** Contacts Modify */
-	CONTACTS_DATA_CHANGED,
-};
-#endif
-
-
 enum SyncDispatchMessage {
 	/** Sync Finished*/
 	SYNC_FINISHED = 0,
