@@ -60,7 +60,7 @@ static bool check_jobs = false;
 #define SYNC_ERROR_PREFIX "org.tizen.sync.Error"
 #define PRIV_ALARM_SET "http://tizen.org/privilege/alarm.set"
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 #define PRIV_CALENDAR_READ "http://tizen.org/privilege/calendar.read"
 #endif
 
@@ -324,7 +324,7 @@ int _check_privilege_alarm_set(GDBusMethodInvocation *invocation) {
 }
 
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 int _check_privilege_calendar_read(GDBusMethodInvocation *invocation) {
 	return _check_privilege(invocation, PRIV_CALENDAR_READ);
 }
@@ -881,7 +881,7 @@ sync_manager_add_data_change_job(TizenSyncManager* pObject, GDBusMethodInvocatio
 
 	int ret = SYNC_ERROR_NONE;
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 	const char *capability = (char *)pCapabilityArg;
 	if (!strcmp(capability, "http://tizen.org/sync/capability/calendar") ||
 		!strcmp(capability, "http://tizen.org/sync/capability/contact")) {

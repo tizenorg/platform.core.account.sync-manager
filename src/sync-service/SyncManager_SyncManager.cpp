@@ -247,7 +247,7 @@ bool accountCb(account_h account, void* pUserData) {
 
 void
 SyncManager::UpdateRunningAccounts(void) {
-#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
+#if !defined(_FEATURE_CONTAINER_ENABLE)
 	__runningAccounts.clear();
 	if (account_foreach_account_from_db(accountCb, this) < 0) {
 		LOG_LOGD("UpdateRunningAccounts: Can not fetch account from db");
@@ -256,7 +256,7 @@ SyncManager::UpdateRunningAccounts(void) {
 }
 
 
-#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
+#if !defined(_FEATURE_CONTAINER_ENABLE)
 bool OnAccountUpdated(const char* pEventType, int acountId, void* pUserData) {
 	//TODO: will go in enhancements
 	SyncManager* pSyncManager = (SyncManager*)pUserData;
@@ -746,7 +746,7 @@ SyncManager::Construct(void) {
 	LOG_LOGE_BOOL(SetAulAppStatusChangedListener() == 0, "Failed to register for watching app status changed callback.");
 
 /*
-#if !defined(_SEC_FEATURE_CONTAINER_ENABLE)
+#if !defined(_FEATURE_CONTAINER_ENABLE)
 	UpdateRunningAccounts();
 
 	if (account_subscribe_create(&__accountSubscriptionHandle) < 0)

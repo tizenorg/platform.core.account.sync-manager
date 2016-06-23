@@ -19,7 +19,7 @@
  * @brief   This is the implementation file for the PeriodicSyncScheduler class.
  */
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 #include <calendar.h>
 #endif
 

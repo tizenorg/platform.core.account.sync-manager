@@ -19,7 +19,7 @@
 
 #include <account.h>
 #include <string>
-#if defined(_SEC_FEATURE_CONTAINER_ENABLE)
+#if defined(_FEATURE_CONTAINER_ENABLE)
 #include <vasum.h>
 #endif
 
@@ -29,7 +29,7 @@
 {
 */
 
-#if defined(_SEC_FEATURE_CONTAINER_ENABLE)
+#if defined(_FEATURE_CONTAINER_ENABLE)
 #define KNOX_CONTAINER_ZONE_ENTER(pid)	struct vsm_context *ctx; \
 									struct vsm_zone* effective_zone; \
 									ctx = vsm_create_context();\

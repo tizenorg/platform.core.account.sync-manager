@@ -19,7 +19,7 @@
  * @brief   This is the implementation file for the DataChangeListener class.
  */
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 #include <calendar.h>
 #endif
 
@@ -33,7 +33,7 @@
 
 
 /* LCOV_EXCL_START */
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 void OnCalendarBookChanged(const char* view_uri, void* user_data) {
 	LOG_LOGD("On Calendar Book Changed");
 
@@ -117,7 +117,7 @@ DataChangeSyncScheduler::~DataChangeSyncScheduler(void) {
 /* LCOV_EXCL_STOP */
 
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 int
 DataChangeSyncScheduler::SubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(!calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already Subscribed");
@@ -226,7 +226,7 @@ DataChangeSyncScheduler::SubscribeMediaContentCallback(void) {
 
 
 /* LCOV_EXCL_START */
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 int
 DataChangeSyncScheduler::UnSubscribeCalendarCallback(void) {
 	SYNC_LOGE_RET_RES(calendar_subscription_started, SYNC_ERROR_NONE, "Calendar Callback Already UnSubscribed");
@@ -274,7 +274,7 @@ int
 DataChangeSyncScheduler::RegisterDataChangeListeners(void) {
 	int err = SYNC_ERROR_NONE;
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 	err = SubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		/* LCOV_EXCL_START */
@@ -309,7 +309,7 @@ int
 DataChangeSyncScheduler::DeRegisterDataChangeListeners(void) {
 	int err = VALUE_UNDEFINED;
 
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
+#if defined(_FEATURE_CALENDAR_ENABLE)
 	err = UnSubscribeCalendarCallback();
 	if (err != SYNC_ERROR_NONE) {
 		LOG_LOGD("DeRegistration of Calendar DataChangeListener Failed");

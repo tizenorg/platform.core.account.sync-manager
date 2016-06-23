@@ -317,10 +317,7 @@ int sync_manager_add_periodic_sync_job(account_h account, const char *sync_job_n
 int sync_manager_add_data_change_sync_job(account_h account, const char *sync_capability, sync_option_e sync_option, bundle *sync_job_user_data, int *sync_job_id)
 {
 	if (sync_capability != NULL) {
-		if (
-#if defined(_SEC_FEATURE_CALENDAR_ENABLE)
-			!(strcmp(sync_capability, "http://tizen.org/sync/capability/calendar")) ||
-#endif
+		if (!(strcmp(sync_capability, "http://tizen.org/sync/capability/calendar")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/contact")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/image")) ||
 			!(strcmp(sync_capability, "http://tizen.org/sync/capability/video")) ||
