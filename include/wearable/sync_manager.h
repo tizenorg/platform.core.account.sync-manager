@@ -118,8 +118,8 @@ typedef enum {
  *
  * @since_tizen 3.0
  *
- * @remarks Release account with account_destroy() after using it.\n\n
- * Release sync_job_user_data with bundle_free() after using it.
+ * @remarks @a Release account with account_destroy() after using it.\n\n
+ * @a Release sync_job_user_data with bundle_free() after using it.
  *
  * @param[in] account				An account handle on which sync operation was requested or @c NULL in the case of accountless sync operation
  * @param[in] sync_job_name			A string representing a sync job which has been operated or @c NULL in the case of data change sync operation
