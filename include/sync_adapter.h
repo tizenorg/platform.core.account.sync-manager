@@ -21,6 +21,7 @@
 
 #include <account.h>
 #include <bundle.h>
+#include <sync-error.h>
 
 
 #ifdef __cplusplus
